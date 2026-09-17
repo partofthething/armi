@@ -114,6 +114,7 @@ class VtkDumper(dumper.VisFileDumper):
     def __enter__(self):
         self._assemFiles = []
         self._blockFiles = []
+        return self
 
     def __exit__(self, type, value, traceback):
         assert len(self._assemFiles) == len(self._blockFiles)
