@@ -167,6 +167,8 @@ class XdmfDumper(dumper.VisFileDumper):
         self._blockGrids = []
         self._assemGrids = []
 
+        return self
+
     def __exit__(self, type, value, traceback):
         """
         Finalize file writing.
