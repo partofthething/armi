@@ -25,7 +25,12 @@ class VisFileDumper(ABC):
 
     @abstractmethod
     def __enter__(self):
-        """Invoke initialize when entering a context manager."""
+        """Prepare to write states, and return the dumper.
+
+        Implementations must return ``self``: these classes exist to be used as
+        ``with VtkDumper(...) as dumper: dumper.dumpState(r)``, which binds
+        whatever ``__enter__`` returns.
+        """
 
     @abstractmethod
     def __exit__(self, type, value, traceback):
