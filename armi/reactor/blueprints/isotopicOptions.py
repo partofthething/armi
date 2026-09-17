@@ -508,7 +508,8 @@ def eleExpandInfoBasedOnCodeENDF(cs):
             elementalsToKeep.update(endf70Elementals)
         elif "7r1" in dragLib:
             elementalsToKeep.update(endf71Elementals)
-        elif "8r0" in dragLib:
+        elif "8r0" in dragLib or "8r1" in dragLib:
+            # ENDF/B VIII.0 and VIII.1 share the same elemental evaluations.
             elementalsToKeep.update(endf80Elementals)
             elementalsToKeep.update(hydrogenElementals)
             elementalsToKeep.update(oxygenElementals)
