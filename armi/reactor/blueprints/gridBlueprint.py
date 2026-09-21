@@ -486,22 +486,12 @@ class GridBlueprint(YamlObject):
     def _latticeMapToGridContents(self):
         """Parse ``self.latticeMap`` into a dict mapping grid (i, j) indices to textual specifiers."""
         symmetry = geometry.SymmetryType.fromStr(self.symmetry)
-        geom = geometry.GeomType.fromStr(self.geom)
         latticeCls = asciimaps.asciiMapFromGeomAndDomain(self.geom, symmetry.domain)
         asciimap = latticeCls()
         asciimap.readAscii(self.latticeMap)
         gridContents = dict()
 
-        iOffset = 0
-        jOffset = 0
-        if geom == geometry.GeomType.CARTESIAN and symmetry.domain == geometry.DomainType.FULL_CORE:
-            # asciimaps is not smart about where the center should be, so we need to offset
-            # apropriately to get (0,0) in the middle
-            nx, ny = _getGridSize(asciimap.keys())
-
-            # turns out this works great for even and odd cases. love it when integer math works in your favor
-            iOffset = int(-nx / 2)
-            jOffset = int(-ny / 2)
+        iOffset, jOffset = _getAsciiMapOffset(self.geom, self.symmetry, asciimap.keys())
 
         for (i, j), spec in asciimap.items():
             if spec == "-":
@@ -571,6 +561,36 @@ def _getGridSize(idx) -> Tuple[int, int]:
     ny = max(key[1] for key in idx) - min(key[1] for key in idx) + 1
 
     return nx, ny
+
+
+def _getAsciiMapOffset(geom, symmetry, indices) -> Tuple[int, int]:
+    """
+    Return the (i, j) shift between ascii map positions and grid indices.
+
+    The ascii map machinery always counts up from zero at one corner, but full-core Cartesian grids
+    are centered on the origin and so run negative on one side. This is the offset to *add* to an
+    ascii map position to get a grid index, and to *subtract* to go back the other way.
+
+    Reading and writing both go through here so the two directions cannot drift apart.
+
+    Parameters
+    ----------
+    geom : str
+        The geometry of the grid, e.g. ``cartesian``.
+    symmetry : str
+        The symmetry of the grid, e.g. ``full``.
+    indices : iterable of (int, int)
+        Every occupied position, used to find where the center of the grid lands.
+    """
+    if geometry.GeomType.fromStr(geom) != geometry.GeomType.CARTESIAN:
+        return 0, 0
+    if geometry.SymmetryType.fromStr(symmetry).domain != geometry.DomainType.FULL_CORE:
+        return 0, 0
+
+    nx, ny = _getGridSize(indices)
+
+    # truncating toward zero happens to land on the right cell for both even and odd counts
+    return int(-nx / 2), int(-ny / 2)
 
 
 def _filterOutsideDomain(gridBp):
@@ -676,7 +696,12 @@ def saveToStream(stream, bluep, full=False, tryMap=False):
                     aMap.readAscii(gridDesign.latticeMap)
                 else:
                     # Otherwise, regenerate the map from the current grid of data.
-                    aMap.asciiLabelByIndices = {(key[0], key[1]): val for key, val in gridDesign.gridContents.items()}
+                    iOffset, jOffset = _getAsciiMapOffset(
+                        gridDesign.geom, gridDesign.symmetry, gridDesign.gridContents.keys()
+                    )
+                    aMap.asciiLabelByIndices = {
+                        (key[0] - iOffset, key[1] - jOffset): val for key, val in gridDesign.gridContents.items()
+                    }
                     aMap.gridContentsToAscii()
             except Exception as e:
                 runLog.warning(
