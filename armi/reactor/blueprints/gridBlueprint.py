@@ -612,6 +612,39 @@ def _filterOutsideDomain(gridBp):
         del gridBp.gridContents[idx]
 
 
+def isCenteredOnOrigin(gridBp) -> bool:
+    """Whether a full-core Cartesian grid's contents sit symmetrically about ``(0, 0)``.
+
+    An ascii map records positions by where they sit in the text and carries no origin of its own;
+    the reader recovers one by assuming the map is centered. A full-core Cartesian grid that has
+    grown lopsided therefore cannot be written as a map at all, only as an explicit list of
+    positions. Everything else is always centered by construction, so this is only ever False for
+    that one case.
+    """
+    contents = gridBp.gridContents or {}
+    if not contents:
+        return True
+    if geometry.GeomType.fromStr(gridBp.geom) != geometry.GeomType.CARTESIAN:
+        return True
+    if geometry.SymmetryType.fromStr(gridBp.symmetry).domain != geometry.DomainType.FULL_CORE:
+        return True
+
+    iMin, iMax = min(key[0] for key in contents), max(key[0] for key in contents)
+    jMin, jMax = min(key[1] for key in contents), max(key[1] for key in contents)
+    return abs(iMin) == abs(iMax) and abs(jMin) == abs(jMax)
+
+
+def _whyNotAMap(gridBp) -> str:
+    """The reason, worded the same way every time so the log does not fill up with near-copies."""
+    if not isCenteredOnOrigin(gridBp):
+        return (
+            "Its contents are no longer centered on the origin, and a full-core Cartesian lattice "
+            "map has no way to say where its center is. Squaring the grid up about (0, 0) would "
+            "let it be written as a map again."
+        )
+    return "See the debug log for the underlying error."
+
+
 def saveToStream(stream, bluep, full=False, tryMap=False):
     """
     Save the blueprints to the passed stream.
@@ -682,9 +715,12 @@ def saveToStream(stream, bluep, full=False, tryMap=False):
                     aMap.gridContentsToAscii()
             except Exception as e:
                 runLog.warning(
-                    "The `lattice map` for the current assembly arrangement cannot be written. Defaulting to using the "
-                    f"`grid contents` dictionary instead. Exception: {e}"
+                    f"Writing grid `{gridDesignType}` as a `lattice map` is not possible, so it is being "
+                    "written as a `grid contents` dictionary instead. This is equivalent, just harder to "
+                    f"read. {_whyNotAMap(gridDesign)}",
+                    single=True,
                 )
+                runLog.debug(f"Could not write `{gridDesignType}` as a lattice map: {e}")
                 aMap = None
 
             if aMap is not None:
