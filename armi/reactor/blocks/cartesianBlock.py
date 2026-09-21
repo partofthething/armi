@@ -16,7 +16,7 @@
 
 import math
 
-from armi.reactor import components
+from armi.reactor import components, geometry
 from armi.reactor.blocks.block import Block
 from armi.reactor.flags import Flags
 
@@ -75,10 +75,20 @@ class CartesianBlock(Block):
         raise NotImplementedError("Directly setting the pitch of a cartesian block is currently not supported.")
 
     def getSymmetryFactor(self):
-        """Return a factor between 1 and N where 1/N is how much cut-off by symmetry lines this mesh cell is."""
+        """Return a factor between 1 and N where 1/N is how much cut-off by symmetry lines this mesh cell is.
+
+        Nothing is cut off a full core, whatever its boundary says.
+        ``THROUGH_CENTER_ASSEMBLY`` places the origin at the centre of an
+        assembly rather than on a lattice line, and that is meaningful for a
+        full core as well as a partial one: ``(FULL_CORE, NO_SYMMETRY, True)``
+        is an explicitly valid symmetry. On a quarter core it means the central
+        assembly is quartered and the assemblies on the axes are halved; on a
+        full core every one of them is whole.
+        """
         if self.core is not None:
-            indices = self.spatialLocator.getCompleteIndices()
-            if self.core.symmetry.isThroughCenterAssembly:
+            symmetry = self.core.symmetry
+            if symmetry.isThroughCenterAssembly and symmetry.domain != geometry.DomainType.FULL_CORE:
+                indices = self.spatialLocator.getCompleteIndices()
                 if indices[0] == 0 and indices[1] == 0:
                     # central location
                     return 4.0

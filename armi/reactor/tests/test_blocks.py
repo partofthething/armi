@@ -3069,6 +3069,87 @@ class TestThRZBlock(unittest.TestCase):
         self.assertAlmostEqual(self.ThRZBlock.getBoronMassEnrich(), 0.0)
 
 
+class TestCartesianBlockSymmetryFactor(unittest.TestCase):
+    """The symmetry factor says how much of a block a symmetry line cuts off.
+
+    ``THROUGH_CENTER_ASSEMBLY`` only says the origin sits at the centre of an
+    assembly instead of on a lattice line, and that is as true of a full core as
+    of a quarter one. On a quarter core it means the central assembly is
+    quartered and the assemblies on the axes are halved; on a full core nothing
+    is cut off anything.
+    """
+
+    PITCH = 10.0
+
+    def _block(self, domain, indices, throughCenter=True):
+        from armi.reactor import reactors
+
+        blueprint = blueprints.Blueprints()
+        reactor = reactors.Reactor("Reactor", blueprint)
+        reactor.add(reactors.Core("Core"))
+        reactor.core.spatialGrid = grids.CartesianGrid.fromRectangle(self.PITCH, self.PITCH)
+        boundary = (
+            geometry.BoundaryType.NO_SYMMETRY
+            if domain == geometry.DomainType.FULL_CORE
+            else geometry.BoundaryType.REFLECTIVE
+        )
+        reactor.core.spatialGrid.symmetry = geometry.SymmetryType(
+            domain, boundary, throughCenterAssembly=throughCenter
+        )
+        reactor.core.spatialGrid.geomType = geometry.CARTESIAN
+        reactor.core.spatialGrid.armiObject = reactor.core
+
+        block = blocks.CartesianBlock("block")
+        block.add(
+            components.Square(
+                "duct",
+                "UZr",
+                Tinput=273.0,
+                Thot=273.0,
+                widthOuter=self.PITCH,
+                widthInner=0.0,
+                mult=1.0,
+            )
+        )
+        block.setHeight(1.0)
+        block.parent = reactor.core
+        block.spatialLocator = reactor.core.spatialGrid[indices[0], indices[1], 0]
+        return block
+
+    def test_quarterCoreCutsTheCentreAndTheAxes(self):
+        quarter = geometry.DomainType.QUARTER_CORE
+        self.assertEqual(self._block(quarter, (0, 0)).getSymmetryFactor(), 4.0)
+        self.assertEqual(self._block(quarter, (0, 3)).getSymmetryFactor(), 2.0)
+        self.assertEqual(self._block(quarter, (3, 0)).getSymmetryFactor(), 2.0)
+        self.assertEqual(self._block(quarter, (2, 3)).getSymmetryFactor(), 1.0)
+
+    def test_fullCoreCutsNothing(self):
+        """A full core is entirely present, so every block is whole."""
+        full = geometry.DomainType.FULL_CORE
+        for indices in ((0, 0), (0, 3), (3, 0), (2, 3), (-4, 0), (0, -4)):
+            self.assertEqual(
+                self._block(full, indices).getSymmetryFactor(),
+                1.0,
+                f"full core block at {indices} should not be cut by anything",
+            )
+
+    def test_fullCoreVolumeIsTheWholeCell(self):
+        """The factor divides area and volume, so getting it wrong scales both."""
+        full = geometry.DomainType.FULL_CORE
+        centre = self._block(full, (0, 0))
+        corner = self._block(full, (2, 3))
+        self.assertAlmostEqual(centre.getArea(), self.PITCH**2)
+        self.assertAlmostEqual(centre.getArea(), corner.getArea())
+        self.assertAlmostEqual(centre.getVolume(), corner.getVolume())
+
+    def test_awayFromTheCentreNothingIsCutEither(self):
+        """Without a through-centre origin no block sits on a symmetry line."""
+        quarter = geometry.DomainType.QUARTER_CORE
+        for indices in ((0, 0), (0, 3), (3, 0)):
+            block = self._block(quarter, indices, throughCenter=False)
+            self.assertEqual(block.getSymmetryFactor(), 1.0)
+
+
 class TestCartesianBlock(unittest.TestCase):
     """Tests for blocks with rectangular/square outer shape."""
 
