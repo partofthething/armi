@@ -23,7 +23,7 @@ if not isConfigured():
     configure()
 
 from armi.reactor.blueprints import Blueprints
-from armi.reactor.blueprints.gridBlueprint import Grids, Pitch, saveToStream
+from armi.reactor.blueprints.gridBlueprint import Grids, Pitch, isCenteredOnOrigin, saveToStream
 from armi.utils.customExceptions import InputError
 from armi.utils.directoryChangers import TemporaryDirectoryChanger
 
@@ -508,6 +508,41 @@ class TestFullCartesianGridBPRoundTrip(unittest.TestCase):
 
         self.assertEqual(gridDesign.gridContents, expected)
         self.assertEqual(gridDesign.gridContents[0, 0], "OC")
+
+
+class TestIsCenteredOnOrigin(unittest.TestCase):
+    """An ascii map has no way to record where its own center is.
+
+    The reader recovers one by assuming the contents are centered, so a full-core Cartesian grid
+    that has grown lopsided cannot be written as a map at all. Callers that edit grids need to be
+    able to ask before they are surprised by the fallback.
+    """
+
+    def setUp(self):
+        self.gridDesign = Grids.load(FULL_CARTESIAN_CORE)["core"]
+        _ = self.gridDesign.construct()
+
+    def test_aTidyGridIsCentered(self):
+        self.assertTrue(isCenteredOnOrigin(self.gridDesign))
+
+    def test_growingOnOneSideIsNot(self):
+        self.gridDesign.gridContents[0, 3] = "IC"
+        self.assertFalse(isCenteredOnOrigin(self.gridDesign))
+
+    def test_growingOnBothSidesStillIs(self):
+        self.gridDesign.gridContents[0, 3] = "IC"
+        self.gridDesign.gridContents[0, -3] = "IC"
+        self.assertTrue(isCenteredOnOrigin(self.gridDesign))
+
+    def test_anEmptyGridIsCentered(self):
+        self.gridDesign.gridContents = {}
+        self.assertTrue(isCenteredOnOrigin(self.gridDesign))
+
+    def test_theQuestionOnlyAppliesToFullCoreCartesian(self):
+        """Everything else is centered by construction, so the answer is always yes."""
+        hexDesign = Grids.load(SMALL_HEX)["core"]
+        _ = hexDesign.construct()
+        self.assertTrue(isCenteredOnOrigin(hexDesign))
 
 
 class TestGridBlueprintsSection(unittest.TestCase):
