@@ -261,6 +261,20 @@ TINY_GRID = """core:
        : IF
 """
 
+FULL_CARTESIAN_CORE = """core:
+    geom: cartesian
+    symmetry: full
+    lattice pitch:
+        x: 20.0
+        y: 20.0
+    lattice map: |
+        -  RR RR RR -
+        RR IC IC IC RR
+        RR IC MC IC RR
+        RR IC IC OC RR
+        -  RR RR RR -
+"""
+
 BIG_FULL_HEX_CORE = """core:
   geom: hex
   symmetry: full
@@ -398,6 +412,51 @@ class TestGridBPRoundTripFull(unittest.TestCase):
         self.assertEqual(gridDesign.gridContents[1, -1], "ZZ")
         self.assertEqual(gridDesign.gridContents[-3, 1], "RC")
         self.assertEqual(gridDesign.gridContents[3, -1], "PC")
+
+
+class TestFullCartesianGridBPRoundTrip(unittest.TestCase):
+    """A full-core Cartesian grid is centered on the origin, so it runs negative on one side.
+
+    The ascii map itself always counts up from zero, and the shift between the two has to be undone
+    on the way out or the negative half of the core is silently dropped.
+    """
+
+    def setUp(self):
+        self.grids = Grids.load(FULL_CARTESIAN_CORE)
+        self.gridDesign = self.grids["core"]
+        _ = self.gridDesign.construct()
+
+    def test_indicesAreCenteredOnOrigin(self):
+        contents = self.gridDesign.gridContents
+        self.assertEqual(contents[0, 0], "MC")
+        self.assertEqual(min(i for i, _ in contents), -2)
+        self.assertEqual(max(i for i, _ in contents), 2)
+
+    def test_roundTripKeepsEveryLocation(self):
+        before = dict(self.gridDesign.gridContents)
+
+        stream = io.StringIO()
+        saveToStream(stream, self.grids, full=True, tryMap=True)
+        stream.seek(0)
+        gridDesign = Grids.load(stream)["core"]
+        _ = gridDesign.construct()
+
+        self.assertEqual(gridDesign.gridContents, before)
+
+    def test_roundTripFromGridContents(self):
+        """Edits arrive as grid contents with no lattice map, which is the path an editor uses."""
+        self.gridDesign.gridContents[0, 0] = "OC"
+        self.gridDesign.latticeMap = None
+        expected = dict(self.gridDesign.gridContents)
+
+        stream = io.StringIO()
+        saveToStream(stream, self.grids, full=True, tryMap=True)
+        stream.seek(0)
+        gridDesign = Grids.load(stream)["core"]
+        _ = gridDesign.construct()
+
+        self.assertEqual(gridDesign.gridContents, expected)
+        self.assertEqual(gridDesign.gridContents[0, 0], "OC")
 
 
 class TestGridBlueprintsSection(unittest.TestCase):
