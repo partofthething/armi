@@ -262,6 +262,23 @@ class SymmetryType:
     The goal of this class is to provide simple functions for storing these options in enumerations and using them to
     check symmetry conditions, while also providing a standard string representation of the options that facilitates
     interfacing with yaml and/or the database nicely.
+
+    Notes
+    -----
+    ``isThroughCenterAssembly`` is easy to misread. Despite the name, it is not a statement about symmetry at all: it
+    says where the grid origin sits relative to the lattice. True means the origin is at the center of a grid cell, so
+    there is one assembly at dead center; False means the origin is at the corner where cells meet, so there is not.
+    ``CartesianGrid.fromRectangle`` takes exactly that as its ``isOffset`` argument, inverted.
+
+    Both states are therefore meaningful for a full core, which is why ``(FULL_CORE, NO_SYMMETRY, True)`` is a valid
+    symmetry: a full core with an odd number of assemblies across has one in the middle, and one with an even number
+    does not. ``gridBlueprint`` infers the flag for a full core from exactly that, the grid being square with an odd
+    number of cells on a side.
+
+    On a *partial* core the two readings coincide -- if a quarter core is cut at the origin and an assembly sits there,
+    the symmetry lines really do bisect it -- and only then does the flag imply that boundary assemblies are cut. Code
+    acting on the second meaning has to check the domain as well, the way ``getSymmetricEquivalents`` and
+    ``CartesianBlock.getSymmetryFactor`` do.
     """
 
     VALID_SYMMETRY = {
