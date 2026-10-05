@@ -12,7 +12,7 @@ These instructions target users with some software development knowledge. In par
 
 You must have the following installed before proceeding:
 
-* `Python <https://www.python.org/downloads/>`__ version 3.9 or newer.
+* `Python <https://www.python.org/downloads/>`__ version 3.11 or newer.
 
   .. admonition:: The right Python command
 
@@ -25,8 +25,46 @@ You also likely need the following for interacting with the source code reposito
 
 * `Git <https://git-scm.com/>`_
 
+There are two ways to install ARMI: with `uv <https://docs.astral.sh/uv/>`_ (described next), or with the standard
+``venv`` and ``pip`` tools (described after that). uv is faster and creates and manages the virtual environment for you.
+
+Installing with uv
+==================
+First, `install uv <https://docs.astral.sh/uv/getting-started/installation/>`_. uv can download a suitable Python
+interpreter for you, so a separate Python installation is not strictly required.
+
+To use ARMI as a dependency of your own project, add it from within that project::
+
+    $ uv add git+https://github.com/partofthething/armi
+
+To work on the ARMI source code, clone the repository and sync a development environment that includes the test
+dependencies::
+
+    $ git clone https://github.com/partofthething/armi
+    $ cd armi
+    $ uv sync --extra test
+
+This creates a virtual environment in ``.venv`` and installs ARMI into it in editable mode. Other optional dependency
+groups can be added with more ``--extra`` flags (e.g. ``--extra mpi --extra memprof``), or all of them with
+``--all-extras``. Run commands inside the environment with ``uv run``::
+
+    $ uv run armi --help
+    $ uv run pytest -n 4 armi
+
+Alternatively, activate the environment with ``source .venv/bin/activate`` (Linux/macOS) or
+``.venv\Scripts\activate`` (Windows) and run commands directly.
+
+.. note:: ARMI is a library, so this repository does not commit a ``uv.lock`` file. ``uv sync`` still writes one
+    locally (it is git-ignored); run ``uv lock --upgrade`` to pick up newer versions of the dependencies.
+
+If you will be running ARMI in parallel over MPI, the ``mpi`` extra requires some MPI development libraries
+(e.g. ``sudo apt install libopenmpi-dev`` on Linux).
+
+Installing with pip
+===================
+
 Preparing a Virtual Environment
-===============================
+-------------------------------
 While not *technically* required, we highly recommend installing ARMI into a
 `virtual environment <https://docs.python.org/3/library/venv.html>`_  to assist in dependency management. In short,
 virtual environments are a mechanism by which a Python user can maintain separate sets of Python packages for various
@@ -54,38 +92,27 @@ If you will be running ARMI in parallel over MPI, you must also install the ``mp
 so will require some MPI development libraries (e.g. ``sudo apt install libopenmpi-dev``).
 
 Getting the code
-================
+----------------
 Choose one of the following two installation methods depending on your needs.
 
-Step 0: Update PIP
-------------------
-If you are using an older version of Python, say 3.9 or older, you should ensure that you are using a version of PIP that is at least 22.1::
-
-    (armi-venv) $ pip install pip>=22.1
-
-or it will be enough to just do::
-
-    (armi-venv) $ pip install -U pip
-
-
 Option 1: Install as a library
-------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 If you plan on running ARMI without viewing or modifying source code, you may install it with ``pip``, which will
 automatically discover and install the dependencies. This is useful for quick evaluations or to use it as a dependency
 in another project::
 
-   	(armi-venv) $ pip install https://github.com/terrapower/armi/archive/main.zip
+   	(armi-venv) $ pip install https://github.com/partofthething/armi/archive/main.zip
 
 
 Option 2: Install as a repository (for developers)
---------------------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 If you'd like to view or change the ARMI source code (common!), you need to clone the ARMI source and then install its
 dependencies. Clone the ARMI source code from the git repository with::
 
-   (armi-venv) $ git clone https://github.com/terrapower/armi
+   (armi-venv) $ git clone https://github.com/partofthething/armi
 
 .. tip:: If you plan to contribute to ARMI (please do!), you may want to use
-	SSH keys and use ``git clone git@github.com:terrapower/armi.git``.
+	SSH keys and use ``git clone git@github.com:partofthething/armi.git``.
 
 Now install ARMI with all its dependencies::
 
@@ -101,12 +128,12 @@ Now install ARMI with all its dependencies::
 
 
 Verifying installation
-----------------------
+======================
 Check the installation status by running::
 
     (armi-venv) $ armi
 
-or, equivalently::
+or, equivalently (prefix either with ``uv run`` if you installed with uv and have not activated the environment)::
 
     (armi-venv) $ python -m armi
 
