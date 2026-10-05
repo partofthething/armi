@@ -93,3 +93,6 @@ venv*/
 *.vtu
 *.xdmf
 *dlayxs*
+
+# uv lockfile: this is a library, so dependencies are not pinned
+uv.lock

@@ -295,8 +295,8 @@ napoleon_use_rtype = True
 
 nbsphinx_kernel_name = "python3"
 
-ogp_site_url = "https://terrapower.github.io/armi/"
-ogp_image = "https://terrapower.github.io/armi/_static/armiSchematicView.png"
+ogp_site_url = "https://partofthething.github.io/armi/"
+ogp_image = "https://partofthething.github.io/armi/_static/armiSchematicView.png"
 ogp_site_name = "Advanced Reactor Modeling Interface"
 
 # Add any paths that contain templates here, relative to this directory.
@@ -338,7 +338,7 @@ rst_epilog = r"""
 
 wiki = {
     "GitHub Discussions": (
-        "https://github.com/terrapower/armi/discussions" + "%s",
+        "https://github.com/partofthething/armi/discussions" + "%s",
         None,
     )
 }
@@ -395,7 +395,7 @@ html_context = {
     "conf_py_path": "/doc/",  # Path in the checkout to the docs root
     "display_github": True,  # Integrate GitHub
     "github_repo": "armi",  # Repo name
-    "github_user": "terrapower",  # Username
+    "github_user": "partofthething",  # Username
     "github_version": "main",  # Version
 }
 

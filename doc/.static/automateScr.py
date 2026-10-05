@@ -182,9 +182,10 @@ def isMainPR(prNum: int):
         True if this PR is merging INTO the ARMI main branch. Default is True.
     """
     try:
-        url = f"https://github.com/terrapower/armi/pull/{prNum}"
+        repo = os.environ.get("GITHUB_REPOSITORY", "partofthething/armi")
+        url = f"https://github.com/{repo}/pull/{prNum}"
         r = requests.get(url)
-        return "terrapower/armi:main" in r.text
+        return f"{repo}:main" in r.text
     except Exception as e:
         logScrError(f"Failed to determine if PR#{prNum} merged into the main branch: {e}")
         return True
