@@ -163,12 +163,14 @@ class RedistributeMass:
         find the root of the above equation, indicating the value for :math:`\hat{T}`
         that finds the desired area, post-redistribution of mass.
         """
+        # capture the target volume before changing the temperature of toComp, which changes its area
+        newVolume = self.newVolume
         if isclose(self.fromComp.temperatureInC, self.toComp.temperatureInC, rel_tol=1e-09):
             # per isclose documentation, rel_tol of 1e-09 is roughly equivaluent to ensuring the temps are
             # the same to roughly 9 digits.
             newToCompTemp = self.toComp.temperatureInC
         else:
-            targetArea = self.newVolume / (self.toComp.height + abs(self.deltaZTop))
+            targetArea = newVolume / (self.toComp.height + abs(self.deltaZTop))
             try:
                 newToCompTemp = brentq(
                     f=lambda T: self.toComp.getArea(Tc=T) - targetArea,
@@ -193,8 +195,9 @@ class RedistributeMass:
                     f({self.fromComp.temperatureInC}) = {self.toComp.getArea(Tc=self.fromComp.temperatureInC) - targetArea}
                     f({self.toComp.temperatureInC}) = {self.toComp.getArea(Tc=self.toComp.temperatureInC) - targetArea}
 
-                    Instead, a mass weighted average temperature of {newToCompTemp} will be used. The consequence is that
-                    mass conservation is no longer guaranteed for this component type on this assembly!
+                    Instead, a mass weighted average temperature of {newToCompTemp} will be used and the number
+                    densities will be scaled to conserve mass. The consequence is that the density of this component
+                    will not be consistent with its temperature!
                     """  # noqa: E501
                     runLog.warning(dedent(msg), label="Temp Search Failure")
             except Exception as ee:
@@ -203,6 +206,15 @@ class RedistributeMass:
         # Do not use component.setTemperature as this mucks with the number densities we just calculated.
         self.toComp.temperatureInC = newToCompTemp
         self.toComp.clearCache()
+
+        # The number densities set in setNewToCompNDens assume the post-redistribution volume of toComp is
+        # newVolume. That only holds if the temperature search above found the target area. Otherwise (e.g., the
+        # temperatures are the same but the linked components have different areas, or the search failed), scale
+        # the number densities so that they are consistent with the actual post-redistribution volume and mass is
+        # conserved.
+        actualNewVolume = self.toComp.getArea() * (self.toComp.height + abs(self.deltaZTop))
+        if actualNewVolume > 0.0 and not isclose(actualNewVolume, newVolume, rel_tol=1e-12):
+            self.toComp.changeNDensByFactor(newVolume / actualNewVolume)
 
     @staticmethod
     def _sortKey(item):

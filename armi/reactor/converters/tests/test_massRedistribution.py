@@ -24,6 +24,7 @@ import numpy as np
 from armi.reactor.components import Circle
 from armi.reactor.converters.axialExpansionChanger.redistributeMass import RedistributeMass
 from armi.testing import mockRunLogs
+from armi.utils import densityTools
 
 
 class BlockLike:
@@ -149,3 +150,45 @@ class TestMassRedistribution(TestCase):
             self.assertFalse(stat, msg=case)
             stdout = logs.getStdout()
             self.assertIn("Inconsistent detailedNDens", stdout, msg=case)
+
+
+class TestMassConservationDifferentAreas(TestCase):
+    """Mass is conserved when redistributing between linked components, including those with different areas."""
+
+    def _redistribute(self, fromTemp: float, toTemp: float, fromOD: float):
+        """Redistribute mass from fromComp to toComp and return toComp along with the total mass before and after."""
+        fromComp = Circle("fuel", "UZr", Tinput=20, Thot=fromTemp, od=fromOD, mult=3)
+        fromComp.height = 7.3
+        fromComp.parent = BlockLike(fromComp.height)
+        toComp = Circle("fuel", "UZr", Tinput=20, Thot=toTemp, od=1.0, mult=3)
+        toComp.height = 3.74
+        toComp.parent = BlockLike(toComp.height)
+        dz = 0.6
+
+        def mass(c, height):
+            return densityTools.calculateMassDensity(c.getNumberDensities()) * c.getArea() * height
+
+        massBefore = mass(toComp, toComp.height) + mass(fromComp, dz)
+        RedistributeMass(fromComp=fromComp, toComp=toComp, deltaZTop=dz, assemName=self._testMethodName)
+        # the post-redistribution height of toComp is toComp.height + dz
+        massAfter = mass(toComp, toComp.height + dz)
+        return toComp, massBefore, massAfter
+
+    def test_sameTemperatureDifferentAreas(self):
+        """No temperature solve is performed, so the number densities must account for the area difference."""
+        _toComp, massBefore, massAfter = self._redistribute(fromTemp=500.0, toTemp=500.0, fromOD=0.9)
+        self.assertAlmostEqual(massAfter / massBefore, 1.0, places=12)
+
+    def test_tempSearchFails(self):
+        """The temperature search cannot find the target area, so a fallback temperature is used."""
+        with mockRunLogs.BufferLog() as logs:
+            _toComp, massBefore, massAfter = self._redistribute(fromTemp=520.0, toTemp=500.0, fromOD=0.9)
+        self.assertIn("Temperature search algorithm in axial expansion has failed", logs.getStdout())
+        self.assertAlmostEqual(massAfter / massBefore, 1.0, places=12)
+
+    def test_tempSearch(self):
+        """The temperature search succeeds when the components have the same cold dimensions."""
+        toComp, massBefore, massAfter = self._redistribute(fromTemp=520.0, toTemp=500.0, fromOD=1.0)
+        self.assertGreater(toComp.temperatureInC, 500.0)
+        self.assertLess(toComp.temperatureInC, 520.0)
+        self.assertAlmostEqual(massAfter / massBefore, 1.0, places=12)
