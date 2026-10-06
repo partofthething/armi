@@ -621,13 +621,27 @@ class TestHexReactor(TestReactor):
         self.r.core.p.powerDensity = 1e9
         mass = self.r.core.getHMMass()
         self.r.core.setPowerIfNecessary()
-        self.assertAlmostEqual(self.r.core.p.power, 1e9 * mass)
+        self.assertEqual(self.r.core.powerMultiplier, 3)
+        self.assertAlmostEqual(self.r.core.p.power, 1e9 * mass * 3)
 
         # don't take the powerDensity when not needed
         self.r.core.p.power = 3e9
         self.r.core.p.powerDensity = 2e9
         self.r.core.setPowerIfNecessary()
         self.assertAlmostEqual(self.r.core.p.power, 3e9)
+
+    def test_setPowerFromDensityIsFullCore(self):
+        """The power from a power density should not depend on the symmetry of the model."""
+        self.r.core.p.powerDensity = 30.0
+        self.r.core.setPowerFromDensity()
+        thirdCorePower = self.r.core.p.power
+
+        converter = geometryConverters.ThirdCoreHexToFullCoreChanger(self.o.cs)
+        converter.convert(self.r)
+        self.assertEqual(self.r.core.powerMultiplier, 1)
+        self.r.core.setPowerFromDensity()
+
+        self.assertAlmostEqual(self.r.core.p.power / thirdCorePower, 1.0)
 
     def test_findAllMeshPoints(self):
         """Test findAllMeshPoints().

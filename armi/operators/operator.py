@@ -414,8 +414,11 @@ class Operator:
         if halt:
             return False
 
-        # read total core power from settings (power or powerDensity)
-        basicPower = self.cs["power"] or (self.cs["powerDensity"] * self.r.core.getHMMass())
+        # read total core power from settings (power or powerDensity). The power is full-core, so the heavy metal
+        # mass in the modeled portion of the core must be scaled up by the symmetry factor.
+        basicPower = self.cs["power"] or (
+            self.cs["powerDensity"] * self.r.core.getHMMass() * self.r.core.powerMultiplier
+        )
 
         for timeNode in range(startingNode, int(self.burnSteps[cycle])):
             self.r.core.p.power = self.powerFractions[cycle][timeNode] * basicPower

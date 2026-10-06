@@ -332,8 +332,13 @@ class Core(composites.Composite):
         )
 
     def setPowerFromDensity(self):
-        """Set the power from the powerDensity."""
-        self.p.power = self.p.powerDensity * self.getHMMass()
+        """
+        Set the power from the powerDensity.
+
+        ``power`` is always the full-core power, so the heavy metal mass in the modeled portion of the core is scaled
+        up by the symmetry factor.
+        """
+        self.p.power = self.p.powerDensity * self.getHMMass() * self.powerMultiplier
 
     def setPowerIfNecessary(self):
         """Set the core power, from the power density.
