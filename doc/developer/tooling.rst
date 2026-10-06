@@ -257,25 +257,32 @@ The ``runLog`` tool also allows for you to log one module differently from the r
 base. For instance, you could set the log level to "debug" in just one Python file, to help testing
 during development.
 
-That functionality is provided by what might look like a bare Python logging import, but is actually
-calling the same underlying ``armi`` logging tooling:
+That functionality is provided by a standard library logger that lives underneath the ``armi`` logger, so its messages
+are formatted and written by the ARMI run log like any other:
 
 .. code-block:: python
 
-    import logging
-    runLog = logging.getLogger(__name__)
+    from armi import runLog
+    log = runLog.getLogger(__name__)
 
-In either case, you can then log using the same, easy interface:
-
-.. code-block:: python
-
-    runLog.info('Normal stuff.')
-    runLog.error('Oh no!')
-
-Finally, you can change the logging level in the above scenario by doing:
+You can then log using the standard ``logging`` interface. The ARMI-specific levels are available as constants, and
+the ``single`` and ``label`` options are passed through ``extra``:
 
 .. code-block:: python
 
-    runLog.setVerbosity(logging.DEBUG)
-    # or
-    runLog.setVerbosity('debug')
+    log.info('Normal stuff.')
+    log.error('Oh no!')
+    log.log(runLog.IMPORTANT, 'Worth calling out.')
+    log.warning('Only once, please.', extra={'single': True})
+
+Finally, you can change the logging level of just that module, either with the ``moduleVerbosity`` setting or by
+doing:
+
+.. code-block:: python
+
+    log.setLevel(logging.DEBUG)
+
+Inside the ``armi`` package, ``logging.getLogger(__name__)`` gives the same logger as ``runLog.getLogger(__name__)``.
+In a downstream application, use ``runLog.getLogger(__name__)``: it puts your module's logger underneath the ``armi``
+logger (e.g. ``armi.myApp.physics``), which is what sends its messages to the ARMI run log. The ``moduleVerbosity``
+setting uses the same names, so ``myApp.physics: debug`` works as written.

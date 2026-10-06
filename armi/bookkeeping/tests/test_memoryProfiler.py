@@ -108,7 +108,7 @@ class TestMemoryProfiler(unittest.TestCase):
             self.assertEqual("", mock.getStdout())
             testName = "test_checkForDuplicateObjectsOnArmiModel"
             runLog.LOG.startLog(testName)
-            runLog.LOG.setVerbosity(logging.IMPORTANT)
+            runLog.LOG.setVerbosity(runLog.IMPORTANT)
 
             # check for duplicates
             with self.assertRaises(RuntimeError):

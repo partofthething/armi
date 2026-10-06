@@ -145,7 +145,7 @@ class TestCompositePattern(unittest.TestCase):
             self.assertEqual("", mock.getStdout())
             testName = "test_printContents"
             runLog.LOG.startLog(testName)
-            runLog.LOG.setVerbosity(logging.IMPORTANT)
+            runLog.LOG.setVerbosity(runLog.IMPORTANT)
 
             self.container.printContents(includeNuclides=True)
             logMsg = mock.getStdout()
