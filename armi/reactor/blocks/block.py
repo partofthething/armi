@@ -734,14 +734,17 @@ class Block(composites.Composite):
 
         self.p.enrichmentBOL = self.getFissileMassEnrich()
         massHmBOL = 0.0
+        symmetryFactor = self.getSymmetryFactor()
         for child in self:
             hmMass = child.getHMMass()
             massHmBOL += hmMass
             # Components have the following parameters but not every composite will massHmBOL,
             # molesHmBOL, puFrac, enrichmentBOL
             if isinstance(child, components.Component):
+                # Like the block parameters, these are for the portion of the component inside the model. getHMMass
+                # already accounts for the symmetry factor, but getHMMoles does not.
                 child.p.massHmBOL = hmMass
-                child.p.molesHmBOL = child.getHMMoles()
+                child.p.molesHmBOL = child.getHMMoles() / symmetryFactor
                 if child.p.molesHmBOL:
                     child.p.enrichmentBOL = child.getFissileMassEnrich()
 
