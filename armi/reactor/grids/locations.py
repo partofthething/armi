@@ -119,6 +119,8 @@ class LocationBase(ABC):
         # because the comparison is not symmetric.
         if selfR < thatR:
             return True
+        elif selfR > thatR:
+            return False
         else:
             for lt, eq in zip(selfIndices < thatIndices, selfIndices == thatIndices):
                 if eq:

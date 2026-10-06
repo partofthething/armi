@@ -29,10 +29,14 @@ from armi.physics.neutronics.settings import (
 from armi.reactor import blueprints
 from armi.reactor.blueprints import isotopicOptions
 from armi.reactor.flags import Flags
+from armi.settings.fwSettings.globalSettings import CONF_ACCEPTABLE_BLOCK_AREA_ERROR
 from armi.testing import mockRunLogs
 from armi.utils.customExceptions import InputError
 from armi.utils.directoryChangers import TemporaryDirectoryChanger
 from armi.utils.yamlSchema import YamlSchemaError
+
+# these inputs exercise isotopics, not geometry, so their blocks have different areas
+AREA_ERROR = 1.0
 
 
 class TestCustomIsotopics(unittest.TestCase):
@@ -342,6 +346,7 @@ assemblies:
             newSettings={
                 CONF_XS_KERNEL: "MC2v2",
                 "inputHeightsConsideredHot": False,
+                CONF_ACCEPTABLE_BLOCK_AREA_ERROR: AREA_ERROR,
             }
         )
 
@@ -441,7 +446,7 @@ assemblies:
             runLog.LOG.setVerbosity(DEBUG)
 
             # rebuild the input to capture the logs
-            cs = settings.Settings()
+            cs = settings.Settings().modified(newSettings={CONF_ACCEPTABLE_BLOCK_AREA_ERROR: AREA_ERROR})
             cs = cs.modified(newSettings={CONF_XS_KERNEL: "MC2v2"})
             bp = blueprints.Blueprints.load(self.yamlString)
             bp.constructAssem(cs, name="fuel a")
@@ -458,7 +463,7 @@ assemblies:
             )
 
         # Check that assigning a custom density to the Void material fails
-        cs = settings.Settings()
+        cs = settings.Settings().modified(newSettings={CONF_ACCEPTABLE_BLOCK_AREA_ERROR: AREA_ERROR})
         cs = cs.modified(newSettings={CONF_XS_KERNEL: "MC2v2"})
         bp = blueprints.Blueprints.load(self.yamlStringWithError)
         # Ensure we have some Void
@@ -520,7 +525,7 @@ assemblies:
         np.testing.assert_almost_equal(fuel4.p.numberDensities, fuel5.p.numberDensities)
 
     def test_expandedNatural(self):
-        cs = settings.Settings()
+        cs = settings.Settings().modified(newSettings={CONF_ACCEPTABLE_BLOCK_AREA_ERROR: AREA_ERROR})
         cs = cs.modified(newSettings={CONF_XS_KERNEL: "MC2v3"})
 
         bp = blueprints.Blueprints.load(self.yamlString)
@@ -609,7 +614,7 @@ assemblies:
 """
 
     def test_customComponentsWithoutComposition(self):
-        cs = settings.Settings()
+        cs = settings.Settings().modified(newSettings={CONF_ACCEPTABLE_BLOCK_AREA_ERROR: AREA_ERROR})
         bp = blueprints.Blueprints.load(self.yamlBlocksBadIsotopics)
 
         with self.assertRaises(IOError):
@@ -669,7 +674,7 @@ assemblies:
     """
 
     def test_expandedNatural(self):
-        cs = settings.Settings()
+        cs = settings.Settings().modified(newSettings={CONF_ACCEPTABLE_BLOCK_AREA_ERROR: AREA_ERROR})
         cs = cs.modified(newSettings={CONF_XS_KERNEL: "MC2v3"})
 
         bp = blueprints.Blueprints.load(self.yamlString)
@@ -690,7 +695,7 @@ assemblies:
             ref_E80_elem = []
 
             # Load settings and set neutronics kernel to MCNP
-            cs = settings.Settings()
+            cs = settings.Settings().modified(newSettings={CONF_ACCEPTABLE_BLOCK_AREA_ERROR: AREA_ERROR})
             cs = cs.modified(newSettings={CONF_NEUTRONICS_KERNEL: "MCNP"})
 
             # Set ENDF/B-VII.0 as MCNP cross section library base

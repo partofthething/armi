@@ -355,6 +355,57 @@ class TestGridBPRoundTrip(unittest.TestCase):
         self.assertIn("full", gridBp["core"].symmetry)
         self.assertIn("IF", gridBp["core"].latticeMap)
 
+    def test_roundTripUnchangedReusesLatticeMap(self):
+        """An unmodified lattice map is reused as the source of truth when writing, rather than being regenerated."""
+        for gridInput in (SMALL_HEX, BIG_FULL_HEX_CORE):
+            grids = Grids.load(gridInput)
+            core = grids["core"]
+            core.construct()
+            self.assertTrue(core._latticeMapMatchesGridContents())
+            originalMap = core.latticeMap
+
+            stream = io.StringIO()
+            saveToStream(stream, grids, False, True)
+            stream.seek(0)
+            savedMap = Grids.load(stream)["core"].latticeMap
+            self.assertEqual(
+                [line.rstrip() for line in savedMap.splitlines()],
+                [line.rstrip() for line in originalMap.splitlines()],
+            )
+
+    def test_roundTripAfterEdit(self):
+        """Edits made to the grid contents after reading a lattice map are not lost when saving."""
+        core = self.grids["core"]
+        core.construct()
+        self.assertTrue(core.readFromLatticeMap)
+        core.gridContents[0, 0] = "XX"
+        self.assertFalse(core._latticeMapMatchesGridContents())
+
+        stream = io.StringIO()
+        saveToStream(stream, self.grids, False, True)
+        stream.seek(0)
+        core2 = Grids.load(stream)["core"]
+        core2.construct()
+        self.assertEqual(core2.gridContents[0, 0], "XX")
+        self.assertEqual(dict(core2.gridContents), dict(core.gridContents))
+
+    def test_roundTripAfterExpandToFull(self):
+        """A grid read from a partial-core lattice map can be saved after being expanded to full core."""
+        core = self.grids["core"]
+        core.construct()
+        core.expandToFull()
+        self.assertIsNone(core.latticeMap)
+        self.assertFalse(core.readFromLatticeMap)
+
+        for tryMap in (False, True):
+            stream = io.StringIO()
+            saveToStream(stream, self.grids, False, tryMap)
+            stream.seek(0)
+            core2 = Grids.load(stream)["core"]
+            core2.construct()
+            self.assertIn("full", core2.symmetry)
+            self.assertEqual(dict(core2.gridContents), dict(core.gridContents))
+
 
 class TestGridBPRoundTripFull(unittest.TestCase):
     def test_fullMap(self):

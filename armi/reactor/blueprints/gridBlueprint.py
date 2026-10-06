@@ -414,6 +414,10 @@ class GridBlueprint(YamlObject):
 
         self.gridContents = newContents
 
+        # any lattice map describes the old, partial domain, so it is no longer valid
+        self.latticeMap = None
+        self.readFromLatticeMap = False
+
         # set the grid symmetry
         split = geometry.THROUGH_CENTER_ASSEMBLY in self.symmetry
         self.symmetry = str(
@@ -477,12 +481,16 @@ class GridBlueprint(YamlObject):
         (e.g. ``IC``)).
         """
         self.readFromLatticeMap = True
+        self.gridContents = self._latticeMapToGridContents()
+
+    def _latticeMapToGridContents(self):
+        """Parse ``self.latticeMap`` into a dict mapping grid (i, j) indices to textual specifiers."""
         symmetry = geometry.SymmetryType.fromStr(self.symmetry)
         geom = geometry.GeomType.fromStr(self.geom)
         latticeCls = asciimaps.asciiMapFromGeomAndDomain(self.geom, symmetry.domain)
         asciimap = latticeCls()
         asciimap.readAscii(self.latticeMap)
-        self.gridContents = dict()
+        gridContents = dict()
 
         iOffset = 0
         jOffset = 0
@@ -499,7 +507,24 @@ class GridBlueprint(YamlObject):
             if spec == "-":
                 # skip placeholders
                 continue
-            self.gridContents[i + iOffset, j + jOffset] = spec
+            gridContents[i + iOffset, j + jOffset] = spec
+
+        return gridContents
+
+    def _latticeMapMatchesGridContents(self):
+        """Whether the stored ``latticeMap`` still represents the current ``gridContents`` and symmetry.
+
+        The lattice map is not kept in sync with later edits (e.g. from the GridEditor or ``expandToFull``), so it can
+        only be reused when it still agrees with the grid contents.
+        """
+        if not self.latticeMap:
+            return False
+        try:
+            fromMap = self._latticeMapToGridContents()
+        except Exception:
+            return False
+        current = {(key[0], key[1]): val for key, val in (self.gridContents or {}).items()}
+        return fromMap == current
 
     def getLocators(self, spatialGrid: grids.Grid, latticeIDs: list):
         """
@@ -633,6 +658,8 @@ def saveToStream(stream, bluep, full=False, tryMap=False):
         # string-> tuple parser for reading it back in. Skip this type of grid.
         if gridDesignType == "coreEqPath":
             continue
+        # Only reuse the original lattice map (which preserves the user's formatting) if it is still up to date.
+        reuseLatticeMap = gridDesign._latticeMapMatchesGridContents()
         _filterOutsideDomain(gridDesign)
 
         if not gridDesign.gridContents:
@@ -644,11 +671,11 @@ def saveToStream(stream, bluep, full=False, tryMap=False):
 
             aMap = asciimaps.asciiMapFromGeomAndDomain(gridDesign.geom, symmetry.domain)()
             try:
-                if gridDesign.latticeMap:
-                    # Try to use the lattice map first, it was the original source of truth.
+                if reuseLatticeMap:
+                    # Use the original lattice map if it still matches the current grid contents.
                     aMap.readAscii(gridDesign.latticeMap)
                 else:
-                    # If there is no original lattice map, use the current grid of data.
+                    # Otherwise, regenerate the map from the current grid of data.
                     aMap.asciiLabelByIndices = {(key[0], key[1]): val for key, val in gridDesign.gridContents.items()}
                     aMap.gridContentsToAscii()
             except Exception as e:

@@ -459,15 +459,13 @@ class Blueprints(YamlObject, metaclass=_BlueprintsPluginCollector):
     def _checkAssemblyAreaConsistency(self, cs):
         references = None
         for a in self.assemblies.values():
-            if references is None:
-                references = (a, a.getArea())
-                continue
-
             assemblyArea = a.getArea()
-            if isinstance(a, assemblies.RZAssembly):
-                # R-Z assemblies by definition have different areas, so skip the check
-                continue
-            if abs(references[1] - assemblyArea) > 1e-9:
+            if references is None:
+                references = (a, assemblyArea)
+            elif isinstance(a, assemblies.RZAssembly):
+                # R-Z assemblies by definition have different areas, so skip the assembly-to-assembly check
+                pass
+            elif abs(references[1] - assemblyArea) > 1e-9:
                 runLog.error("REFERENCE COMPARISON ASSEMBLY:")
                 references[0][0].printContents()
                 runLog.error("CURRENT COMPARISON ASSEMBLY:")
