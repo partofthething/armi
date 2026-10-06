@@ -76,6 +76,22 @@ class TestSpatialLocator(unittest.TestCase):
         loc2 = grids.IndexLocation(2, 2, 0, None)
         self.assertEqual(loc1 + loc2, grids.IndexLocation(3, 4, 0, None))
 
+    def test_ltIsConsistent(self):
+        """Ordering locations must be a consistent ordering, so sorting does not depend on the input order."""
+        grid = grids.HexGrid.fromPitch(1.0)
+        a, b = grid[-5, 0, 0], grid[0, 0, 0]
+        self.assertFalse(a < b)
+        self.assertTrue(b < a)
+
+        locs = [grid[i, j, 0] for i in range(-3, 4) for j in range(-3, 4)]
+        for x in locs:
+            for y in locs:
+                self.assertFalse(x < y and y < x)
+
+        expected = sorted(locs)
+        self.assertEqual(sorted(reversed(locs)), expected)
+        self.assertEqual(sorted(locs[::3] + locs[1::3] + locs[2::3]), expected)
+
     def test_multiIndexEq(self):
         """Check multi index locations are only true if they live on the same grid and have the same locations."""
         a = grids.MultiIndexLocation(None)

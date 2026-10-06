@@ -33,6 +33,7 @@ from armi.reactor.flags import Flags
 from armi.settings.fwSettings.globalSettings import CONF_INPUT_HEIGHTS_HOT
 from armi.testing import TESTING_ROOT
 from armi.utils import directoryChangers, textProcessors
+from armi.utils.customExceptions import InputError
 from armi.utils.directoryChangers import TemporaryDirectoryChanger
 from armi.utils.yamlSchema import YamlSchemaError
 
@@ -325,6 +326,51 @@ grids:
 
         self.assertEqual(fa.p.hotChannelFactors, "Default")
         self.assertEqual(fb.p.hotChannelFactors, "Reactor")
+
+    def test_blockAreaConsistencyEveryAssembly(self):
+        """Inconsistent block areas within an assembly are caught, regardless of the assembly order."""
+        blocks = r"""blocks:
+    fuel: &block_fuel
+        fuel:
+            shape: Hexagon
+            material: UZr
+            Tinput: 25.0
+            Thot: 25.0
+            ip: 0.0
+            mult: 1.0
+            op: 10.0
+    big: &block_big
+        fuel:
+            shape: Hexagon
+            material: UZr
+            Tinput: 25.0
+            Thot: 25.0
+            ip: 0.0
+            mult: 1.0
+            op: 20.0
+assemblies:
+"""
+
+        def assem(name, specifier, blockList):
+            return f"""    {name}:
+        specifier: {specifier}
+        blocks: [{", ".join(blockList)}]
+        height: [1.0, 1.0]
+        axial mesh points: [1, 1]
+        xs types: [A, A]
+"""
+
+        good = assem("good", "IC", ["*block_fuel", "*block_fuel"])
+        bad = assem("bad", "OC", ["*block_fuel", "*block_big"])
+        cs = settings.Settings().modified(newSettings={CONF_INPUT_HEIGHTS_HOT: True})
+
+        design = blueprints.Blueprints.load(blocks + good + good.replace("good", "good2").replace("IC", "MC"))
+        design._prepConstruction(cs)
+
+        for assems in (good + bad, bad + good):
+            design = blueprints.Blueprints.load(blocks + assems)
+            with self.assertRaisesRegex(InputError, "different area"):
+                design._prepConstruction(cs)
 
     def test_nuclidesMc2v2(self):
         """Tests that ZR is not expanded to its isotopics for this setting."""

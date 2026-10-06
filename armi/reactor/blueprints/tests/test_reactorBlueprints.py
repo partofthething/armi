@@ -27,6 +27,7 @@ from armi.reactor.excoreStructure import ExcoreStructure
 from armi.reactor.reactors import Core, loadFromCs
 from armi.reactor.spentFuelPool import SpentFuelPool
 from armi.settings.caseSettings import Settings
+from armi.settings.fwSettings.globalSettings import CONF_ACCEPTABLE_BLOCK_AREA_ERROR
 from armi.testing import TESTING_ROOT, mockRunLogs
 
 CORE_BLUEPRINT = """
@@ -151,7 +152,8 @@ class TestReactorBlueprints(unittest.TestCase):
             with open(fn, "w") as f:
                 f.write(SMALL_YAML)
 
-        cs = settings.Settings()
+        # the custom isotopics input exercises isotopics, not geometry, so its blocks have different areas
+        cs = settings.Settings().modified(newSettings={CONF_ACCEPTABLE_BLOCK_AREA_ERROR: 1.0})
         bp = blueprints.Blueprints.load(test_customIsotopics.TestCustomIsotopics.yamlString)
         bp.systemDesigns = self.systemDesigns
         bp.gridDesigns = self.gridDesigns
