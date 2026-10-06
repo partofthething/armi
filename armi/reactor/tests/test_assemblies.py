@@ -17,6 +17,7 @@
 import math
 import os
 import pathlib
+import pickle
 import random
 import unittest
 from unittest.mock import patch
@@ -906,6 +907,14 @@ class TestAssembly(unittest.TestCase):
         ref = ["005-003-000", "005-003-001", "005-003-002"]
         self.assertEqual(cur, ref)
 
+    def test_dump(self):
+        with directoryChangers.TemporaryDirectoryChanger():
+            self.assembly.dump("assem.dump.pkl")
+            with open("assem.dump.pkl", "rb") as f:
+                loaded = pickle.load(f)
+            self.assertEqual(loaded.getName(), self.assembly.getName())
+            self.assertEqual(len(loaded), len(self.assembly))
+
     def test_getParamValuesAtZ(self):
         # single value param
         for b, temp in zip(self.assembly, [80, 85, 90]):
@@ -930,6 +939,9 @@ class TestAssembly(unittest.TestCase):
                 b.p.mgFlux = flux
             self.assertTrue(np.allclose([2.5, 7.0], self.assembly.getParamValuesAtZ("mgFlux", 20.0)))
             self.assertTrue(np.allclose([1.5, 9.0], self.assembly.getParamValuesAtZ("mgFlux", 10.0)))
+            # extending a multiDimensional param beyond the ends uses the bottom/top block values
+            self.assertTrue(np.allclose([1, 10], self.assembly.getParamValuesAtZ("mgFlux", 1.0, fillValue="extend")))
+            self.assertTrue(np.allclose([3, 6], self.assembly.getParamValuesAtZ("mgFlux", 29.0, fillValue="extend")))
             for b in self.assembly:
                 b.p.mgFlux = [0.0] * 2
             self.assertTrue(np.allclose([0.0, 0.0], self.assembly.getParamValuesAtZ("mgFlux", 10.0)))

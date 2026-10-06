@@ -13,6 +13,8 @@
 # limitations under the License.
 """Direct tests of the Excore Structures and Spent Fuel Pools."""
 
+import copy
+import pickle
 from unittest import TestCase
 from unittest.mock import MagicMock
 
@@ -173,3 +175,45 @@ class TestExcoreCollection(TestCase):
 
         self.assertTrue(isinstance(excore["ivs"], ExcoreStructure))
         self.assertTrue(isinstance(excore.ivs, ExcoreStructure))
+
+    def test_addSubclassLikeAttribute(self):
+        sfp = SpentFuelPool("sfp")
+
+        excore = ExcoreCollection()
+        excore.sfp = sfp
+
+        self.assertIs(excore["sfp"], sfp)
+        self.assertIs(excore.sfp, sfp)
+        self.assertNotIn("sfp", excore.__dict__)
+
+    def test_representation(self):
+        excore = ExcoreCollection()
+        excore["sfp"] = SpentFuelPool("sfp")
+        rep = repr(excore)
+        self.assertIn("ExcoreCollection", rep)
+        self.assertIn("sfp", rep)
+
+    def _buildReactorWithSfp(self):
+        r = Reactor("Reactor", None)
+        sfp = SpentFuelPool("Spent Fuel Pool")
+        sfp.spatialGrid = grids.CartesianGrid.fromRectangle(1.0, 1.0)
+        r.add(sfp)
+        self.assertIs(r.excore["sfp"], sfp)
+        return r
+
+    def test_deepcopy(self):
+        r = self._buildReactorWithSfp()
+        r2 = copy.deepcopy(r)
+
+        self.assertIn("sfp", r2.excore)
+        self.assertIsNot(r2.excore["sfp"], r.excore["sfp"])
+        # the copied collection must refer to the copied reactor's child, not a disconnected copy
+        self.assertIs(r2.excore["sfp"], r2.getChildren()[0])
+        self.assertIs(r2.excore["sfp"].parent, r2)
+
+    def test_pickle(self):
+        r = self._buildReactorWithSfp()
+        r2 = pickle.loads(pickle.dumps(r))
+
+        self.assertIn("sfp", r2.excore)
+        self.assertIs(r2.excore["sfp"], r2.getChildren()[0])

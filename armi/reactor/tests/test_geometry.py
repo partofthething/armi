@@ -115,8 +115,7 @@ class TestSymmetryType(unittest.TestCase):
     def test_domainTypeNulls(self):
         self.assertEqual(geometry.DomainType.NULL.label, "")
         self.assertEqual(str(geometry.DomainType.NULL), "")
-        with self.assertRaises(ValueError):
-            geometry.DomainType.NULL.symmetryFactor()
+        self.assertEqual(geometry.DomainType.NULL.symmetryFactor(), 1.0)
 
     def test_checkValidGeomSymmetryCombo(self):
         geomHex = geometry.GeomType.HEX

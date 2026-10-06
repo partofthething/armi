@@ -1242,12 +1242,39 @@ class TestCartesianReactor(TestReactor):
         # Cartesian pitch should have 2 dims since it could be a rectangle that is not square.
         assert_equal(self.r.core.getAssemblyPitch(), [10.0, 16.0])
 
-    def test_getAssembliesInSquareRing(self, exclusions=[2]):
-        expectedAssemsInRing = [1, 0]
+    def test_getAssembliesInSquareRing(self):
+        """Square rings are 1-based, like ``CartesianGrid.getRingPos`` and ``Core.getNumRings``.
+
+        The center location (0, 0) is ring 1, so the single test assembly at (1, 0) is in ring 2.
+        """
+        expectedAssemsInRing = [0, 1]
         actualAssemsInRing = []
         for ring in range(1, self.r.core.getNumRings() + 1):
             actualAssemsInRing.append(len(self.r.core.getAssembliesInSquareOrHexRing(ring)))
         self.assertSequenceEqual(actualAssemsInRing, expectedAssemsInRing)
+        self.assertEqual(len(self.r.core.getAssembliesInSquareOrHexRing(0)), 0)
+
+    def test_getAssembliesInSquareRingNoOverlap(self):
+        """Each assembly is in exactly one square ring, matching ``getRingPos``."""
+        core = self.r.core
+        a0 = core.getFirstAssembly()
+        for i, j in [(0, 0), (0, 1), (1, 1), (2, 1), (0, 2), (3, 2)]:
+            a = copy.deepcopy(a0)
+            a.renumber(self.r.incrementAssemNum())
+            a.spatialLocator = core.spatialGrid[i, j, 0]
+            core.add(a)
+
+        expectedRings = {a: a.spatialLocator.getRingPos()[0] for a in core}
+        self.assertEqual(sorted(set(expectedRings.values())), [1, 2, 3, 4])
+        self.assertEqual(core.getNumRings(), 4)
+
+        foundRings = {}
+        for ring in range(1, core.getNumRings() + 1):
+            for a in core.getAssembliesInSquareOrHexRing(ring):
+                self.assertNotIn(a, foundRings)
+                foundRings[a] = ring
+        self.assertEqual(foundRings, expectedRings)
+        self.assertEqual(len(core.getAssembliesInRing(2)), 3)
 
     def test_getNuclideCategoriesLogging(self):
         """Simplest possible test of the getNuclideCategories method and its logging."""
