@@ -53,6 +53,7 @@ from armi.reactor.components import (
 )
 from armi.reactor.reactors import Reactor
 from armi.testing import TESTING_ROOT, buildSimpleFuelHexBlock, loadTestReactor
+from armi.utils import hexagon
 from armi.utils.units import getTc
 
 
@@ -604,6 +605,47 @@ class TestDerivedShapeGetArea(unittest.TestCase):
         comp = [c for c in b if isinstance(c, DerivedShape)][0]
 
         self.assertAlmostEqual(blockArea - compArea, comp.getComponentArea(Tc=300))
+
+    @staticmethod
+    def _buildExpandingBlock():
+        from armi.reactor.blocks import HexBlock
+
+        b = HexBlock("b", height=10.0)
+        b.add(Circle("fuel", "UZr", Tinput=25.0, Thot=500.0, od=10.0, mult=1.0))
+        b.add(Hexagon("duct", "HT9", Tinput=25.0, Thot=600.0, op=16.0, ip=15.0, mult=1.0))
+        b.add(DerivedShape("coolant", "Sodium", Tinput=25.0, Thot=25.0))
+        return b
+
+    def test_getAreaColdWithExpandedPitch(self):
+        """The cold DerivedShape area must be based on the cold pitch, not the thermally-expanded one."""
+        b = self._buildExpandingBlock()
+        duct = b.getComponent(flags.Flags.DUCT)
+        self.assertGreater(duct.getDimension("op"), duct.getDimension("op", cold=True))
+
+        totalAreaCold = sum(c.getArea(cold=True) for c in b)
+        self.assertAlmostEqual(totalAreaCold, hexagon.area(duct.getDimension("op", cold=True)))
+
+        totalAreaHot = sum(c.getArea() for c in b)
+        self.assertAlmostEqual(totalAreaHot, b.getMaxArea())
+
+    def test_getAreaTempWithExpandedPitch(self):
+        """The DerivedShape area at a temperature must be based on the pitch at that temperature."""
+        b = self._buildExpandingBlock()
+        duct = b.getComponent(flags.Flags.DUCT)
+        Tc = 300.0
+        totalArea = sum(c.getArea(Tc=Tc) for c in b)
+        self.assertAlmostEqual(totalArea, hexagon.area(duct.getDimension("op", Tc=Tc)))
+
+    def test_twoDerivedShapesRaise(self):
+        """A block with more than one DerivedShape must raise a clear error, not recurse forever."""
+        from armi.reactor.blocks import HexBlock
+
+        b = HexBlock("b", height=10.0)
+        b.add(Hexagon("duct", "HT9", Tinput=25.0, Thot=25.0, op=16.0, ip=15.0, mult=1.0))
+        b.add(DerivedShape("coolant", "Sodium", Tinput=25.0, Thot=25.0))
+        b.add(DerivedShape("coolant2", "Sodium", Tinput=25.0, Thot=25.0))
+        with self.assertRaisesRegex(ValueError, "More than one ``DerivedShape``"):
+            b[1].getVolume()
 
 
 class TestComponentSort(unittest.TestCase):

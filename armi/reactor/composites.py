@@ -1899,6 +1899,7 @@ class Composite(ArmiObject):
         We'd like to not have to call setNumberDensity for each nuclide because we don't
         want to call ``getVolumeFractions`` for each nuclide (it's inefficient).
         """
+        numberDensities = dict(numberDensities)
         numberDensities.update({nuc: 0.0 for nuc in self.getNuclides() if nuc not in numberDensities})
         self.updateNumberDensities(numberDensities)
 
@@ -1964,14 +1965,15 @@ class Composite(ArmiObject):
 
     def changeNDensByFactor(self, factor):
         """Change the number density of all nuclides within the object by a multiplicative factor."""
-        densitiesScaled = {nuc: val * factor for nuc, val in self.getNumberDensities().items()}
-        self.setNumberDensities(densitiesScaled)
+        # scale each child individually so that the distribution of nuclides among children is preserved
+        for child in self:
+            child.changeNDensByFactor(factor)
 
-        # Update detailedNDens if it exists (Components only)
+        # Update detailedNDens if it exists on this object
         if self.p.get("detailedNDens", None) is not None:
             self.p.detailedNDens *= factor
 
-        # Update pinNDens if it exists (Components only)
+        # Update pinNDens if it exists on this object
         if self.p.get("pinNDens", None) is not None:
             self.p.pinNDens *= factor
 

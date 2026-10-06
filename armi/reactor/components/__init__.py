@@ -397,7 +397,7 @@ class DerivedShape(UnshapedComponent):
         for sibling in self.parent:
             if sibling is self:
                 continue
-            elif not self and isinstance(sibling, DerivedShape):
+            elif isinstance(sibling, DerivedShape):
                 raise ValueError(f"More than one ``DerivedShape`` component in {self.parent} is not allowed.")
 
             siblingVolume += sibling.getVolume()
@@ -457,6 +457,27 @@ class DerivedShape(UnshapedComponent):
         vol = UnshapedComponent.getVolume(self)
         return vol
 
+    def _getParentMaxArea(self, cold=False, Tc=None):
+        """
+        Get the max area of the parent with its pitch at cold dimensions or at temperature ``Tc``.
+
+        The parent's ``getMaxArea`` is based on the current (hot) pitch, so it is scaled by the
+        squared ratio of the requested pitch to the current pitch of the pitch-defining component.
+        """
+        parentArea = self.parent.getMaxArea()
+        try:
+            _pitch, pitchComp = self.parent.getPitch(returnComp=True)
+            pitchDim = self.parent.PITCH_DIMENSION
+        except (AttributeError, ValueError):
+            # parent has no pitch-defining component, so there is nothing to scale
+            return parentArea
+
+        hotPitch = pitchComp.getDimension(pitchDim)
+        if not hotPitch:
+            return parentArea
+        pitch = pitchComp.getDimension(pitchDim, Tc=Tc, cold=cold)
+        return parentArea * (pitch / hotPitch) ** 2
+
     def getComponentArea(self, cold=False, Tc=None):
         """
         Get the area of this component in cm^2.
@@ -473,14 +494,14 @@ class DerivedShape(UnshapedComponent):
 
         if cold:
             # At cold temp, the DerivedShape has the area of the parent minus the other siblings
-            parentArea = self.parent.getMaxArea()
+            parentArea = self._getParentMaxArea(cold=True)
             # NOTE: Here we assume there is one-and-only-one DerivedShape in each Component
             siblings = sum([c.getArea(cold=True) for c in self.parent if not isinstance(c, DerivedShape)])
             return parentArea - siblings
 
         if Tc is not None:
             # The DerivedShape has the area of the parent minus the other siblings
-            parentArea = self.parent.getMaxArea()
+            parentArea = self._getParentMaxArea(Tc=Tc)
             # NOTE: Here we assume there is one-and-only-one DerivedShape in each Component
             siblings = sum([c.getArea(Tc=Tc) for c in self.parent if not isinstance(c, DerivedShape)])
             return parentArea - siblings

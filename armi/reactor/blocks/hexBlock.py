@@ -138,7 +138,7 @@ class HexBlock(Block):
             "Material",
             self.getAverageTempInC(),
             self.getAverageTempInC(),
-            self._pitchDefiningComponent[1],
+            self.getPitch(),
         )
         hexComponent.setNumberDensities(self.getNumberDensities())
         b.add(hexComponent)
