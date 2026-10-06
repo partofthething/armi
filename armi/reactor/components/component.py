@@ -801,11 +801,16 @@ class Component(composites.Composite, metaclass=ComponentType):
             newNumDens = []
             nucs = self.p.nuclides
             ndens = self.p.numberDensities
-            # build the index once rather than doing an O(n) np.where scan per nuclide
-            nucIndex = {nuc: i for i, nuc in enumerate(nucs.tolist())}
+            # for many nuclides, build an index once rather than doing an O(n) scan per nuclide; for
+            # just a few (e.g. setNumberDensity), building the index costs more than the scans
+            nucIndex = {nuc: i for i, nuc in enumerate(nucs.tolist())} if len(numberDensities) > 4 else None
             for nucName, dens in numberDensities.items():
                 byteName = nucName.encode()
-                i = nucIndex.get(byteName)
+                if nucIndex is None:
+                    found = np.flatnonzero(nucs == byteName)
+                    i = int(found[0]) if found.size else None
+                else:
+                    i = nucIndex.get(byteName)
                 if i is not None:
                     ndens[i] = dens
                 else:
