@@ -19,7 +19,10 @@ import unittest
 from glob import glob
 from shutil import copyfile
 
+import numpy as np
+
 from armi.reactor import parameters
+from armi.reactor.parameters import parameterDefinitions
 from armi.reactor.reactorParameters import makeParametersReadOnly
 from armi.testing import TESTING_ROOT, loadTestReactor
 from armi.utils.directoryChangers import TemporaryDirectoryChanger
@@ -326,6 +329,63 @@ class TestParameter(unittest.TestCase):
         data = mock.getSyncData()
         self.assertEqual(data["n"], 99)
         self.assertEqual(data["nPlus1"], 100)
+
+    def test_eqComparesValues(self):
+        """Two collections with the same assigned params but different values are not equal."""
+
+        class Mock(parameters.ParameterCollection):
+            pDefs = parameters.ParameterDefinitionCollection()
+            with pDefs.createBuilder() as pb:
+                pb.defParam("power", "W", "description", "location", default=0.0)
+                pb.defParam(
+                    "mgFlux",
+                    "n/cm^2/s",
+                    "description",
+                    "location",
+                    default=None,
+                    setter=parameterDefinitions.isNumpyArray("mgFlux"),
+                )
+
+        x = Mock()
+        x.power = 1.0
+        x.mgFlux = np.array([1.0, 2.0, 3.0])
+        # deepcopy assigns a new serialNum, which should not affect equality
+        y = copy.deepcopy(x)
+        self.assertNotEqual(x.serialNum, y.serialNum)
+        self.assertEqual(x, y)
+
+        y.power = 999.0
+        self.assertNotEqual(x, y)
+
+        y.power = 1.0
+        y.mgFlux = np.array([1.0, 2.0, 4.0])
+        self.assertNotEqual(x, y)
+
+        # arrays of different shapes are simply unequal
+        y.mgFlux = np.array([1.0, 2.0])
+        self.assertNotEqual(x, y)
+
+    def test_restoreBackupRetainsReshapedArray(self):
+        """A retained array param that changed shape since the backup is kept, not an error."""
+
+        class Mock(parameters.ParameterCollection):
+            pDefs = parameters.ParameterDefinitionCollection()
+            with pDefs.createBuilder() as pb:
+                pb.defParam(
+                    "mgFlux",
+                    "n/cm^2/s",
+                    "description",
+                    "location",
+                    default=None,
+                    setter=parameterDefinitions.isNumpyArray("mgFlux"),
+                )
+
+        mock = Mock()
+        mock.mgFlux = np.zeros(3)
+        mock.backUp()
+        mock.mgFlux = np.ones(5)
+        mock.restoreBackup({mock.paramDefs["mgFlux"]})
+        np.testing.assert_array_equal(mock.mgFlux, np.ones(5))
 
     def test_cannotDefineParamWithSameName(self):
         with self.assertRaises(parameters.ParameterDefinitionError):

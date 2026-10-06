@@ -355,10 +355,18 @@ class ParameterCollection(metaclass=_ParameterCollectionType):
             return False
 
         for pd in self.paramDefs:
+            if pd.name == "serialNum":
+                # serialNum identifies the object, so it does not make two collections' values different
+                continue
             fieldName = pd.fieldName
             haveValue = (hasattr(self, fieldName), hasattr(other, fieldName))
             if all(haveValue):
-                if getattr(self, fieldName) != getattr(self, fieldName):
+                selfValue = getattr(self, fieldName)
+                otherValue = getattr(other, fieldName)
+                if isinstance(selfValue, np.ndarray) or isinstance(otherValue, np.ndarray):
+                    if not np.array_equal(selfValue, otherValue):
+                        return False
+                elif selfValue != otherValue:
                     return False
             elif any(haveValue):
                 return False
@@ -464,7 +472,7 @@ class ParameterCollection(metaclass=_ParameterCollectionType):
             # correct for global paramDef.assigned assumption
             retainedValue = getattr(self, pd.fieldName)
             if isinstance(retainedValue, np.ndarray) or isinstance(currentValue, np.ndarray):
-                if (retainedValue != currentValue).any():
+                if not np.array_equal(retainedValue, currentValue):
                     setattr(self, pd.fieldName, currentValue)
                     pd.assigned = SINCE_ANYTHING
                     self.assigned = SINCE_ANYTHING
