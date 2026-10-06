@@ -3440,3 +3440,39 @@ class TestMassConservation(unittest.TestCase):
             10,
             "Sum of component mass {0} != total block mass {1}. ".format(tMass, bMass),
         )
+
+
+class TestHexBlockAreaAndHomogenization(unittest.TestCase):
+    @staticmethod
+    def _buildBlock(ductThot):
+        b = blocks.HexBlock("b", height=10.0)
+        b.add(components.Circle("fuel", "UZr", Tinput=25.0, Thot=25.0, od=10.0, mult=1.0))
+        b.add(components.Hexagon("duct", "HT9", Tinput=25.0, Thot=ductThot, op=16.0, ip=15.0, mult=1.0))
+        b.add(components.DerivedShape("coolant", "Sodium", Tinput=25.0, Thot=25.0))
+        return b
+
+    def test_getAreaCachesColdAndHotSeparately(self):
+        """Cold and hot block areas must not be served from the same cache entry."""
+        b = self._buildBlock(ductThot=600.0)
+        hot = b.getArea()
+        cold = b.getArea(cold=True)
+        self.assertNotAlmostEqual(hot, cold)
+
+        # call in the opposite order on a fresh block; the results must be order independent
+        b2 = self._buildBlock(ductThot=600.0)
+        self.assertAlmostEqual(b2.getArea(cold=True), cold)
+        self.assertAlmostEqual(b2.getArea(), hot)
+
+        # the cold area is the area of the as-input pitch
+        self.assertAlmostEqual(cold, hexagon.area(16.0))
+
+    def test_createHomogenizedCopyConservesMassAfterTempChange(self):
+        """The homogenized copy must use the current pitch, not a stale one from before a temperature change."""
+        b = self._buildBlock(ductThot=25.0)
+        b.getComponent(Flags.DUCT).setTemperature(600.0)
+        b.clearCache()
+
+        h = b.createHomogenizedCopy()
+        self.assertAlmostEqual(h.getPitch(), b.getPitch())
+        self.assertAlmostEqual(h.getVolume(), b.getVolume())
+        self.assertAlmostEqual(h.getMass(), b.getMass(), delta=1e-8 * b.getMass())

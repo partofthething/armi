@@ -793,6 +793,41 @@ class TestCompositeTree(unittest.TestCase):
         self.assertAlmostEqual(dens["U235"], u235Dens / 2, delta=1e-6)
         self.assertAlmostEqual(dens["U238"], u238Dens / 2, delta=1e-6)
 
+    @staticmethod
+    def _buildTwoFuelBlock():
+        b = blocks.HexBlock("b", height=10.0)
+        f1 = components.Circle("fuel1", "UZr", Tinput=25.0, Thot=25.0, od=1.0, mult=10.0)
+        f2 = components.Circle("fuel2", "UZr", Tinput=25.0, Thot=25.0, od=1.0, mult=10.0)
+        f2.setNumberDensity("U235", 2 * f1.getNumberDensity("U235"))
+        b.add(f1)
+        b.add(f2)
+        b.add(components.Hexagon("duct", "HT9", Tinput=25.0, Thot=25.0, op=16.0, ip=15.0))
+        b.add(components.DerivedShape("coolant", "Sodium", Tinput=25.0, Thot=25.0))
+        return b, f1, f2
+
+    def test_changeNDensByFactorPreservesChildDistribution(self):
+        """Scaling a composite must scale each child, not homogenize densities across children."""
+        b, f1, f2 = self._buildTwoFuelBlock()
+        coolant = b.getComponent(Flags.COOLANT)
+        f1U235 = f1.getNumberDensity("U235")
+        f2U235 = f2.getNumberDensity("U235")
+        coolantNa = coolant.getNumberDensity("NA23")
+        b.p.detailedNDens = np.array([1.0, 2.0])
+
+        b.changeNDensByFactor(0.5)
+
+        self.assertAlmostEqual(f1.getNumberDensity("U235"), f1U235 / 2)
+        self.assertAlmostEqual(f2.getNumberDensity("U235"), f2U235 / 2)
+        self.assertAlmostEqual(coolant.getNumberDensity("NA23"), coolantNa / 2)
+        self.assertEqual(coolant.getNumberDensity("U235"), 0.0)
+        np.testing.assert_allclose(b.p.detailedNDens, [0.5, 1.0])
+
+    def test_setNumberDensitiesDoesNotMutateInput(self):
+        b, _f1, _f2 = self._buildTwoFuelBlock()
+        ndens = {"U235": 1e-3}
+        b.setNumberDensities(ndens)
+        self.assertEqual(ndens, {"U235": 1e-3})
+
     def test_summing(self):
         a = assemblies.Assembly("dummy")
         a.spatialGrid = grids.AxialGrid.fromNCells(2, armiObject=a)

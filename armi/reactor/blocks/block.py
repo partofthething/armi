@@ -580,8 +580,9 @@ class Block(composites.Composite):
         """
         # this caching requires that you clear the cache every time you adjust anything including
         # temperature and dimensions.
-        area = self._getCached("area")
-        if area:
+        cacheKey = "coldArea" if cold else "area"
+        area = self._getCached(cacheKey)
+        if area is not None:
             return area
 
         a = 0.0
@@ -594,7 +595,7 @@ class Block(composites.Composite):
         # clipped by symmetry lines
         area = fullArea / self.getSymmetryFactor()
 
-        self._setCache("area", area)
+        self._setCache(cacheKey, area)
         return area
 
     def getVolume(self):
