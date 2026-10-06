@@ -791,7 +791,7 @@ class Assembly(composites.Composite):
         if not fName:
             fName = self.getName() + ".dump.pkl"
 
-        with open(fName, "w") as pkl:
+        with open(fName, "wb") as pkl:
             pickle.dump(self, pkl)
 
     def iterBlocks(self, typeSpec=None, exact=False):
@@ -1130,7 +1130,7 @@ class Assembly(composites.Composite):
             if values.ndim == 1:
                 fillValue = values[0], values[-1]
             elif values.ndim == 2:
-                fillValue = values[:, 0], values[:, 1]
+                fillValue = values[:, 0], values[:, -1]
             else:
                 raise Exception(
                     'Unsupported shape ({}) returned from getChildParamValues("{}").'

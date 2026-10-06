@@ -823,11 +823,9 @@ class Core(composites.Composite):
             exclusions = set(exclusions)
             assems.drop(lambda a: a in exclusions)
 
-        # filter based on geomType
-        if self.geomType == geometry.GeomType.CARTESIAN:  # a ring in cartesian is basically a square.
-            assems.select(lambda a: any(xy == ring for xy in abs(a.spatialLocator.indices[:2])))
-        else:
-            assems.select(lambda a: (a.spatialLocator.getRingPos()[0] == ring))
+        # filter based on ring. The grid defines what a ring is: hexagonal rings for hex grids, and square rings
+        # (1-based Chebyshev distance from the center) for Cartesian grids.
+        assems.select(lambda a: (a.spatialLocator.getRingPos()[0] == ring))
 
         # filter based on typeSpec
         if typeSpec:

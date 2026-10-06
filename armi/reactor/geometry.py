@@ -187,7 +187,7 @@ class DomainType(enum.Enum):
             return ""
 
     def symmetryFactor(self) -> float:
-        if self in (self.FULL_CORE, self == self.NULL):
+        if self in (self.FULL_CORE, self.NULL):
             return 1.0
         elif self == self.THIRD_CORE:
             return 3.0

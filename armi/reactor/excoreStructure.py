@@ -125,7 +125,7 @@ class ExcoreCollection(dict):
 
         If the value has an ExcoreStructure type, assume we want to store this in the dictionary.
         """
-        if type(value) is ExcoreStructure:
+        if isinstance(value, ExcoreStructure):
             self.__setitem__(key, value)
         else:
             self.__dict__[key] = value
@@ -142,7 +142,10 @@ class ExcoreCollection(dict):
         """Needed to support pickling and unpickling the Reactor."""
         memo[id(self)] = newE = self.__class__.__new__(self.__class__)
         newE.__setstate__(copy.deepcopy(self.__getstate__(), memo))
+        # the ex-core structures themselves are stored as dict items, not in __dict__
+        for key, val in self.items():
+            dict.__setitem__(newE, copy.deepcopy(key, memo), copy.deepcopy(val, memo))
         return newE
 
     def __repr__(self):
-        return f"<{self.__class__.__name__}: {self.name} id:{id(self)}>"
+        return f"<{self.__class__.__name__}: {list(self.keys())} id:{id(self)}>"
