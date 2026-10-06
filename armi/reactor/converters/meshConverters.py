@@ -173,9 +173,8 @@ class RZThetaReactorMeshConverter(MeshConverter):
                 "Outermost ring of the core {} is not fully filled and will be homogenized with the "
                 "previous ring {}".format(self.radialMesh[-1], self.radialMesh[-2])
             )
-            self.radialMesh.pop(-1)
+            # remove the boundary between the last two bins, merging them into one
             self.radialMesh.pop(-2)
-            self.radialMesh.append(self.radialMesh[-1])
 
     def _checkAxialMeshList(self):
         """Check for errors in the axial mesh coordinates."""
@@ -365,7 +364,7 @@ class RZThetaReactorMeshConverterByRingCompositionAxialFlags(
 def checkLastValueInList(inputList, listName, expectedValue, eps=0.001, adjustLastValue=False):
     """Check that the last value in the list is equal to the expected value within +/- eps."""
     msg = "The last value in {} is {} and should be {}".format(listName, inputList[-1], expectedValue)
-    if not np.isclose(inputList[-1], expectedValue, eps):
+    if not np.isclose(inputList[-1], expectedValue, rtol=0.0, atol=eps):
         if adjustLastValue:
             del inputList[-1]
             inputList.append(expectedValue)

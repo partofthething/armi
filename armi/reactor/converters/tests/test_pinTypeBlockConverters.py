@@ -85,3 +85,18 @@ class TestMassConservation(unittest.TestCase):
 
         adjustSmearDensity(self.b, 0.733, bolBlock=bolBlock)
         self.assertAlmostEqual(0.733, self.b.getSmearDensity(), 8)
+
+    def test_adjustSmearDensityAnnularWithGap(self):
+        """Annular fuel with a fuel-clad gap should still achieve the requested smear density."""
+        clad = self.b.getComponent(Flags.CLAD)
+        fuel = self.b.getComponent(Flags.FUEL)
+        cladID = clad.getDimension("id", cold=True)
+        fuel.setDimension("od", 0.9 * cladID)
+        fuel.setDimension("id", 0.1)
+
+        adjustSmearDensity(self.b, 0.70)
+        self.assertAlmostEqual(0.70, self.b.getSmearDensity(), 8)
+
+        # 0.9**2 = 0.81 is the max achievable smear density with this fuel OD
+        with self.assertRaises(ValueError):
+            adjustSmearDensity(self.b, 0.85)

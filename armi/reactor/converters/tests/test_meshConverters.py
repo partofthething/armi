@@ -131,3 +131,27 @@ class TestRZReactorMeshConverter(unittest.TestCase):
         self.assertListEqual(meshConvert.radialMesh, expectedRadialMesh)
         self.assertListEqual(meshConvert.axialMesh, expectedAxialMesh)
         self.assertListEqual(meshConvert.thetaMesh, expectedThetaMesh)
+
+
+class TestMeshConverterHelpers(unittest.TestCase):
+    def test_combineLastTwoRadialBins(self):
+        meshConvert = meshConverters.RZThetaReactorMeshConverter({})
+        meshConvert.radialMesh = [3, 5, 8, 9, 10]
+        meshConvert._combineLastTwoRadialBins()
+        self.assertListEqual(meshConvert.radialMesh, [3, 5, 8, 10])
+
+        # bins that are not a single ring wide are left alone
+        meshConvert.radialMesh = [3, 5, 8, 10]
+        meshConvert._combineLastTwoRadialBins()
+        self.assertListEqual(meshConvert.radialMesh, [3, 5, 8, 10])
+
+    def test_checkLastValueInList(self):
+        # eps is an absolute tolerance, so 399.7 is not close enough to 400
+        self.assertListEqual(
+            meshConverters.checkLastValueInList([100, 399.7], "test", 400, adjustLastValue=True), [100, 400]
+        )
+        with self.assertRaises(ValueError):
+            meshConverters.checkLastValueInList([100, 399.7], "test", 400)
+
+        # within the absolute tolerance is left unchanged
+        self.assertListEqual(meshConverters.checkLastValueInList([100, 399.9995], "test", 400), [100, 399.9995])

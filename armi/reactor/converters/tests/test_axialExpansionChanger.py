@@ -18,6 +18,7 @@ import collections
 import copy
 import os
 import unittest
+from math import isclose
 from statistics import mean
 from typing import Callable
 
@@ -934,6 +935,7 @@ class TestInputHeightsConsideredHot(unittest.TestCase):
                different height than that of the standard case.
         """
         for aStd, aExp in zip(self.stdAssems, self.testAssems):
+            linkedComps = AssemblyAxialLinkage(aExp).linkedComponents
             self.assertAlmostEqual(
                 aStd.getTotalHeight(),
                 aExp.getTotalHeight(),
@@ -952,6 +954,10 @@ class TestInputHeightsConsideredHot(unittest.TestCase):
                         self.checkColdHeightBlockMass(bStd, bExp, "B10")
                     for cExp in iterSolidComponents(bExp):
                         if cExp.zbottom == bExp.p.zbottom and cExp.ztop == bExp.p.ztop:
+                            if _isLinkedToDifferentArea(cExp, linkedComps):
+                                # mass redistributed between linked components with different areas is conserved
+                                # by adjusting the density, so it is not expected to match the material density
+                                continue
                             matDens = cExp.material.density(Tc=cExp.temperatureInC)
                             compDens = cExp.density()
                             msg = (
@@ -978,6 +984,17 @@ class TestInputHeightsConsideredHot(unittest.TestCase):
         nuclide densities and block heights are thermally expanded.
         """
         self.assertGreater(bExp.getMass(nuclide), bStd.getMass(nuclide))
+
+
+def _isLinkedToDifferentArea(c: Component, linkedComps: dict) -> bool:
+    """Whether a component is axially linked to a component with a different cold area."""
+    link = linkedComps.get(c)
+    if link is None:
+        return False
+    return any(
+        other is not None and not isclose(other.getArea(cold=True), c.getArea(cold=True), rel_tol=1e-9)
+        for other in (link.lower, link.upper)
+    )
 
 
 def checkColdBlockHeight(bStd: HexBlock, bExp: HexBlock, assertType: Callable, strForAssertion: str):

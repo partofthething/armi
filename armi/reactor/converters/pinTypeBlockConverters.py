@@ -70,8 +70,15 @@ def adjustSmearDensity(obj, value, bolBlock=None):
     fuelID = fuel.getDimension("id", cold=True)
 
     if fuelID > 0.0:  # Annular fuel (Adjust fuel ID to get new smear density)
+        # sd = (fuel_od**2 - fuel_id**2) / clad_id**2, so new fuel_id = sqrt(fuel_od**2 - sd * clad_id**2)
         fuelOD = fuel.getDimension("od", cold=True)
-        newID = fuelOD * math.sqrt(1.0 - value)
+        radicand = fuelOD**2 - value * cladID**2
+        if radicand < 0.0:
+            raise ValueError(
+                "Cannot modify smear density of {0} to {1}. The annular fuel OD {2} is too small relative to the "
+                "cladding ID {3} to achieve this smear density.".format(obj, value, fuelOD, cladID)
+            )
+        newID = math.sqrt(radicand)
         fuel.setDimension("id", newID)
     else:  # Slug fuel (Adjust fuel OD to get new smear density)
         newOD = math.sqrt(value * cladID**2)
