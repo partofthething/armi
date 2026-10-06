@@ -472,15 +472,15 @@ class AxialExpansionChanger:
         """
         After component initial mass parameters have been adjusted for expansion,
         recompute block parameters that are derived from children.
+
+        The component parameters already account for the symmetry factor of the block, so they are summed directly.
         """
         paramsToMove = (
             "massHmBOL",
             "molesHmBOL",
         )
         for paramName in paramsToMove:
-            b.p[paramName] = (
-                sum(c.p[paramName] for c in b.iterComponents() if c.p[paramName] is not None) / b.getSymmetryFactor()
-            )
+            b.p[paramName] = sum(c.p[paramName] for c in b.iterComponents() if c.p[paramName] is not None)
 
     def recalculateBurnup(self, b: "Block"):
         """Post axial-expansion, heavy metal may have moved between blocks; recalculate burnup.

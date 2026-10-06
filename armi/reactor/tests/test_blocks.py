@@ -35,6 +35,7 @@ from armi.physics.neutronics import GAMMA, NEUTRON
 from armi.reactor import blocks, blueprints, components, geometry, grids
 from armi.reactor.blueprints.tests.test_blockBlueprints import FULL_BP
 from armi.reactor.components import basicShapes, complexShapes
+from armi.reactor.converters.axialExpansionChanger import AxialExpansionChanger
 from armi.reactor.flags import Flags
 from armi.reactor.grids.cartesian import CartesianGrid
 from armi.testing import (
@@ -1273,7 +1274,10 @@ class TestBlock(unittest.TestCase):
                 self.assertAlmostEqual(c.p.massHmBOL, hmMass, places=12)
                 self.assertAlmostEqual(
                     c.p.molesHmBOL,
-                    sum(ndens for ndens in hmNDens.values()) / units.MOLES_PER_CC_TO_ATOMS_PER_BARN_CM * c.getVolume(),
+                    sum(ndens for ndens in hmNDens.values())
+                    / units.MOLES_PER_CC_TO_ATOMS_PER_BARN_CM
+                    * c.getVolume()
+                    / sf,
                     places=12,
                 )
                 self.assertAlmostEqual(c.p.enrichmentBOL, c.getFissileMassEnrich(), places=12)
@@ -1283,6 +1287,20 @@ class TestBlock(unittest.TestCase):
                 self.assertEqual(c.p.enrichmentBOL, 0.0)
 
         self.assertAlmostEqual(self.block.p.massHmBOL, totalHMMass)
+
+    @patch.object(blocks.HexBlock, "getSymmetryFactor")
+    def test_recomputeBlockMassParamsWithSymmetry(self, mock_sf):
+        """Recomputing block BOL params from components should not change them for blocks on symmetry lines."""
+        mock_sf.return_value = 3
+        self.block.completeInitialLoading()
+        massHmBOL = self.block.p.massHmBOL
+        molesHmBOL = self.block.p.molesHmBOL
+        self.assertGreater(massHmBOL, 0.0)
+
+        AxialExpansionChanger()._recomputeBlockMassParams(self.block)
+
+        self.assertAlmostEqual(self.block.p.massHmBOL / massHmBOL, 1.0, places=12)
+        self.assertAlmostEqual(self.block.p.molesHmBOL / molesHmBOL, 1.0, places=12)
         self.assertAlmostEqual(self.block.p.enrichmentBOL, self.block.getFissileMassEnrich(), places=12)
 
     def test_add(self):
