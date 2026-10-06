@@ -15,14 +15,13 @@
 
 import copy
 import io
-import logging
 import os
 import unittest
 
 import voluptuous as vol
 from ruamel.yaml import YAML
 
-from armi import configure, getApp, getPluginManagerOrFail, plugins, settings
+from armi import configure, getApp, getPluginManagerOrFail, plugins, runLog, settings
 from armi.physics.fuelCycle import FuelHandlerPlugin
 from armi.physics.fuelCycle.settings import CONF_SHUFFLE_LOGIC
 from armi.physics.neutronics.settings import CONF_NEUTRONICS_KERNEL
@@ -338,7 +337,7 @@ assemblyRotationAlgorithm: buReducingAssemblyRotatoin
 
         # set the logger once, and check it is was set
         cs.setModuleVerbosities()
-        logger = logging.getLogger("test_setModuleVerbosities")
+        logger = runLog.getLogger("test_setModuleVerbosities")
         self.assertEqual(logger.level, 10)
 
         # try to set the logger again, without forcing it

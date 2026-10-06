@@ -1278,17 +1278,9 @@ class TestCartesianReactor(TestReactor):
 
     def test_getNuclideCategoriesLogging(self):
         """Simplest possible test of the getNuclideCategories method and its logging."""
-        log = mockRunLogs.BufferLog()
-
-        # this strange namespace-stomping is used to the test to set the logger in reactors.Core
-        from armi.reactor import reactors
-
-        reactors.runLog = runLog
-        runLog.LOG = log
-
-        # run the actual method in question
-        self.r.core.getNuclideCategories()
-        messages = log.getStdout()
+        with mockRunLogs.BufferLog() as log:
+            self.r.core.getNuclideCategories()
+            messages = log.getStdout()
 
         self.assertIn("Nuclide categorization", messages)
         self.assertIn("Structure", messages)

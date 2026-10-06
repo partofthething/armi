@@ -14,8 +14,10 @@
 """Tests of the runLog tooling with MPI."""
 
 import logging
+import tempfile
 import unittest
 from logging import handlers
+from unittest import mock
 
 from armi import context, runLog
 
@@ -23,15 +25,16 @@ from armi import context, runLog
 class TestRunLoggerMPI(unittest.TestCase):
     @unittest.skipIf(context.MPI_SIZE <= 1, "Parallel test only")
     def test_handlerType(self):
-        if context.MPI_RANK == 0:
-            self.rl = runLog.RunLogger("ARMI|things_and_stuff|0")
-        else:
-            self.rl = runLog.RunLogger("ARMI|things_and_stuff|1")
+        log = runLog._RunLog(context.MPI_RANK, logger=logging.Logger("test_handlerType"))
+        with tempfile.TemporaryDirectory() as logDir, mock.patch.object(runLog, "_LOG_DIR", logDir):
+            log.startLog("things_and_stuff")
+            handlerType = type(log.logger.handlers[0])
+            log.close()
 
         # check the handler type
         if context.MPI_RANK == 0:
-            self.assertEqual(type(self.rl.handlers[0]), logging.StreamHandler)
+            self.assertEqual(handlerType, runLog._StdoutHandler)
         elif context.PLATFORM == context.Platform.WINDOWS:
-            self.assertEqual(type(self.rl.handlers[0]), logging.FileHandler)
+            self.assertEqual(handlerType, logging.FileHandler)
         else:
-            self.assertEqual(type(self.rl.handlers[0]), handlers.WatchedFileHandler)
+            self.assertEqual(handlerType, handlers.WatchedFileHandler)

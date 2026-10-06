@@ -453,7 +453,7 @@ class Settings:
         Parameters
         ----------
         force : bool, optional
-            If force is False, don't overwrite the log verbosities if the logger already exists.
+            If force is False, don't overwrite the verbosity of a logger that already has a level set.
             IF this needs to be used mid-run, force=False is safer.
 
         Notes
@@ -465,10 +465,9 @@ class Settings:
 
         # set, but don't use, the module-level loggers
         for mName, mLvl in verbs.items():
+            log = runLog.getLogger(mName)
             # by default, we init module-level logging, not change it mid-run
-            if force or mName not in logging.Logger.manager.loggerDict:
+            if force or log.level == logging.NOTSET:
                 # cast verbosity to integer
                 lvl = int(mLvl) if mLvl.isnumeric() else runLog.LOG.logLevels[mLvl][0]
-
-                log = logging.getLogger(mName)
-                log.setVerbosity(lvl)
+                log.setLevel(lvl)

@@ -17,6 +17,7 @@ were called. These should only be used in testing.
 """
 
 import io
+import logging
 import sys
 from logging import LogRecord
 
@@ -30,21 +31,25 @@ class BufferLog(runLog._RunLog):
     """
 
     def __init__(self, *args, **kwargs):
+        # use a logger of our own, so that nothing done to this log changes the real ARMI logger
+        kwargs.setdefault("logger", logging.Logger("BufferLog"))
         super(BufferLog, self).__init__(*args, **kwargs)
         self.originalLog = None
+        self.originalErr = None
         self._outputStream = ""
         self._errStream = io.StringIO()
-        self._deduplication = runLog.DeduplicationFilter()
-        sys.stderr = self._errStream
         self.setVerbosity(0)
 
     def __enter__(self):
         self.originalLog = runLog.LOG
         runLog.LOG = self
+        self.originalErr = sys.stderr
+        sys.stderr = self._errStream
         return self
 
     def __exit__(self, exception_type, exception_value, traceback):
         runLog.LOG = self.originalLog
+        sys.stderr = self.originalErr
 
     def log(self, msgType, msg, single=False, label=None):
         """
@@ -66,16 +71,12 @@ class BufferLog(runLog._RunLog):
         record = LogRecord("BufferLog", msgVerbosity, "pathname", 1, msg, {}, ())
         record.label = label
         record.single = single
-        if single and not self._deduplication.filter(record):
+        if single and not self.getDuplicatesFilter().filter(record):
             return
 
         # Do the actual logging, but add that custom indenting first
         msg = self.logLevels[msgType][1] + str(msg) + "\n"
         self._outputStream += msg
-
-    def clearSingleLogs(self):
-        """Reset the single warned list so we get messages again."""
-        self._deduplication.singleMessageLabels.clear()
 
     def getStdout(self):
         return self._outputStream
