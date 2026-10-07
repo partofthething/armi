@@ -234,7 +234,7 @@ The user has the power to set the various places (namespaces) that materials mig
 in specific places in the Python venv, or even in specific directories in the file system. The setting that controls all
 this is ``materialNamespaceOrder``.
 
-Here is the simplest example::
+Here is the simplest example:
 
 .. code-block:: yaml
 
@@ -249,7 +249,7 @@ example above is common for unit tests.
 
 Custom YAML Materials
 """""""""""""""""""""
-Perhaps your team has a directory of YAML material files::
+Perhaps your team has a directory of YAML material files:
 
 .. code-block:: yaml
 
@@ -263,7 +263,7 @@ ARMI cannot guarantee that a file on your laptop will never move.
 
 Another way to include a directory of YAML material files is to store them right in your Python venv. This is
 a good way to enforce that if, as long as your simulation runs from a correct Python venv, you have the correct
-materials. For this we use a custom ``venv`` syntax::
+materials. For this we use a custom ``venv`` syntax:
 
 .. code-block:: yaml
 
@@ -272,7 +272,7 @@ materials. For this we use a custom ``venv`` syntax::
 
 Custom Python Materials
 """""""""""""""""""""""
-Perhaps there is just one material a user would like to amend for their simulation. For example::
+Perhaps there is just one material a user would like to amend for their simulation. For example:
 
 .. code-block:: python
 
@@ -303,7 +303,7 @@ To use this material in a simulation:
 ARMI Application Materials
 """"""""""""""""""""""""""
 If you want to ignore the ARMI materials, in favor of a set of only materials your team has created for an ARMI
-Application, you could do something like this::
+Application, you could do something like this:
 
 .. code-block:: yaml
 
@@ -314,7 +314,7 @@ The above works by importing all the subclasses of ``armi.materials.Material`` t
 ``myArmiApp/materials.py`` if the path you identify is a file, or ``myArmiApp/materials/__init__.py`` if the path you
 identify is a module. There are a few common ways people do this. You can, obviously, define all your material classes
 in the file you specify. But that is often cumbersome and ugly if you have a lot of materials. So you can also just
-import all the material classes you define into the file, that looks something like this::
+import all the material classes you define into the file, that looks something like this:
 
 .. code-block:: python
 
@@ -326,7 +326,7 @@ import all the material classes you define into the file, that looks something l
     from myArmiApp.materials.water import LiquidWater, SteamWater
 
 While the above is the gold standard and easy to accomplish, ARMI comes with a helper method to save you having to write
-all of that (and worse, having to maintain all of that)::
+all of that (and worse, having to maintain all of that):
 
 .. code-block:: python
 
@@ -341,7 +341,7 @@ above, where ``material: myArmiApp.materials:AcmeSteel`` would be required.
 Combining Multiple Custom Materials Sources
 """""""""""""""""""""""""""""""""""""""""""
 Of course, you can mix and match the above options. In the wild, we have seen people create complicated lists for their
-simulations that something like this::
+simulations that something like this:
 
 .. code-block:: yaml
 
@@ -357,7 +357,7 @@ that would be in ``myArmiApp.materials.prod``).
 
 Finally, while the setting ``materialNamespaceOrder`` is probably the best option for configuring a simulation, people
 are often running ARMI scripts or unit tests and want to do their configuration in Python code. The function you need to
-call do do that is ``armi.materials.setMaterialNamespaceOrder``::
+call do do that is ``armi.materials.setMaterialNamespaceOrder``:
 
 .. code-block:: python
 
@@ -365,7 +365,7 @@ call do do that is ``armi.materials.setMaterialNamespaceOrder``::
     import armi
     armi.materials.setMaterialNamespaceOrder(["armi.materials"])
 
-Or, duplicating the complex YAML example above::
+Or, duplicating the complex YAML example above:
 
 .. code-block:: python
 
@@ -576,7 +576,7 @@ The cascade then proceeds as normal from the destination location. For example
            - cascade: ["outer fuel", "010-046", "009-045", "Delete"]
              fuelEnrichment: [0, 0.12, 0.14, 0.15, 0]
 
-A cascade that loads an assembly from the SFP may look like::
+A cascade that loads an assembly from the SFP may look like:
 
 ..  code:: yaml
 

@@ -330,8 +330,10 @@ exclude_patterns = [
     "gallery/**/*.zip",
     "gallery/analysis/index.html",
     "gallery/framework/index.html",
+    "gallery-src",  # sphinx-gallery reads its sources itself and writes the pages into gallery/
     "logs",
     "Thumbs.db",
+    "user/grids.rst",  # only rendered by being included in user/inputs.rst
 ]
 
 rst_epilog = r"""
