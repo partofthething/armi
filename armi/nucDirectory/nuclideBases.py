@@ -1293,11 +1293,12 @@ class NuclideBases:
 
     def fromName(self, name):
         """Return a nuclide from its name."""
-        matches = [nn for nn in self.instances if nn.name == name]
-        if len(matches) != 1:
-            raise Exception(f"Too many or too few ({len(matches)}) matches for {name}")
+        # byName also holds aliases (e.g. AM242 -> AM242M), so require the nuclide to really have this name
+        nuc = self.byName.get(name)
+        if nuc is None or nuc.name != name:
+            raise Exception(f"No nuclide is named {name}")
 
-        return matches[0]
+        return nuc
 
     def isMonoIsotopicElement(self, name):
         """Return true if this is the only naturally occurring isotope of its element."""
