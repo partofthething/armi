@@ -160,13 +160,15 @@ class ParameterCollection(metaclass=_ParameterCollectionType):
         self._hist = {}
 
         # Initialize all parameter values to **something**. This is crucial to getting
-        # the split-key dictionary memory savings in lieu of using __slots__!
+        # the split-key dictionary memory savings in lieu of using __slots__! These are all
+        # known fields on a fresh, writeable collection, so skip the checks in __setattr__.
+        instanceDict = self.__dict__
         if _state is None:
             for pDef in self.paramDefs:
-                setattr(self, pDef.fieldName, pDef.default)
+                instanceDict[pDef.fieldName] = pDef.default
         else:
             for key, val in zip(self._allFields, _state):
-                self.__dict__[key] = val
+                instanceDict[key] = val
 
         self.assigned = NEVER
 
@@ -310,9 +312,13 @@ class ParameterCollection(metaclass=_ParameterCollectionType):
         return data
 
     def __setstate__(self, state):
-        # does the reverse of __getstate__
+        # does the reverse of __getstate__. Every key is in _allFields, so the only check from __setattr__ that can
+        # fail is the read-only one.
+        if getattr(self, "readOnly", False):
+            raise RuntimeError("Cannot set the state of a read-only Parameter Collection.")
+        instanceDict = self.__dict__
         for key, val in zip(self._allFields, state):
-            setattr(self, key, val)
+            instanceDict[key] = val
 
     def __getitem__(self, name):
         try:
