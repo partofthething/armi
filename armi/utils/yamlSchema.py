@@ -86,7 +86,8 @@ import io
 import threading
 
 from ruamel.yaml import YAML
-from ruamel.yaml.comments import CommentedMap, CommentedSeq, merge_attrib
+from ruamel.yaml.comments import Anchor, Comment, CommentedMap, CommentedSeq, Format, LineCol, Tag, merge_attrib
+from ruamel.yaml.mergevalue import MergeValue
 from ruamel.yaml.scalarstring import LiteralScalarString, ScalarString
 
 # ARMI writes every YAML file it produces in one house style, and normalizes input to it on the way
@@ -251,6 +252,72 @@ def _location(data, key=None):
         return f"line {data.lc.line + 1}, column {data.lc.col + 1}"
     except AttributeError:
         return None
+
+
+def _copyDoc(data, memo=None, shareAnchored=False):
+    """Deep-copy parsed ruamel.yaml data, keeping anchors and merge keys pointing where they should.
+
+    ``copy.deepcopy`` cannot be trusted with this data. ruamel.yaml's ``CommentedMap`` copies its
+    anchor and its merge list without the memo (``copy_attributes`` hands the memo to ``getattr``
+    as a default instead of to ``deepcopy``), so a copied ``<<: *fuel_1`` points at a second,
+    disconnected copy of ``fuel_1`` that carries the ``&fuel_1`` anchor too. The dump then defines
+    the anchor twice, and edits to the real ``fuel_1`` never reach the merge.
+
+    Parameters
+    ----------
+    data : object
+        The parsed data to copy.
+    memo : dict, optional
+        The ``deepcopy`` memo, so nodes shared within the data stay shared in the copy.
+    shareAnchored : bool, optional
+        Reference anchored nodes below ``data`` instead of copying them. An anchored node is a
+        definition that something else owns, so a node being split off from the one it was aliasing
+        should go on pointing at it rather than define it a second time.
+    """
+    return _copyNode(data, {} if memo is None else memo, shareAnchored, isRoot=True)
+
+
+def _copyNode(data, memo, shareAnchored, isRoot=False):
+    if id(data) in memo:
+        return memo[id(data)]
+
+    if shareAnchored and not isRoot:
+        anchor = getattr(data, "yaml_anchor", lambda: None)()
+        if anchor is not None and anchor.value:
+            return data
+
+    if isinstance(data, CommentedMap):
+        new = data.__class__()
+        memo[id(data)] = new
+        # only the keys this mapping defines itself; merged ones come back with the merge below
+        for key, value in data.non_merged_items():
+            new[key] = _copyNode(value, memo, shareAnchored)
+
+        merge = getattr(data, merge_attrib, None)
+        if merge:
+            new.add_yaml_merge(_copyNode(merge, memo, shareAnchored))
+    elif isinstance(data, CommentedSeq):
+        new = data.__class__()
+        memo[id(data)] = new
+        for value in data:
+            new.append(_copyNode(value, memo, shareAnchored))
+    elif isinstance(data, MergeValue):
+        new = MergeValue()
+        memo[id(data)] = new
+        new.value = [_copyNode(m, memo, shareAnchored) for m in data.value]
+        if data.sequence is not None:
+            new.sequence = _copyNode(data.sequence, memo, shareAnchored)
+        new.merge_pos = data.merge_pos
+
+        return new
+    else:
+        return copy.deepcopy(data, memo)
+
+    for attrib in (Comment.attrib, Format.attrib, LineCol.attrib, Anchor.attrib, Tag.attrib):
+        if hasattr(data, attrib):
+            setattr(new, attrib, copy.deepcopy(getattr(data, attrib), memo))
+
+    return new
 
 
 class Field:
@@ -535,7 +602,7 @@ class YamlObject(metaclass=_SchemaMeta):
         new = self.__class__.__new__(self.__class__)
         memo[id(self)] = new
         for name, value in self.__dict__.items():
-            new.__dict__[name] = copy.deepcopy(value, memo)
+            new.__dict__[name] = _copyDoc(value, memo)
 
         return new
 
@@ -689,7 +756,7 @@ class YamlObject(metaclass=_SchemaMeta):
         # pulled into a second block, say. While it still agrees with that node, it is written as
         # the alias it came in as. The moment it disagrees, it needs a node of its own, or the edit
         # would silently rewrite the original too.
-        candidate = copy.deepcopy(self._doc)
+        candidate = _copyDoc(self._doc, shareAnchored=True)
         self._writeFields(candidate)
         if candidate == self._doc:
             return self._doc
@@ -860,7 +927,7 @@ class Sequence:
         new = self.__class__.__new__(self.__class__)
         memo[id(self)] = new
         for name, value in self.__dict__.items():
-            new.__dict__[name] = copy.deepcopy(value, memo)
+            new.__dict__[name] = _copyDoc(value, memo)
 
         return new
 
@@ -1017,7 +1084,7 @@ class _MappingBase(YamlObject):
 
     def toData(self):
         if self._doc is not None and self._sharedDoc:
-            candidate = copy.deepcopy(self._doc)
+            candidate = _copyDoc(self._doc, shareAnchored=True)
             self._writeFields(candidate)
             self._writeItems(candidate)
             if candidate == self._doc:

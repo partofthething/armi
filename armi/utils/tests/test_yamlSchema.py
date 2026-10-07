@@ -14,6 +14,7 @@
 
 """Tests for the document-backed YAML-to-object mapping."""
 
+import copy
 import io
 import unittest
 import warnings
@@ -256,6 +257,31 @@ sfp:
 
         self.assertIn("<<: *shared", dumped)
         self.assertEqual(reloaded["core"].geom, "hex")
+        self.assertEqual(reloaded["sfp"].geom, "cartesian")
+
+    def test_mergeKeysSurviveACopy(self):
+        """A copied merge key still points at the copied anchor, rather than defining it again."""
+        source = "core: &shared\n    geom: cartesian\nsfp:\n    <<: *shared\n    lattice map: x\n"
+        grids = copy.deepcopy(Grids.load(source))
+        grids["core"].geom = "hex"
+        dumped, reloaded = self._dumpAndReload(grids)
+
+        self.assertEqual(dumped.count("&shared"), 1)
+        self.assertIn("<<: *shared", dumped)
+        self.assertEqual(reloaded["core"].geom, "hex")
+        # sfp is its own design: editing core must not reach it through the merge
+        self.assertEqual(reloaded["sfp"].geom, "cartesian")
+
+    def test_splitAliasKeepsItsMergeKey(self):
+        """A node split off from the one it aliased goes on merging the original, not a copy of it."""
+        source = "base: &base\n    geom: cartesian\ncore: &core\n    <<: *base\n    lattice map: x\nsfp: *core\n"
+        grids = Grids.load(source)
+        grids["sfp"].latticeMap = "y"
+        dumped, reloaded = self._dumpAndReload(grids)
+
+        self.assertEqual(dumped.count("&base"), 1)
+        self.assertEqual(reloaded["core"].latticeMap, "x")
+        self.assertEqual(reloaded["sfp"].latticeMap, "y")
         self.assertEqual(reloaded["sfp"].geom, "cartesian")
 
     def test_loadDoesNotMutateOnDump(self):
