@@ -15,7 +15,6 @@
 
 import os
 import shutil
-import time
 import unittest
 
 from armi.utils import outputCache
@@ -80,7 +79,6 @@ class TestOutputCache(unittest.TestCase):
             f.write("hi there")
 
         self.assertTrue(os.path.exists(outDir))
-        time.sleep(2)
         outputCache.deleteCache(outDir)
         self.assertFalse(os.path.exists(outDir))
 

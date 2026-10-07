@@ -160,9 +160,12 @@ def reduceTestReactorRings(r, cs, maxNumRings):
     elif maxNumRings <= 1:
         raise ValueError("The test reactor must have multiple rings.")
 
-    # reducing the size of the test reactor, by removing the outer rings
+    # reducing the size of the test reactor, by removing the outer rings, then processing the loading once at the end
     for ring in range(maxRings, maxNumRings, -1):
-        r.core.removeAssembliesInRing(ring, cs)
+        for a in r.core.getAssembliesInRing(ring):
+            r.core.removeAssembly(a)
+
+    r.core.processLoading(cs)
 
 
 def getEmptyHexReactor():
