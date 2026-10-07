@@ -85,4 +85,13 @@ def _getFuelPerformanceBlockParams():
             default=0.0,
         )
 
+        pb.defParam(
+            "pinGasPressure",
+            units=units.PASCALS,
+            description="Gas pressure inside the block's fuel pins at operating temperature: the fill gas plus any "
+            "fission gas or other gas the fuel has released into the gap and plenum. A pin's gas space runs its full "
+            "length, so every block of a pin carries the same value.",
+            location=ParamLocation.MAX,
+        )
+
     return pDefs

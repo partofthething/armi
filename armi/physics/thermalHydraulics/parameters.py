@@ -91,6 +91,48 @@ def _getBlockParams():
             location=ParamLocation.AVERAGE,
         )
 
+        pb.defParam(
+            "THcoolantTempAvg",
+            units=units.DEGC,
+            description="Volume-average coolant temperature of the block.",
+            location=ParamLocation.AVERAGE,
+        )
+
+        pb.defParam(
+            "THcoolantDensity",
+            units=f"{units.GRAMS}/{units.CM}^3",
+            description="Volume-average coolant density of the block.",
+            location=ParamLocation.AVERAGE,
+        )
+
+        pb.defParam(
+            "THfuelTempAvg",
+            units=units.DEGC,
+            description="Volume-average fuel temperature of the block's fuel pins.",
+            location=ParamLocation.AVERAGE,
+        )
+
+        pb.defParam(
+            "THfuelTempPeak",
+            units=units.DEGC,
+            description="Highest fuel temperature in the block: the centerline of its hottest fuel pin.",
+            location=ParamLocation.MAX,
+        )
+
+        pb.defParam(
+            "THfuelTempSurface",
+            units=units.DEGC,
+            description="Average fuel surface temperature of the block's fuel pins.",
+            location=ParamLocation.AVERAGE,
+        )
+
+        pb.defParam(
+            "THcladTempAvg",
+            units=units.DEGC,
+            description="Volume-average cladding temperature of the block's fuel pins.",
+            location=ParamLocation.AVERAGE,
+        )
+
     with pDefs.createBuilder(default=None, categories=["thermal hydraulics", "mongoose"], saveToDB=True) as pb:
         pb.defParam(
             "THcornTemp",
