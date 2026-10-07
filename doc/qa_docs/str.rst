@@ -222,9 +222,9 @@ Python Version and Packages
 +++++++++++++++++++++++++++
 
 .. exec::
-    from pip._internal.operations.freeze import freeze
+    from importlib.metadata import distributions
 
-    return "\n\n".join(list(freeze()))
+    return "\n\n".join(sorted({f"{d.metadata['Name']}=={d.version}" for d in distributions()}, key=str.lower))
 
 
 .. _ref_armi_software_date:
@@ -240,7 +240,7 @@ The software tested and date of testing are below:
     from datetime import datetime
     from armi import __version__ as armiVersion
 
-    armiCommit = str(os.environ["GIT_COMMIT"]).strip()
+    armiCommit = os.environ.get("GIT_COMMIT", "").strip()
 
     txt = [f"Date: {datetime.now().strftime('%Y-%m-%d')}"]
     txt.append(f"Python version: {sys.version}")

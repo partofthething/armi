@@ -1,4 +1,9 @@
-.. This is just here as a placeholder to avoid 404s after we moved gallery up one. 
-   A variety of sphinx extensions may support redirects but none seem mature yet.
+:orphan:
 
-.. include:: /gallery/index.rst
+.. This is just here as a placeholder to avoid 404s after we moved gallery up one.
+
+.. raw:: html
+
+    <meta http-equiv="refresh" content="0; url=../../gallery/index.html">
+
+The gallery has moved to :doc:`/gallery/index`.
