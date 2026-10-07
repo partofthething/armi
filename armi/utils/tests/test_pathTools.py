@@ -15,7 +15,6 @@
 """Unit tests for pathTools."""
 
 import os
-import time
 import types
 import unittest
 
@@ -150,11 +149,13 @@ class TestPathTools(unittest.TestCase):
             with open(path1, "w") as f1:
                 f1.write("test1")
 
-            time.sleep(1)
-
             path2 = "test_isFilePathNewer2.txt"
             with open(path2, "w") as f2:
                 f2.write("test2")
+
+            # make path2 a second newer than path1, rather than sleeping
+            mtime1 = os.stat(path1).st_mtime
+            os.utime(path2, (mtime1 + 1, mtime1 + 1))
 
             self.assertFalse(pathTools.isFilePathNewer(path1, path2))
             self.assertTrue(pathTools.isFilePathNewer(path2, path1))

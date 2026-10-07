@@ -39,7 +39,7 @@ import unittest
 from contextlib import contextmanager
 from typing import TYPE_CHECKING, Any, Iterable, Union
 
-from armi.testing import loadTestReactor
+from armi.testing import loadTestReactor, reduceTestReactorRings
 
 if TYPE_CHECKING:
     from armi.reactor import Core, parameters
@@ -154,6 +154,8 @@ class SymmetryFactorTester:
 
     def __init__(self, armiSymmetryTester: BasicArmiSymmetryTestHelper):
         self.o, self.r = loadTestReactor(customSettings=armiSymmetryTester.customSettings)
+        # auditing symmetry intent only needs the partial center assembly, so a small core makes expansion much cheaper
+        reduceTestReactorRings(self.r, self.o.cs, 3)
         self.core = self.r.core
         # there is exactly one assembly with 3-symmetry in the test core
         self.partialAssembly = [a for a in self.r.core.getAssemblies() if a.getSymmetryFactor() == 3][0]
