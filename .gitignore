@@ -22,13 +22,17 @@ doc/.apidocs
 doc/_build
 doc/anl-afci-177
 doc/gallery
+doc/sg_execution_times.rst
 doc/gallery-src/framework/*.yaml
 doc/tutorials/anl-afci-177*
 doc/tutorials/case-suite
+doc/tutorials/data_model.ipynb
+doc/tutorials/param_sweep.ipynb
+doc/tutorials/pin-rotations.ipynb
 doc/user/tutorials
 htmlcov/
 monkeytype.*
-test_results.*
+test_results*
 wheelhouse
 
 # No workspace crumbs
