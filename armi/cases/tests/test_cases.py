@@ -520,6 +520,7 @@ class TestCaseSuiteComparison(unittest.TestCase):
                 self.assertEqual(list(b.keys()), ["inputs"])
                 self.assertEqual(sorted(b["inputs"].keys()), ["blueprints", "settings"])
                 b.close()
+                db.close()
 
                 # append to lists
                 dbs.append(db)

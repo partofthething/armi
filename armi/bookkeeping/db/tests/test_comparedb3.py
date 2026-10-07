@@ -118,6 +118,7 @@ class TestCompareDB3(unittest.TestCase):
             self.assertEqual(list(b.keys()), ["inputs"])
             self.assertEqual(sorted(b["inputs"].keys()), ["blueprints", "settings"])
             b.close()
+            db.close()
 
             # append to lists
             dbs.append(db)
@@ -168,6 +169,7 @@ class TestCompareDB3(unittest.TestCase):
             self.assertIn("c00n00", dbKeys)
             self.assertEqual(sorted(b["inputs"].keys()), ["blueprints", "settings"])
             b.close()
+            db.close()
 
             # append to lists
             dbs.append(db)

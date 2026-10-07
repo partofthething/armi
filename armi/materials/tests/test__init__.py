@@ -47,7 +47,7 @@ class TestMaterialsInit(unittest.TestCase):
         self.assertEqual(materials.Water, materials.water.Water)
 
 
-class TestMaterial(Material):
+class DummyMaterial(Material):
     pass
 
 
@@ -56,7 +56,7 @@ class PluginMaterialA(plugins.ArmiPlugin):
     @plugins.HOOKIMPL
     def setMaterialBaseClass(materialType):
         """Set material base class."""
-        return TestMaterial
+        return DummyMaterial
 
 
 class TestMaterialBaseClassHook(unittest.TestCase):
@@ -79,7 +79,7 @@ class TestMaterialBaseClassHook(unittest.TestCase):
         """Verify materials are created with the right base class."""
         materials.setMaterialNamespaceOrder(["dir:" + _RESOURCES_DIR])
         mat = materials.createMaterialByName("Air")
-        self.assertIsInstance(mat, TestMaterial)
+        self.assertIsInstance(mat, DummyMaterial)
 
 
 class TestYamlMaterial(unittest.TestCase):
