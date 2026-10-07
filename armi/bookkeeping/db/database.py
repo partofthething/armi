@@ -31,7 +31,6 @@ Refer to :py:mod:`armi.bookkeeping.db` for information about versioning.
 
 import collections
 import copy
-import gc
 import io
 import itertools
 import os
@@ -663,9 +662,6 @@ class Database:
         self.h5db.close()
         self.h5db = None
         safeCopy(self._fullPath, self._fileName)
-
-        # Garbage collect so we don't have multiple databases hanging around in memory
-        gc.collect()
 
         # Reload the file in append mode and continue on our merry way
         self.h5db = h5py.File(self._fullPath, "r+")
