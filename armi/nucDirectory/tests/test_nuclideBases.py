@@ -47,6 +47,15 @@ class TestNuclideBases(unittest.TestCase):
         with self.assertRaises(KeyError):
             self.nuclideBases.byName["Cat"]
 
+    def test_fromName(self):
+        self.assertIs(self.nuclideBases.fromName("U235"), self.nuclideBases.byName["U235"])
+        self.assertIs(self.nuclideBases.fromName("AM242G"), self.nuclideBases.byName["AM242G"])
+        with self.assertRaises(Exception):
+            self.nuclideBases.fromName("Cat")
+        # AM242 is only an alias in byName; no nuclide carries that name
+        with self.assertRaises(Exception):
+            self.nuclideBases.fromName("AM242")
+
     def test_nucBase_AllAbundancesAddToOne(self):
         for zz in range(1, 102):
             nuclides = self.nuclideBases.elements.byZ[zz].nuclides
