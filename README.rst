@@ -73,6 +73,18 @@ The ARMI tests are meant to be run using `pytest <https://docs.pytest.org/en/8.0
     $ pip install -e ".[test]"
     $ pytest -n 4 armi
 
+To build the HTML documentation locally, install the ``docs`` extra (plus `pandoc <https://pandoc.org/>`_ and
+`Graphviz <https://graphviz.org/>`_ from your system package manager), inject placeholder test results, and run Sphinx
+from the ``doc`` folder::
+
+    $ uv sync --extra test --extra docs
+    $ uv run python doc/skip_str.py
+    $ cd doc
+    $ uv run make html
+
+The result lands in ``doc/_build/html/index.html``. See ``doc/developer/documenting.rst`` for building the full
+version with real test reports.
+
 From here, we recommend going through a few of the gallery examples and tutorials in the documentation to start
 touring the features and capabilities and then move on to the User Manual.
 
