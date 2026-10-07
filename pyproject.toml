@@ -85,6 +85,7 @@ docs = [
     "nbsphinx>=0.9.6", # Parses Jupyter notebooks
     "pandoc", # Must be in the path (to convert file formats)
     "pylint", # Generates UML diagrams
+    "pytest", # autodoc imports the test modules, which document the tests the STR traces
     "pypdf", # Generating a single PDF file for the Sphinx documentation
     "setuptools",  # needed for conf.py tooling
     "sphinx-gallery>=0.13.0", # Builds an HTML version of a Python script and puts it into a gallery
