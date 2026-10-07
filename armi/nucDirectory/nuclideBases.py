@@ -93,6 +93,7 @@ data, moving it out of the global scope, making it part of the reactor data mode
 Settings. Pardon the mess during this transition.
 """
 
+import functools
 import os
 
 import numpy as np
@@ -977,6 +978,13 @@ def imposeBurnChain(burnChainStream):
     nuclideBases.imposeBurnChain(burnChainStream)
 
 
+@functools.cache
+def _readMCCNuclidesFile(mccNuclidesFile):
+    """Parse an MCC nuclides file. It is only read, so each file is parsed once per process."""
+    with open(mccNuclidesFile, "r") as f:
+        return YAML(typ="safe").load(f)
+
+
 def factory():
     """Pass through to NuclideBases.factory() for the global NuclideBases object."""
     global nuclideBases
@@ -1503,10 +1511,7 @@ class NuclideBases:
             read, and the global dictionaries ``byMcc2Id`` ``byMcc3IdEndfVII0`` and ``byMcc3IdEndfVII1`` are populated
             with the nuclide bases keyed by their corresponding ID for each code.
         """
-        with open(mccNuclidesFile, "r") as f:
-            yaml = YAML(typ="rt")
-            nuclides = yaml.load(f)
-
+        nuclides = _readMCCNuclidesFile(mccNuclidesFile)
         for n in nuclides:
             nb = self.byName[n]
             mcc2id = nuclides[n]["ENDF/B-V.2"]
