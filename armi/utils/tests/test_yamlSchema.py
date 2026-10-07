@@ -16,6 +16,7 @@
 
 import io
 import unittest
+import warnings
 
 from armi.utils.yamlSchema import (
     WIDTH,
@@ -238,6 +239,24 @@ sfp:
         grids = Grids.load(source)
         self.assertEqual(grids["sfp"].geom, "cartesian")
         self.assertIn("<<: *shared", Grids.dump(grids))
+
+    def _dumpAndReload(self, grids):
+        """Dump, failing on any warning (a reused anchor warns), and read the result back."""
+        with warnings.catch_warnings():
+            warnings.simplefilter("error")
+            dumped = Grids.dump(grids)
+            return dumped, Grids.load(dumped)
+
+    def test_editingAMergedMappingDoesNotLeak(self):
+        """Editing a mapping must not change the ones that merge it but kept their own value."""
+        source = "core: &shared\n    geom: cartesian\nsfp:\n    <<: *shared\n    lattice map: x\n"
+        grids = Grids.load(source)
+        grids["core"].geom = "hex"
+        dumped, reloaded = self._dumpAndReload(grids)
+
+        self.assertIn("<<: *shared", dumped)
+        self.assertEqual(reloaded["core"].geom, "hex")
+        self.assertEqual(reloaded["sfp"].geom, "cartesian")
 
     def test_loadDoesNotMutateOnDump(self):
         """Dumping twice must give the same answer, i.e. dump must not consume the document."""

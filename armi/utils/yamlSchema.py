@@ -86,7 +86,7 @@ import io
 import threading
 
 from ruamel.yaml import YAML
-from ruamel.yaml.comments import CommentedMap, CommentedSeq
+from ruamel.yaml.comments import CommentedMap, CommentedSeq, merge_attrib
 from ruamel.yaml.scalarstring import LiteralScalarString, ScalarString
 
 # ARMI writes every YAML file it produces in one house style, and normalizes input to it on the way
@@ -787,15 +787,31 @@ def _writeInto(doc, key, value):
     """
     if isinstance(value, (YamlObject, Sequence)):
         rendered = value.toData()
-        if doc.get(key, None) is not rendered:
+        if _readBack(doc, key) is not rendered:
             doc[key] = rendered
         return
 
     rendered = _writeValue(value)
-    if key in doc and _sameScalar(doc[key], rendered):
+    if key in doc and _sameScalar(_readBack(doc, key), rendered):
         return
 
     doc[key] = rendered
+
+
+def _readBack(doc, key):
+    """What ``doc[key]`` will read as once the document is written out and loaded again.
+
+    For a key that comes in through a merge (``<<: *base``), that is whatever the merged mapping
+    holds *by then*. ruamel.yaml copies merged values in at load and never refreshes them, so after
+    ``base`` is edited, ``doc[key]`` still reports the old value -- and comparing against it would
+    let an edit to ``base`` leak into every mapping that merges it.
+    """
+    if isinstance(doc, CommentedMap) and key in doc and key not in doc._ok:
+        for source in getattr(doc, merge_attrib, ()):
+            if key in source:
+                return _readBack(source, key)
+
+    return doc.get(key, None)
 
 
 def _sameScalar(docValue, value):
