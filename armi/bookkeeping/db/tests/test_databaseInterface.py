@@ -501,7 +501,6 @@ class TestDatabaseReading(unittest.TestCase):
         o.interfaces = [i for i in o.interfaces if isinstance(i, (DatabaseInterface))]
         dbi = o.getInterface("database")
         dbi.enabled(True)
-        dbi.initDB()  # Main Interface normally does this
 
         # update a few parameters
         def writeFlux(cycle, node):
