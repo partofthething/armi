@@ -248,7 +248,7 @@ class AssemblyBlueprint(YamlObject):
     def _createBlock(self, cs, blueprint, bDesign, axialIndex):
         """Create a block based on the block design and the axial index."""
         meshPoints = self.axialMeshPoints[axialIndex]
-        height = self.height[axialIndex]
+        height = float(self.height[axialIndex])
         xsType = self.xsTypes[axialIndex]
 
         materialInput = {}

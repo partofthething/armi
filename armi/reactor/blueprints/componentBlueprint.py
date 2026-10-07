@@ -307,6 +307,10 @@ class ComponentBlueprint(YamlObject):
             while isinstance(value, ComponentDimension):
                 value = value.value
 
+            if isinstance(value, float):
+                # the YAML parser hands us its own float subclass, which is slower to copy, pickle, and do math with
+                value = float(value)
+
             kwargs[attr.name] = value
 
         return kwargs
