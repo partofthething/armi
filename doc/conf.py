@@ -65,6 +65,7 @@ APIDOC_REL = ".apidocs"
 SOURCE_DIR = os.path.join("..", "armi")
 STATIC_DIR = ".static"
 _TUTORIAL_FILES = [fName for fName in bookkeepingTests.TUTORIAL_FILES if "ipynb" not in fName]
+_TUTORIAL_NOTEBOOKS = sorted(pathlib.Path(context.ROOT, "tests", "tutorials").glob("*.ipynb"))
 
 
 class PatchedPythonDomain(PythonDomain):
@@ -177,9 +178,9 @@ class PyReverse(Directive):
             for opt, val in self.options.items():
                 if opt in ("filename",):
                     continue
-                new_content.append("    :{}: {}\n".format(opt, val))
+                new_content.append("    :{}: {}".format(opt, val))
 
-            new_content.append("\n")
+            new_content.append("")
 
             for line in self.content:
                 new_content.append("    " + line)
@@ -226,10 +227,12 @@ def setup(app):
     if not os.path.exists(dataDir):
         os.mkdir(dataDir)
 
-    # Copy resources needed to build the tutorial notebooks. nbsphinx_link needs the working directory for running the
-    # notebooks to be the directory of the link itself.
+    # Copy resources needed to build the tutorial notebooks. nbsphinx runs each notebook from its own directory, so the
+    # notebooks that live with the tests are copied next to the other tutorials.
     for path in _TUTORIAL_FILES:
         safeCopy(path, dataDir)
+    for path in _TUTORIAL_NOTEBOOKS:
+        safeCopy(path, "tutorials")
 
 
 # If extensions (or modules to document with autodoc) are in another directory, add these directories to sys.path here.
@@ -242,7 +245,6 @@ sys.path.insert(0, os.path.abspath(".."))
 # (named 'sphinx.ext.*') or your custom ones.
 extensions = [
     "nbsphinx",
-    "nbsphinx_link",
     "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
     "sphinx.ext.doctest",
@@ -360,7 +362,6 @@ html_logo = os.path.join(STATIC_DIR, "armiicon_24x24.ico")
 
 # Theme options are theme-specific and customize the look and feel of a theme further.
 html_theme_options = {
-    "display_version": True,
     "logo_only": False,
     "prev_next_buttons_location": "bottom",
     "style_external_links": True,
@@ -480,28 +481,36 @@ if sys.platform.startswith("win"):
     image_converter_args = ["convert"]
 
 # sphinx-needs settings
-needs_statuses = [
-    dict(name=None, description="No status yet; not in any reviews"),
-    dict(
-        name="preliminary",
-        description="Requirement that will have its wording reviewed and/or does not have implementation/testing yet.",
-    ),
-    dict(
-        name="accepted",
-        description="Requirement that either has completed or will undergo TP-ENG-PROC-0013 Appendix D Part 1 review.",
-    ),
-]
+needs_fields = {
+    # Requirements with no status yet have not been in any reviews.
+    "status": {
+        "nullable": True,
+        "schema": {
+            "type": "string",
+            "enum": [
+                # Requirement that will have its wording reviewed and/or does not have implementation/testing yet.
+                "preliminary",
+                # Requirement that either has completed or will undergo TP-ENG-PROC-0013 Appendix D Part 1 review.
+                "accepted",
+            ],
+        },
+    },
+    "acceptance_criteria": {"nullable": True},
+    "basis": {"nullable": True},
+    "subtype": {"nullable": True},
+    # Defaults for test tags
+    "layout": {"predicates": [("type=='test'", "test_layout")]},
+    "result": {
+        "nullable": True,
+        "parse_dynamic_functions": True,
+        "predicates": [("type=='test'", "[[get_test_result()]]")],
+    },
+}
 
-needs_extra_options = [
-    "acceptance_criteria",
-    "basis",
-    "subtype",
-]
-
-needs_extra_links = [
-    dict(option="tests", incoming="testing", outgoing="requirements"),
-    dict(option="implements", incoming="implementations", outgoing="requirements"),
-]
+needs_links = {
+    "tests": dict(incoming="testing", outgoing="requirements"),
+    "implements": dict(incoming="implementations", outgoing="requirements"),
+}
 
 needs_layouts = {
     "test_layout": {
@@ -531,11 +540,5 @@ needs_layouts = {
     },
 }
 
-needs_global_options = {
-    # Defaults for test tags
-    "layout": ("test_layout", "type=='test'"),
-    "result": ("[[get_test_result()]]", "type=='test'"),
-}
-
 # Formats need roles (reference to a req in text) as just the req ID
-needs_role_need_template = "{id}"
+needs_role_need_template = "{{ id }}"
