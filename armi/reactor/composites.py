@@ -795,18 +795,20 @@ class ArmiObject(metaclass=CompositeModelType):
             raise TypeError(f"nucSpec={nucSpec} is an invalid specifier. It is a {type(nucSpec)}")
 
         # expand elementals if appropriate.
+        nucsHere = set(allNuclidesHere)
+        bySymbol = None
         convertedNucNames = []
         for nucName in nuclideNames:
-            if nucName in allNuclidesHere:
+            if nucName in nucsHere:
                 convertedNucNames.append(nucName)
                 continue
+            if bySymbol is None:
+                bySymbol = self.nuclideBases.elements.bySymbol
             try:
                 # Need all nuclide bases, not just natural isotopics because, e.g. PU
                 # has no natural isotopics!
                 nucs = [
-                    nb.name
-                    for nb in self.nuclideBases.elements.bySymbol[nucName].nuclides
-                    if not isinstance(nb, nuclideBases.NaturalNuclideBase)
+                    nb.name for nb in bySymbol[nucName].nuclides if not isinstance(nb, nuclideBases.NaturalNuclideBase)
                 ]
                 convertedNucNames.extend(nucs)
             except KeyError:
