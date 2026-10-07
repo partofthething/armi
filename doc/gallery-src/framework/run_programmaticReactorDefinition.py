@@ -159,6 +159,7 @@ def buildBlocks(components):
     reflector.name = "reflector"
     reflector["coolant"] = components["coolant"]
     reflector["duct"] = components["duct"]
+    reflector["intercoolant"] = components["intercoolant"]
     blocks[reflector.name] = reflector
 
     return blocks
