@@ -565,13 +565,14 @@ class HexBlock(Block):
             c.p.pinIndices = None
         ijGetter = operator.attrgetter("i", "j")
         allIJ: tuple[tuple[int, int]] = tuple(map(ijGetter, locations))
+        allIJToIndex: dict[tuple[int, int], int] = {ij: index for index, ij in enumerate(allIJ)}
         # Flags for components that we want to set this parameter
         # Usually things are linked to one of these "important" flags, like
         # a cladding component having linked dimensions to a fuel component
         primaryFlags = (Flags.FUEL, Flags.CONTROL, Flags.SHIELD)
         withPinIndices: list[components.Component] = []
         for c in self.iterChildrenWithFlags(primaryFlags):
-            if self._setPinIndices(c, ijGetter, allIJ):
+            if self._setPinIndices(c, ijGetter, allIJToIndex):
                 withPinIndices.append(c)
         # Iterate over every other thing on the grid and make sure
         # 1) it share a lattice site with something that has pin indices, or
@@ -582,12 +583,14 @@ class HexBlock(Block):
             # Does anything with pin indices share this lattice site?
             if any(other.spatialLocator == c.spatialLocator for other in withPinIndices):
                 continue
-            if self._setPinIndices(c, ijGetter, allIJ):
+            if self._setPinIndices(c, ijGetter, allIJToIndex):
                 withPinIndices.append(c)
 
     @staticmethod
     def _setPinIndices(
-        c: components.Component, ijGetter: Callable[[grids.IndexLocation], tuple[int, int]], allIJ: tuple[int, int]
+        c: components.Component,
+        ijGetter: Callable[[grids.IndexLocation], tuple[int, int]],
+        allIJToIndex: dict[tuple[int, int], int],
     ):
         localLocations = c.spatialLocator
         if isinstance(localLocations, grids.MultiIndexLocation):
@@ -599,7 +602,11 @@ class HexBlock(Block):
             localIJ = [ijGetter(localLocations)]
         else:
             return False
-        localIndices = list(map(allIJ.index, localIJ))
+        localIndices = []
+        for ij in localIJ:
+            if ij not in allIJToIndex:
+                raise ValueError(f"Pin location ({ij[0]}, {ij[1]}) is not found on the block's pin grid")
+            localIndices.append(allIJToIndex[ij])
         c.p.pinIndices = localIndices
         return True
 
