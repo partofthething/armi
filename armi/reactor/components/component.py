@@ -1068,8 +1068,8 @@ class Component(composites.Composite, metaclass=ComponentType):
         -------
         Thermal expansion factor as a percentage (1.0 + dLL), where dLL is the linear expansion factor.
         """
-        if isinstance(self.material, (material.Fluid, custom.Custom)):
-            return 1.0  # No thermal expansion of fluids or custom materials
+        if isinstance(self.material, (material.Fluid, custom.Custom)) or not self.material.thermallyExpands:
+            return 1.0  # No thermal expansion of fluids, custom materials or fixed-dimension materials
 
         if T0 is None:
             T0 = self.inputTemperatureInC

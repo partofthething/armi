@@ -910,6 +910,23 @@ class TestComponentExpansion(unittest.TestCase):
     def test_HT9Expansion(self):
         self.runExpansionTests(mat="HT9", isotope="FE")
 
+    def test_fixedDimensionMaterial(self):
+        """A material without an expansion model raises when hot, unless it says it never expands."""
+
+        class NoModel(Material):
+            pass
+
+        class FixedDimensions(Material):
+            thermallyExpands = False
+
+        withoutModel = Circle("circle", NoModel(), self.tCold, self.tHot, self.coldOuterDiameter)
+        with self.assertRaises(RuntimeError):
+            withoutModel.getThermalExpansionFactor()
+
+        fixed = Circle("circle", FixedDimensions(), self.tCold, self.tHot, self.coldOuterDiameter)
+        self.assertEqual(fixed.getThermalExpansionFactor(), 1.0)
+        self.assertEqual(fixed.getDimension("od"), self.coldOuterDiameter)
+
     def test_UZrExpansion(self):
         self.runExpansionTests(mat="UZr", isotope="U235")
 
