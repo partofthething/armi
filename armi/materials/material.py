@@ -92,6 +92,11 @@ class Material(MatPropsMaterial):
     """Dictionary of valid temperatures over which the property models are valid in the format
     'Property Name': ((Temperature_Lower_Limit, Temperature_Upper_Limit), Temperature_Units)"""
 
+    thermallyExpands = True
+    """Whether components of this material change dimensions with temperature. A material that deliberately
+    keeps its input dimensions at every temperature (a benchmark's fixed geometry, say) sets this False, so that
+    its zero expansion is not mistaken for a missing expansion model."""
+
     def __init__(self, yamlPath=None, updateMassFracs=True):
         global _YAML_MATERIALS
         if yamlPath:
