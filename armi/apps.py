@@ -77,6 +77,7 @@ class App:
     def __initNewPlugins(self):
         from armi import bookkeeping, cli, reactor
         from armi.physics import (
+            economics,
             fuelCycle,
             fuelPerformance,
             neutronics,
@@ -88,6 +89,7 @@ class App:
         for plugin in (
             cli.EntryPointsPlugin,
             bookkeeping.BookkeepingPlugin,
+            economics.EconomicsPlugin,
             fuelCycle.FuelHandlerPlugin,
             fuelPerformance.FuelPerformancePlugin,
             neutronics.NeutronicsPlugin,
