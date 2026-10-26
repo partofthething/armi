@@ -225,7 +225,8 @@ class FuelLevelizedCost:
 
     fuelCost: FuelCost
     cycles: list[levelized.Cycle]
-    electricPowerMW: float
+    thermalPowerMW: float
+    thermalEfficiency: float
     discountRate: float
     reloadFraction: float = 1.0
 
@@ -234,10 +235,31 @@ class FuelLevelizedCost:
         return cls(
             fuelCost,
             levelized.cyclesFromSettings(cs),
-            cs["power"] / 1e6 * cs[econSettings.CONF_ECON_THERMAL_EFFICIENCY],
+            cs["power"] / 1e6,
+            cs[econSettings.CONF_ECON_THERMAL_EFFICIENCY],
             cs[econSettings.CONF_ECON_DISCOUNT_RATE],
             cs[econSettings.CONF_ECON_RELOAD_FRACTION],
         )
+
+    @property
+    def electricPowerMW(self) -> float:
+        """Net electric power at full power."""
+        return self.thermalPowerMW * self.thermalEfficiency
+
+    @property
+    def years(self) -> float:
+        """Calendar years over all of the cycles."""
+        return sum(c.length for c in self.cycles)
+
+    @property
+    def capacityFactor(self) -> float:
+        """Energy made over the energy at full power for the whole time, over all of the cycles."""
+        return sum(c.length * c.capacityFactor for c in self.cycles) / self.years
+
+    @property
+    def fullPowerYears(self) -> float:
+        """Effective full power years over all of the cycles."""
+        return self.years * self.capacityFactor
 
     @property
     def purchases(self) -> list[tuple[float, float]]:

@@ -29,7 +29,9 @@ class EconomicsInterface(interfaces.Interface):
         if self.cs[econSettings.CONF_ECON_FUEL_COST_REPORT]:
             from armi.physics.economics import report
 
-            path = report.writeFuelCostReport(self.levelizedCost, f"{self.cs.caseTitle}-fuel-cost.pdf")
+            path = report.writeFuelCostReport(
+                self.levelizedCost, f"{self.cs.caseTitle}-fuel-cost.pdf", title=self.cs.caseTitle
+            )
             runLog.info(f"Wrote the fuel cost report to {path}")
 
 
