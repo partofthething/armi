@@ -67,7 +67,18 @@ def summarize(levelizedCost: fuelCost.FuelLevelizedCost) -> str:
             cost.total / 1e6,
         ]
     )
-    headers = ["Form", "wt% U-235", "kgHM", "Ore kgU", "kg-SWU", "Ore $M", "Conv. $M", "SWU $M", "Fab. $M", "Total $M"]
+    headers = [
+        "Form",
+        "wt% U-235",
+        "kgHM",
+        "Nat. U kgU",
+        "kg-SWU",
+        "Nat. U $M",
+        "Conv. $M",
+        "SWU $M",
+        "Fab. $M",
+        "Total $M",
+    ]
     cycles = levelizedCost.cycles
     return "\n".join(
         [
@@ -75,8 +86,9 @@ def summarize(levelizedCost: fuelCost.FuelLevelizedCost) -> str:
             tabulate.tabulate(rows, headers=headers, floatFmt=".2f"),
             f"Overnight cost of the initial core: ${cost.total / 1e6:,.2f}M "
             f"(${cost.total / cost.heavyMetal:,.0f}/kgHM, tails assay {100 * cost.unitCosts.tailsAssay:.3f} wt%)",
-            f"Levelized fuel cost: ${levelizedCost.lcoe:.2f}/MWh at a {100 * levelizedCost.discountRate:.1f}% "
-            f"discount rate (${levelizedCost.undiscountedLcoe:.2f}/MWh undiscounted) over {len(cycles)} cycle(s), "
-            f"{sum(c.length for c in cycles):.2f} years at {levelizedCost.electricPowerMW:.1f} MWe",
+            levelizedCost.describeLcoe(),
+            f"Over {len(cycles)} cycle(s), {sum(c.length for c in cycles):.2f} years at "
+            f"{levelizedCost.electricPowerMW:.1f} MWe",
+            f"Prices: {cost.unitCosts.describe()}",
         ]
     )

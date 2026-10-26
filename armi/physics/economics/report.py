@@ -9,13 +9,6 @@ from armi.physics.economics import fuelCost
 #: One color per cost category, in a fixed order.
 CATEGORY_COLORS = dict(zip(fuelCost.COST_CATEGORIES, ("#2a78d6", "#eb6834", "#1baf7a", "#eda100")))
 
-CATEGORY_LABELS = {
-    "ore": "Ore (U3O8)",
-    "conversion": "Conversion",
-    "enrichment": "Enrichment",
-    "fabrication": "Fabrication",
-}
-
 TEXT = "#0b0b0b"
 MUTED = "#52514e"
 GRID = "#e4e3df"
@@ -57,14 +50,14 @@ def _summaryPage(levelizedCost):
         f"Overnight cost of the initial core: ${cost.total / 1e6:,.2f}M",
         f"{cost.heavyMetal:,.0f} kg heavy metal, ${cost.total / cost.heavyMetal:,.0f}/kgHM",
         f"{cost.oreUranium:,.0f} kg natural uranium, {cost.swu:,.0f} kg-SWU",
-        f"Levelized fuel cost: ${levelizedCost.lcoe:.2f}/MWh at {100 * levelizedCost.discountRate:.1f}% "
-        f"(${levelizedCost.undiscountedLcoe:.2f}/MWh undiscounted)",
+        *levelizedCost.describeLcoe().splitlines(),
         f"{len(levelizedCost.cycles)} cycle(s) over {sum(c.length for c in levelizedCost.cycles):.2f} years at "
         f"{levelizedCost.electricPowerMW:.1f} MWe, reloading {levelizedCost.reloadFraction:.0%} of the core per cycle",
     ]
+    lines += ["", *cost.unitCosts.describe().splitlines()]
     fig.text(0.08, 0.935, "\n".join(lines), va="top", linespacing=1.6)
 
-    ax = fig.add_axes([0.24, 0.55, 0.68, 0.22])
+    ax = fig.add_axes([0.24, 0.45, 0.68, 0.2])
     labels = [_groupLabel(g.group) for g in cost.groups]
     left = np.zeros(len(cost.groups))
     for cat in fuelCost.COST_CATEGORIES:
@@ -74,7 +67,7 @@ def _summaryPage(levelizedCost):
             values,
             left=left,
             color=CATEGORY_COLORS[cat],
-            label=CATEGORY_LABELS[cat],
+            label=fuelCost.CATEGORY_LABELS[cat],
             height=0.6,
             edgecolor="white",
             linewidth=1,
@@ -85,7 +78,7 @@ def _summaryPage(levelizedCost):
     ax.invert_yaxis()
     ax.grid(axis="y", visible=False)
     ax.set_xlabel("Cost, $M")
-    fig.text(0.08, 0.835, "By fuel group", fontweight="bold")
+    fig.text(0.08, 0.72, "By fuel group", fontweight="bold")
     ax.legend(ncols=4, loc="lower left", bbox_to_anchor=(-0.24, 1.08), frameon=False)
     ax.set_xlim(right=left.max() * 1.15)
 
@@ -110,8 +103,8 @@ def _summaryPage(levelizedCost):
             f"{cost.total / 1e6:,.2f}",
         ]
     )
-    columns = ["Group", "kgHM", "Ore kgU", "kg-SWU", "Ore $M", "Conv. $M", "SWU $M", "Fab. $M", "Total $M"]
-    tableAx = fig.add_axes([0.08, 0.08, 0.84, 0.38])
+    columns = ["Group", "kgHM", "Nat. U kgU", "kg-SWU", "Nat. U $M", "Conv. $M", "SWU $M", "Fab. $M", "Total $M"]
+    tableAx = fig.add_axes([0.08, 0.04, 0.84, 0.32])
     tableAx.axis("off")
     tableAx.set_title("Breakdown", loc="left", fontweight="bold")
     table = tableAx.table(
@@ -130,18 +123,6 @@ def _summaryPage(levelizedCost):
         if row == 0 or row == len(rows):
             cell.set_text_props(fontweight="bold")
 
-    u = cost.unitCosts
-    fabrication = ", ".join(f"{form} ${price:,.0f}/kgHM" for form, price in u.fabricationPerKgHM.items())
-    fig.text(
-        0.08,
-        0.04,
-        f"Prices: ore ${u.orePerLbU3O8:.0f}/lb U3O8, conversion ${u.conversionPerKgU:.0f}/kgU "
-        f"({100 * u.conversionLoss:.1f}% loss), enrichment ${u.swu:.0f}/SWU, feed {100 * u.feedAssay:.3f} wt%, "
-        f"tails {100 * u.tailsAssay:.3f} wt%.\nFabrication: {fabrication}.",
-        color=MUTED,
-        fontsize=8,
-        va="bottom",
-    )
     return fig
 
 
@@ -168,7 +149,7 @@ def _unitCostPage(cost):
         lower = np.zeros_like(assays)
         for cat, upper in zip(fuelCost.COST_CATEGORIES, stacked):
             ax.fill_between(
-                100 * assays, lower, upper, color=CATEGORY_COLORS[cat], label=CATEGORY_LABELS[cat], linewidth=0
+                100 * assays, lower, upper, color=CATEGORY_COLORS[cat], label=fuelCost.CATEGORY_LABELS[cat], linewidth=0
             )
             lower = upper
         for g in (g for g in cost.groups if g.group.form == form):

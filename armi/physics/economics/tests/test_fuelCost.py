@@ -54,6 +54,11 @@ class TestFuelCost(unittest.TestCase):
         self.assertGreater(levelized.lcoe, levelized.undiscountedLcoe)
         self.assertIn("Overnight cost", economicsInterface.summarize(levelized))
 
+        byCategory = levelized.lcoeByCategory()
+        self.assertAlmostEqual(sum(byCategory.values()), levelized.lcoe)
+        self.assertAlmostEqual(sum(levelized.lcoeByCategory(discounted=False).values()), levelized.undiscountedLcoe)
+        self.assertIn("/SWU", levelized.fuelCost.unitCosts.describe())
+
     def test_interfaceAndReport(self):
         interface = self.o.getInterface("economics")
         self.assertIsNotNone(interface)

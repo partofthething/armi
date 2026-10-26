@@ -24,6 +24,13 @@ ASSAY_DECIMALS = 5
 
 COST_CATEGORIES = ("ore", "conversion", "enrichment", "fabrication")
 
+CATEGORY_LABELS = {
+    "ore": "Natural uranium (U3O8)",
+    "conversion": "Conversion",
+    "enrichment": "Enrichment (SWU)",
+    "fabrication": "Fabrication",
+}
+
 
 @dataclass(frozen=True)
 class UnitCosts:
@@ -57,6 +64,17 @@ class UnitCosts:
     def orePerKgU(self) -> float:
         """Natural uranium as U3O8, per kg of uranium."""
         return enrichment.feedCostPerKgU(self.orePerLbU3O8)
+
+    def describe(self) -> str:
+        """Return the prices and assays as text."""
+        fabrication = ", ".join(f"{form} ${price:,.0f}/kgHM" for form, price in self.fabricationPerKgHM.items())
+        return (
+            f"Natural uranium ${self.orePerLbU3O8:.0f}/lb U3O8 (${self.orePerKgU:.0f}/kgU), "
+            f"conversion ${self.conversionPerKgU:.0f}/kgU ({100 * self.conversionLoss:.1f}% loss)\n"
+            f"Enrichment ${self.swu:.0f}/SWU, "
+            f"feed {100 * self.feedAssay:.3f} wt%, tails {100 * self.tailsAssay:.3f} wt%\n"
+            f"Fabrication: {fabrication}"
+        )
 
     @property
     def feedPerKgU(self) -> float:
@@ -243,3 +261,16 @@ class FuelLevelizedCost:
     def undiscountedLcoe(self) -> float:
         """Fuel bought over electricity made, $/MWh, with no discounting."""
         return levelized.levelizedCost(self.purchases, self.generation, 0.0)
+
+    def lcoeByCategory(self, discounted: bool = True) -> dict[str, float]:
+        """Levelized fuel cost, $/MWh, split by cost category (every reload costs in the same proportions)."""
+        lcoe = self.lcoe if discounted else self.undiscountedLcoe
+        return {cat: lcoe * cost / self.fuelCost.total for cat, cost in self.fuelCost.byCategory().items()}
+
+    def describeLcoe(self) -> str:
+        """Return the levelized fuel cost and its split by category as text."""
+        parts = " + ".join(f"{CATEGORY_LABELS[cat]} ${value:.2f}" for cat, value in self.lcoeByCategory().items())
+        return (
+            f"Levelized fuel cost: ${self.lcoe:.2f}/MWh at a {100 * self.discountRate:.1f}% discount rate "
+            f"(${self.undiscountedLcoe:.2f}/MWh undiscounted)\n  = {parts}"
+        )
