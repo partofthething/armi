@@ -1,6 +1,6 @@
-*************************
-ARMI 2.0.0 (unreleased)
-*************************
+*******************************************
+Release 2.0.0 of this fork (unreleased)
+*******************************************
 
 .. important:: This is a release of an independent fork, not a TerraPower release. It is not affiliated with,
    supported by, or endorsed by TerraPower, LLC, which has not reviewed or approved any of the changes below. ARMI is a

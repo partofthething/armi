@@ -1,5 +1,5 @@
-SCR for ARMI 2.0.0
-==================
+SCR for release 2.0.0 of this fork
+==================================
 
 This is a listing of all the Software Change Request (SCR) changes in the ARMI repository, as part of the current release.
 
