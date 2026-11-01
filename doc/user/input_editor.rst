@@ -81,7 +81,9 @@ Blocks
 The cross section is drawn to scale from the component definitions, at cold input dimensions, and redraws as you
 type, even while a block is too incomplete to build. Next to it is the area of every component and its share of
 the block. A wrong radius, pitch or multiplicity is usually obvious here long before it would show up in a run.
-Click a component in the drawing or the table to edit it.
+Click a component in the drawing or the table to edit it. Ctrl-wheel (or pinch) zooms in on the point under
+the cursor, so a clad or a gap a fraction of a millimetre thick can be checked; drag to pan, and double-click or
+*Fit* to see the whole block again.
 
 Assemblies
 ----------
