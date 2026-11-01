@@ -2,27 +2,14 @@
 ARMI Introduction
 #################
 
-.. important:: **This is an independent fork. It is not affiliated with, supported by, sponsored by, or endorsed by
-   TerraPower, LLC.**
-
-   It is derived from the open-source ARMI\ :sup:`®` software that TerraPower, LLC released under the Apache
-   License 2.0, and it has diverged substantially from it. TerraPower has not reviewed, tested, or approved any of
-   its changes, and is not responsible for them. Please do not contact TerraPower for support with this fork, and do
-   not report its problems to TerraPower's ARMI project: use
-   `this fork's issue tracker <https://github.com/partofthething/armi/issues>`_.
-   TerraPower's own ARMI is at https://github.com/terrapower/armi.
-
-   ARMI and TerraPower are registered trademarks of TerraPower, LLC. They are used here only to say where this software
-   came from, as Section 6 of the Apache License 2.0 allows; that use implies no trademark license, affiliation, or
-   endorsement.
-
 This fork of the Advanced Reactor Modeling Interface (ARMI\ :sup:`®`) is an open-source tool that streamlines your
 nuclear reactor design/analysis needs by providing a software *reactor at your fingertips* and a rich ecosystem of
 utilities working in concert. It is made for and by professional reactor analysis teams.
 
-.. note:: This fork allows less restricted use of Large Language Models (LLMs) and AI coding assistants in its
-   development, including for writing tests. Its LLM usage policy is in the
-   `standards and practices`_.
+.. note:: This is an independent fork of ARMI, not affiliated with, supported by, or endorsed by TerraPower, LLC. It
+   allows broader use of AI coding assistants in its development (see the `standards and practices`_). Please report
+   problems on `this fork's issue tracker <https://github.com/partofthething/armi/issues>`_, not to TerraPower.
+   Trademark and license details are under License, below.
 
 ARMI:
 

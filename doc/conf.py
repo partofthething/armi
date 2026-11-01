@@ -375,7 +375,6 @@ html_theme_options = {
     "logo": {"text": "ARMI (independent fork)"},
     # No "By <author>" line: the copyright line already credits TerraPower and the fork's maintainers.
     "footer_content_items": ["copyright.html", "last-updated.html"],
-    "announcement": ("An independent fork of ARMI, not affiliated with, supported by, or endorsed by TerraPower, LLC."),
 }
 
 html_css_files = ["css/custom.css"]

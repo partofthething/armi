@@ -2,13 +2,10 @@
 Release 2.0.0 of this fork (unreleased)
 *******************************************
 
-.. important:: This is a release of an independent fork, not a TerraPower release. It is not affiliated with,
-   supported by, or endorsed by TerraPower, LLC, which has not reviewed or approved any of the changes below. ARMI is a
-   registered trademark of TerraPower, LLC, named here only to identify the software this fork derives from.
-
-The first release of this fork, branched from upstream ARMI 0.6.4 and numbered 2.0 to mark the fork. It adds a
-browser-based input editor in place of the wxPython one, fuel cycle economics, replaces the blueprint YAML layer,
-fixes a set of long-standing reactor model bugs and makes common operations much faster.
+The first release of this fork, branched from upstream ARMI 0.6.4 and numbered 2.0 to mark the fork, which is
+independent of TerraPower, LLC. It adds a browser-based input editor in place of the wxPython one, fuel cycle
+economics, replaces the blueprint YAML layer, fixes a set of long-standing reactor model bugs and makes common
+operations much faster.
 
 Browser-based input editor
 ==========================
