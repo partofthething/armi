@@ -106,6 +106,7 @@ def attachParticleLayers(host, layers, packingFraction):
     packingFraction : float
         Volume fraction of the host outline the particles fill, at the input (cold) dimensions.
     """
+    packingFraction = float(packingFraction)  # not the YAML parser's float subclass, which the DB cannot store
     if not 0.0 < packingFraction < 0.75:
         raise ValueError(f"Packing fraction of particles in {host} must be in (0, 0.75), not {packingFraction}")
     particleVolume = sphereVolume(layers[-1].getDimension("od", cold=True))

@@ -148,6 +148,17 @@ class TestParticleFuel(unittest.TestCase):
         self.assertAlmostEqual(particleArea / outline, 0.35)
         self.assertEqual(self.compact.p.packingFraction, 0.35)
 
+    def test_packingFractionCanBeStored(self):
+        """The packing fraction is a plain float, which the database can write next to the Nones of other components."""
+        import numpy as np
+
+        from armi.bookkeeping.db import layout
+
+        self.assertIs(type(self.compact.p.packingFraction), float)
+        values = np.array([c.p.packingFraction for c in self.b], dtype=object)
+        stored = layout.replaceNonesWithNonsense(values, "packingFraction")
+        self.assertEqual(stored[0], 0.35)
+
     def test_blockAreaIsConserved(self):
         hexagon = math.sqrt(3.0) / 2.0 * 36.0**2
         self.assertAlmostEqual(sum(c.getArea() for c in self.b), hexagon, places=6)
