@@ -104,6 +104,20 @@ class TestSession(unittest.TestCase):
             self.assertEqual([each["name"] for each in payload["files"]], ["a.yaml"])
             self.assertIn("sub", [each["name"] for each in payload["directories"]])
 
+    def test_filePickerCanListAnyFileOrOnlyFolders(self):
+        with inTempDir():
+            for name in ("a.yaml", "lib.bin"):
+                with open(name, "w") as stream:
+                    stream.write("x")
+            os.mkdir("sub")
+            _, anything = self.session.listFiles({"dir": os.getcwd(), "kind": "any"})
+            self.assertEqual(sorted(each["name"] for each in anything["files"]), ["a.yaml", "lib.bin"])
+            _, folders = self.session.listFiles({"dir": os.getcwd(), "kind": "dir"})
+            self.assertEqual(folders["files"], [])
+            self.assertIn("sub", [each["name"] for each in folders["directories"]])
+            status, _ = self.session.listFiles({"dir": os.getcwd(), "kind": "socket"})
+            self.assertEqual(status, 400)
+
 
 class TestFileKindDetection(unittest.TestCase):
     def test_tellsSettingsFromBlueprints(self):

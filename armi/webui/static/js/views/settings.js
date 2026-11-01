@@ -8,10 +8,12 @@
 //
 // A setting whose plugin described an editor for it gets that control instead of the generic box
 // its type would earn. The widgets are general -- one of a list, several of a list, a table of
-// rows -- and nothing here knows what any particular setting means.
+// rows, a path -- and nothing here knows what any particular setting means. A plugin can also
+// order its settings, describe a section, and show a setting only while another has a given value.
 
 import { api } from "../api.js";
 import { h, fill } from "../dom.js";
+import { pickPath } from "../picker.js";
 import { store } from "../store.js";
 import { checkbox, comboInput, dialog, field, numberInput, selectInput, textInput, toast } from "../ui.js";
 
@@ -33,13 +35,18 @@ export function settingsView(ctx) {
   }
 
   const data = store.settings;
-  ctx.state.group = ctx.state.group || "all";
+  // The section rides in the shared `selected` slot, so it is in the address bar like every other view's
+  // selection: a reload comes back to it and a link points at it.
+  ctx.state.group = data.groups.includes(ctx.state.selected) ? ctx.state.selected : "all";
   if (ctx.state.changedOnly === undefined) ctx.state.changedOnly = true;
   const query = (ctx.state.query || "").trim().toLowerCase();
 
+  const values = Object.fromEntries(data.settings.map((setting) => [setting.name, setting.value]));
   const visible = data.settings.filter((setting) => {
     if (ctx.state.group !== "all" && setting.group !== ctx.state.group) return false;
-    if (ctx.state.changedOnly && setting.isDefault && !query) return false;
+    if (!conditionHolds(setting.editor?.showWhen, values)) return false;
+    // The changed-only filter narrows "Everything"; a chosen section shows all of its settings.
+    if (ctx.state.group === "all" && ctx.state.changedOnly && setting.isDefault && !query) return false;
     if (!query) return true;
     return (
       setting.name.toLowerCase().includes(query) ||
@@ -52,6 +59,13 @@ export function settingsView(ctx) {
   renderInspector(ctx, data);
 }
 
+/** Whether any of a setting's showWhen conditions is met by the current values (none always is). */
+function conditionHolds(conditions, values) {
+  if (!conditions || !conditions.length) return true;
+  return conditions.some((condition) =>
+    condition.in.some((value) => String(value) === String(values[condition.setting])));
+}
+
 function renderNavigator(ctx, data) {
   const counts = {};
   for (const setting of data.settings) {
@@ -62,7 +76,7 @@ function renderNavigator(ctx, data) {
       type: "button",
       "aria-selected": String(ctx.state.group === id),
       onclick: () => {
-        ctx.state.group = id;
+        ctx.state.selected = id === "all" ? null : id;
         ctx.refresh();
       },
     }, h("span.item__name", label), h("span.item__meta", count ? `${count} changed` : ""));
@@ -113,14 +127,16 @@ function renderStage(ctx, data, visible) {
     h("div.stage__bar",
       h("span.stage__title", ctx.state.group === "all" ? "All settings" : ctx.state.group),
       h("span.item__meta", `${visible.length} shown`),
-      checkbox({
-        label: "Only what differs from the default",
-        checked: ctx.state.changedOnly,
-        onChange: (value) => {
-          ctx.state.changedOnly = value;
-          ctx.refresh();
-        },
-      }),
+      ctx.state.group === "all"
+        ? checkbox({
+            label: "Only what differs from the default",
+            checked: ctx.state.changedOnly,
+            onChange: (value) => {
+              ctx.state.changedOnly = value;
+              ctx.refresh();
+            },
+          })
+        : null,
       h("input.searchbox", {
         type: "search", placeholder: "Find by name or description",
         value: ctx.state.query || "", style: { width: "260px" },
@@ -137,6 +153,10 @@ function renderStage(ctx, data, visible) {
     ),
     h("div.stage__body", { style: { padding: "12px 16px 24px" } },
       ignoredBanner(data),
+      ctx.state.group !== "all" && data.groupHints?.[ctx.state.group]
+        ? h("div.field__hint", { style: { maxWidth: "80ch", lineHeight: 1.6, margin: "2px 0 12px" } },
+            data.groupHints[ctx.state.group])
+        : null,
       rows.length
         ? h("div", { style: { display: "grid", gap: "2px", maxWidth: "980px" } }, ...rows)
         : h("div.empty", h("strong", "Nothing to show"),
@@ -271,7 +291,29 @@ function describedControl(editor, value, apply) {
   if (editor.widget === "choice") return choiceControl(editor, value, apply);
   if (editor.widget === "choices") return choicesControl(editor, value, apply);
   if (editor.widget === "table") return tableControl(editor, value, apply);
+  if (editor.widget === "path") return pathControl(editor, value, apply);
   return null;
+}
+
+/** A file or folder path, typed or picked. */
+function pathControl(editor, value, apply) {
+  const folder = editor.pathKind === "dir";
+  const current = value == null ? "" : String(value);
+  const startDir = current.includes("/") ? current.replace(/\/[^/]*$/, "") || "/" : null;
+  return h("div", { style: { display: "flex", gap: "6px", width: "100%" } },
+    stretch(textInput({ value: current, mono: true, placeholder: editor.placeholder || "", onChange: apply })),
+    h("button.btn.btn--sm", {
+      type: "button",
+      onclick: async () => {
+        const chosen = await pickPath(folder ? "Choose a folder" : "Choose a file", {
+          startDir: folder ? current || null : startDir,
+          kind: folder ? "dir" : "any",
+          actionLabel: "Choose",
+        });
+        if (chosen) apply(chosen);
+      },
+    }, "Browse…"),
+  );
 }
 
 /** One value out of a list. */
@@ -280,12 +322,19 @@ function choiceControl(editor, value, apply) {
   if (editor.allowOther) {
     return comboInput({ value: value ?? "", options: values, onChange: (next) => apply(next ?? "") });
   }
-  return selectInput({
+  // The select hands back text; give the setting the option's own value, so 2 stays a number.
+  const typed = (text) => editor.options.find((option) => String(option.value) === text)?.value ?? text ?? "";
+  const select = selectInput({
     value: value ?? "",
     options: editor.options.map((option) => [String(option.value), option.label]),
     blank: editor.allowEmpty ? "— none —" : null,
-    onChange: (next) => apply(next ?? ""),
+    onChange: (next) => apply(typed(next)),
   });
+  // Say what the chosen option does, when the plugin explained it.
+  const help = editor.options.find((option) => String(option.value) === String(value))?.help;
+  if (!help) return select;
+  return h("div", { style: { display: "grid", gap: "4px", width: "100%" } },
+    select, h("div.field__hint", { style: { lineHeight: 1.5 } }, help));
 }
 
 /** Several values out of a list, for a list-valued setting. */
@@ -461,15 +510,24 @@ function renderInspector(ctx, data) {
               h("tr",
                 h("td.mono", { style: { fontSize: "11.5px" } }, setting.name),
                 h("td.mono", { style: { fontSize: "11.5px", color: "var(--text-dim)",
-                  wordBreak: "break-all" } }, formatValue(setting.value))))))
+                  wordBreak: "break-all" }, title: JSON.stringify(setting.value, null, 1) },
+                  formatValue(setting.value))))))
           : h("div.field__hint", "This case is entirely at defaults."),
       ),
     ),
   );
 }
 
+/** A short form of a value for the inspector; the whole value is in the cell's tooltip. */
 function formatValue(value) {
-  if (Array.isArray(value)) return value.join(", ") || "[]";
-  if (value && typeof value === "object") return JSON.stringify(value);
+  if (Array.isArray(value)) {
+    const text = value.join(", ") || "[]";
+    return text.length > 60 ? `${value.length} entries` : text;
+  }
+  if (value && typeof value === "object") {
+    const keys = Object.keys(value);
+    const text = JSON.stringify(value);
+    return text.length > 60 ? `${keys.length} ${keys.length === 1 ? "entry" : "entries"}: ${keys.slice(0, 4).join(", ")}${keys.length > 4 ? ", …" : ""}` : text;
+  }
   return String(value);
 }

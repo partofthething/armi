@@ -40,7 +40,11 @@ async function call(method, path, body) {
 export const api = {
   state: () => call("GET", "/api/state"),
   catalog: () => call("GET", "/api/catalog"),
-  files: (dir) => call("GET", `/api/files${dir ? `?dir=${encodeURIComponent(dir)}` : ""}`),
+  files: (dir, kind = "yaml") => {
+    const query = new URLSearchParams({ kind });
+    if (dir) query.set("dir", dir);
+    return call("GET", `/api/files?${query}`);
+  },
 
   open: (path) => call("POST", "/api/open", { path }),
   blueprints: () => call("GET", "/api/blueprints"),

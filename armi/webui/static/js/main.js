@@ -3,6 +3,7 @@
 import { api } from "./api.js";
 import { h, fill } from "./dom.js";
 import { icon } from "./icons.js";
+import { pickPath } from "./picker.js";
 import { store } from "./store.js";
 import { dialog, field, selectInput, toast } from "./ui.js";
 
@@ -180,53 +181,8 @@ function baseName(path) {
 
 // -- file actions -----------------------------------------------------------------------------
 
-async function pickFile(title, startDir) {
-  let dir = startDir || store.session?.cwd || null;
-  const listing = h("div");
-  const crumb = h("div.crumb");
-
-  const load = async (target) => {
-    const data = await api.files(target);
-    dir = data.dir;
-    crumb.textContent = data.dir;
-    fill(
-      listing,
-      data.parent
-        ? h("button.item", { type: "button", onclick: () => load(data.parent) },
-            h("span.item__name", "↑ up a level"))
-        : null,
-      ...data.directories.map((entry) =>
-        h("button.item", { type: "button", onclick: () => load(entry.path) },
-          h("span.item__name", `${entry.name}/`)),
-      ),
-      ...data.files.map((entry) =>
-        h("button.item", { type: "button", dataset: { path: entry.path },
-            onclick: (event) => {
-              for (const row of listing.querySelectorAll(".item")) row.setAttribute("aria-selected", "false");
-              event.currentTarget.setAttribute("aria-selected", "true");
-              listing.dataset.chosen = entry.path;
-            },
-            ondblclick: () => {
-              listing.dataset.chosen = entry.path;
-              document.querySelector(".dialog__foot .btn--primary")?.click();
-            } },
-          h("span.item__name", entry.name),
-          h("span.item__meta", `${Math.max(1, Math.round(entry.size / 1024))} kB`)),
-      ),
-      data.files.length ? null : h("div.empty", "No YAML files in this folder."),
-    );
-  };
-
-  await load(dir);
-  return dialog({
-    title,
-    body: h("div", crumb, listing),
-    actions: [["Open", "primary", () => listing.dataset.chosen || null]],
-  });
-}
-
 async function openBlueprints() {
-  const path = await pickFile("Open a case, or blueprints on their own");
+  const path = await pickPath("Open a case, or blueprints on their own", { startDir: store.session?.cwd || null });
   if (!path) return;
   try {
     await store.open(path);
@@ -343,7 +299,7 @@ async function saveBlueprintsAs() {
 
 /** Same picker, same endpoint; it just lands you on the settings afterwards. */
 async function openSettings() {
-  const path = await pickFile("Open case settings");
+  const path = await pickPath("Open case settings", { startDir: store.session?.cwd || null });
   if (!path) return;
   try {
     await store.open(path);

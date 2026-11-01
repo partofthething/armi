@@ -107,12 +107,25 @@ def describe(cs: caseSettings.Settings) -> dict:
                 "isEnvironment": bool(each.isEnvironment),
             }
         )
+    # Within a section, settings an editor placed come first, in its order; the rest follow by name.
+    entries.sort(key=lambda entry: (_order(entry), entry["name"].lower()))
+    groupHints = {}
+    for entry in entries:
+        hint = (entry["editor"] or {}).get("groupHint")
+        if hint:
+            groupHints.setdefault(entry["group"], hint)
     return {
         "path": str(cs.path) if cs.path else None,
         "caseTitle": cs.caseTitle,
         "settings": entries,
         "groups": sorted({entry["group"] for entry in entries}, key=_groupSortKey),
+        "groupHints": groupHints,
     }
+
+
+def _order(entry) -> float:
+    order = (entry["editor"] or {}).get("order")
+    return order if order is not None else float("inf")
 
 
 def _groupSortKey(name):

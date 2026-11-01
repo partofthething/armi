@@ -326,11 +326,15 @@ class Session:
     # -- file picker ------------------------------------------------------------------------------
 
     def listFiles(self, query):
-        """Directories and YAML files under a directory, for the open dialog.
+        """Directories and files under a directory, for the editor's file picker.
 
         A browser cannot see the filesystem, and a local tool should not make people paste absolute
-        paths, so the editor gets its own small picker.
+        paths, so the editor gets its own small picker. ``kind`` is ``yaml`` (the default, for opening
+        inputs), ``any`` (every file, for a path setting) or ``dir`` (folders only).
         """
+        kind = query.get("kind") or "yaml"
+        if kind not in ("yaml", "any", "dir"):
+            return 400, {"error": f"Unknown file kind {kind!r}."}
         raw = query.get("dir") or str(self.rootDir)
         here = pathlib.Path(raw).expanduser()
         if not here.is_dir():
@@ -344,7 +348,7 @@ class Session:
                     continue
                 if entry.is_dir():
                     directories.append({"name": entry.name, "path": str(entry)})
-                elif entry.suffix.lower() in BLUEPRINT_SUFFIXES:
+                elif kind == "any" or (kind == "yaml" and entry.suffix.lower() in BLUEPRINT_SUFFIXES):
                     files.append({"name": entry.name, "path": str(entry), "size": entry.stat().st_size})
         except PermissionError:
             return 403, {"error": f"Cannot read {here}."}

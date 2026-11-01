@@ -58,9 +58,32 @@ nothing here knows what any particular setting means:
     ``widget`` of ``choice``, ``number`` or ``text``; ``rowLabel`` names what a row is and
     ``newRow`` is what an added one starts as.
 
-Every editor may also carry a ``group``, which moves the setting into a section of the editor's
-own, and a ``hint`` shown under the control. Both work without a widget, which is how a plugin
-collects a handful of related settings into one section while leaving the controls alone. An
+Every editor may also carry:
+
+``group``
+    Moves the setting into a section of the editor's own.
+``groupHint``
+    A sentence or two shown at the top of that section, saying what its settings are for. Any one
+    editor in the group may carry it; the first one found is used.
+``order``
+    A number that places the setting within its section, lowest first; settings without one follow,
+    alphabetically. A plugin uses it to lead with the setting that matters most.
+``hint``
+    A line shown under the control.
+``showWhen``
+    ``{"setting": name, "equals": value}`` or ``{"setting": name, "in": [values]}``: show the
+    setting only while another one has that value, so options that only apply to one choice of
+    method stay out of the way until that method is chosen. A list of such conditions shows the
+    setting while any one of them holds.
+
+None of these needs a widget, which is how a plugin collects a handful of related settings into
+one section while leaving the controls alone.
+
+A fourth widget takes a file system path:
+
+``path``
+    A text box with a Browse button that opens the editor's own file picker. ``pathKind`` is
+    ``"file"`` (the default) or ``"dir"``. An
 editor naming a setting this application does not define is ignored, and one the editor cannot
 make sense of is dropped with a warning rather than taking the settings page down.
 """
@@ -78,7 +101,11 @@ WIDGETS = {
     "choice": ("options", True),
     "choices": ("options", True),
     "table": ("columns", False),
+    "path": (None, True),
 }
+
+#: What a path widget can ask the picker for.
+PATH_KINDS = ("file", "dir")
 
 #: Widgets a column of a table may use.
 COLUMN_WIDGETS = ("choice", "number", "text")
@@ -128,15 +155,32 @@ def normalize(editor: dict) -> dict:
         raise EditorError(f"unknown widget {widget!r}; use one of {sorted(WIDGETS)}")
     if widget is not None:
         required, mayBeEmpty = WIDGETS[widget]
-        if editor.get(required) is None or (not editor[required] and not mayBeEmpty):
+        if required and (editor.get(required) is None or (not editor[required] and not mayBeEmpty)):
             raise EditorError(f"a {widget} needs {required}")
-    if widget is None and not (editor.get("group") or editor.get("hint")):
-        raise EditorError("an editor with no widget has nothing to say but a group or a hint")
+    sayable = ("group", "groupHint", "hint", "showWhen", "order")
+    if widget is None and not any(editor.get(key) is not None for key in sayable):
+        raise EditorError("an editor with no widget has nothing to say but a group, hint, order or condition")
 
     out = {"widget": widget}
-    for key in ("group", "hint", "rowLabel", "placeholder"):
+    for key in ("group", "groupHint", "hint", "rowLabel", "placeholder"):
         if editor.get(key):
             out[key] = str(editor[key])
+    if editor.get("order") is not None:
+        try:
+            out["order"] = float(editor["order"])
+        except (TypeError, ValueError):
+            raise EditorError(f"order must be a number, not {editor['order']!r}") from None
+    if editor.get("showWhen") is not None:
+        conditions = editor["showWhen"]
+        conditions = conditions if isinstance(conditions, (list, tuple)) else [conditions]
+        if not conditions:
+            raise EditorError("showWhen needs at least one condition")
+        out["showWhen"] = [_condition(each) for each in conditions]
+    if widget == "path":
+        kind = editor.get("pathKind", "file")
+        if kind not in PATH_KINDS:
+            raise EditorError(f"pathKind must be one of {list(PATH_KINDS)}, not {kind!r}")
+        out["pathKind"] = kind
     for key in ("allowOther", "allowEmpty"):
         if key in editor:
             out[key] = bool(editor[key])
@@ -146,6 +190,20 @@ def normalize(editor: dict) -> dict:
         out["columns"] = [_column(each) for each in editor["columns"]]
         out["newRow"] = dict(editor.get("newRow") or {})
     return out
+
+
+def _condition(condition) -> dict:
+    """When to show a setting: another setting equal to a value, or to one of several."""
+    if not isinstance(condition, dict) or not condition.get("setting"):
+        raise EditorError("showWhen needs the name of the setting it depends on")
+    if ("equals" in condition) == ("in" in condition):
+        raise EditorError("showWhen needs exactly one of 'equals' or 'in'")
+    if "equals" in condition:
+        return {"setting": str(condition["setting"]), "in": [condition["equals"]]}
+    values = condition["in"]
+    if isinstance(values, (str, bytes)) or not hasattr(values, "__iter__"):
+        raise EditorError("showWhen 'in' needs a list of values")
+    return {"setting": str(condition["setting"]), "in": list(values)}
 
 
 def _option(option) -> dict:

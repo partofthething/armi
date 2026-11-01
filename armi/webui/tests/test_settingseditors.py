@@ -102,6 +102,67 @@ class TestNormalize(unittest.TestCase):
                 settingseditors.normalize(editor)
 
 
+class TestLayoutAndConditions(unittest.TestCase):
+    """Ordering, section descriptions, conditions and paths."""
+
+    def test_showWhenTakesOneValueOrSeveral(self):
+        one = settingseditors.normalize({"showWhen": {"setting": "a", "equals": "USS"}})
+        self.assertEqual(one["showWhen"], [{"setting": "a", "in": ["USS"]}])
+        several = settingseditors.normalize({"showWhen": {"setting": "a", "in": ["x", "y"]}})
+        self.assertEqual(several["showWhen"][0]["in"], ["x", "y"])
+        either = settingseditors.normalize(
+            {"showWhen": [{"setting": "a", "equals": "USS"}, {"setting": "b", "equals": "refined"}]}
+        )
+        self.assertEqual([each["setting"] for each in either["showWhen"]], ["a", "b"])
+        with self.assertRaises(settingseditors.EditorError):
+            settingseditors.normalize({"showWhen": []})
+
+    def test_showWhenNeedsASettingAndOneTest(self):
+        for bad in (
+            {"equals": 1},
+            {"setting": "a"},
+            {"setting": "a", "equals": 1, "in": [1]},
+            {"setting": "a", "in": "x"},
+        ):
+            with self.assertRaises(settingseditors.EditorError, msg=str(bad)):
+                settingseditors.normalize({"showWhen": bad})
+
+    def test_aPathKnowsWhatItPoints(self):
+        self.assertEqual(settingseditors.normalize({"widget": "path"})["pathKind"], "file")
+        self.assertEqual(settingseditors.normalize({"widget": "path", "pathKind": "dir"})["pathKind"], "dir")
+        with self.assertRaises(settingseditors.EditorError):
+            settingseditors.normalize({"widget": "path", "pathKind": "socket"})
+
+    def test_orderMustBeANumber(self):
+        self.assertEqual(settingseditors.normalize({"order": 2})["order"], 2.0)
+        with self.assertRaises(settingseditors.EditorError):
+            settingseditors.normalize({"order": "first"})
+
+    def test_orderAndAGroupHintAreEnoughOnTheirOwn(self):
+        self.assertEqual(settingseditors.normalize({"order": 1})["widget"], None)
+        self.assertEqual(settingseditors.normalize({"groupHint": "what these do"})["groupHint"], "what these do")
+
+
+class Arranging:
+    """A plugin that orders two settings and describes their section."""
+
+    @staticmethod
+    def defineSettingEditors(cs):
+        return {
+            "verbosity": {"group": "Arranged", "order": 2, "groupHint": "Settings in a chosen order."},
+            "branchVerbosity": {"group": "Arranged", "order": 1},
+        }
+
+
+class TestArrangedSettings(unittest.TestCase):
+    def test_orderedWithinTheGroupAndDescribed(self):
+        with registered(Arranging):
+            described = settingsdoc.describe(caseSettings.Settings())
+        arranged = [entry["name"] for entry in described["settings"] if entry["group"] == "Arranged"]
+        self.assertEqual(arranged, ["branchVerbosity", "verbosity"])
+        self.assertEqual(described["groupHints"]["Arranged"], "Settings in a chosen order.")
+
+
 class TestCollect(unittest.TestCase):
     """Asking the registered plugins, and surviving the answers."""
 

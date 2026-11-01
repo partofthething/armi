@@ -127,7 +127,42 @@ defaults, which keeps a settings file short enough to read.
 
 Teaching the editor about your settings
 =======================================
-Most settings need nothing more than their type, default and options to get a sensible control. For the few that
-do not, such as a list with its own grammar or a table of entries, the plugin that defines them can describe a
-better control: a choice, several choices, or a table with typed columns. Give the plugin class a
-``defineSettingEditors(cs)`` static method; :py:mod:`armi.webui.settingseditors` describes the options.
+Most settings need nothing more than their type, default and options to get a sensible control. A plugin with many
+settings, or settings that only make sense together, can say more. Give the plugin class a
+``defineSettingEditors(cs)`` static method returning, for each setting it wants to present, a description that may:
+
+* ask for a better control: one choice from a list (each option with a line of help), several choices, a table with
+  typed columns, or a file or folder path with a Browse button;
+* put the setting in a section of the plugin's own, give that section a short description, and order the settings
+  within it so the one that matters most comes first;
+* show the setting only while another has a given value (or any of several), so options that belong to one method
+  stay out of the way until that method is chosen;
+* add a hint under the control.
+
+The method gets the settings as they stand and is asked again after every change, so the controls can follow the
+case: the banks a core actually has, or a note on what a chosen preset will really use.
+:py:mod:`armi.webui.settingseditors` documents the vocabulary.
+
+.. code-block:: python
+
+    class MyPlugin(plugins.ArmiPlugin):
+        @staticmethod
+        def defineSettingEditors(cs):
+            return {
+                "mySolver": {
+                    "widget": "choice",
+                    "options": [
+                        {"value": "fast", "help": "Minutes per case."},
+                        {"value": "exact", "help": "Benchmark quality; hours."},
+                    ],
+                    "group": "My solver",
+                    "groupHint": "How the solver trades speed for accuracy.",
+                    "order": 1,
+                },
+                "myExactTolerance": {
+                    "group": "My solver",
+                    "order": 2,
+                    "showWhen": {"setting": "mySolver", "equals": "exact"},
+                },
+                "myLibrary": {"widget": "path", "group": "My solver", "order": 3},
+            }
