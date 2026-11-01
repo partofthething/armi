@@ -21,7 +21,8 @@ nuclear reactor design/analysis needs by providing a software *reactor at your f
 utilities working in concert. It is made for and by professional reactor analysis teams.
 
 .. note:: This fork allows less restricted use of Large Language Models (LLMs) and AI coding assistants in its
-   development, including for writing tests. Its LLM usage policy is in ``doc/developer/standards_and_practices.rst``.
+   development, including for writing tests. Its LLM usage policy is in the
+   `standards and practices`_.
 
 ARMI:
 
@@ -55,7 +56,9 @@ Additional high-level overview about this system can be found in [#touranarmi]_.
    * - Source code
      - https://github.com/partofthething/armi
    * - Documentation
-     - The ``doc/`` directory of this repository
+     - https://partofthething.github.io/armi/
+   * - Release notes
+     - https://partofthething.github.io/armi/release/index.html (what changed in each release of this fork)
    * - Bug tracker
      - https://github.com/partofthething/armi/issues
 
@@ -72,8 +75,8 @@ installs ARMI and its test dependencies into it::
     $ uv run armi --help
     $ uv run pytest -n 4 armi
 
-Alternatively, with ``pip`` (ideally in a virtual environment, as described in the installation documentation, so that
-ARMI's dependencies do not conflict with your system's)::
+Alternatively, with ``pip`` (ideally in a virtual environment, as described in the `installation documentation`_,
+so that ARMI's dependencies do not conflict with your system's)::
 
     $ git clone https://github.com/partofthething/armi
     $ cd armi
@@ -94,11 +97,11 @@ from the ``doc`` folder::
     $ cd doc
     $ uv run make html
 
-The result lands in ``doc/_build/html/index.html``. See ``doc/developer/documenting.rst`` for building the full
-version with real test reports.
+The result lands in ``doc/_build/html/index.html``, the same site that is published at
+https://partofthething.github.io/armi/. See `documenting`_ for building the full version with real test reports.
 
-From here, we recommend going through a few of the gallery examples and tutorials in the documentation to start
-touring the features and capabilities and then move on to the User Manual.
+From here, we recommend going through a few of the `gallery examples`_ and `tutorials`_ to start touring the
+features and capabilities and then move on to the `User Manual`_.
 
 
 Background
@@ -288,7 +291,7 @@ History of ARMI
 ARMI was originally created by TerraPower, LLC starting in 2009 and was released under an open-source license in 2019.
 This repository is an independent fork of that open-source release, maintained separately from TerraPower and without
 its involvement. It differs in its policy on LLM usage and in its own development since the fork, starting with
-release 2.0.0: see the release notes in ``doc/release``. Files carry their original copyright notices, and the
+release 2.0.0: see the `release notes`_. Files carry their original copyright notices, and the
 changes made here are recorded in this repository's version history.
 
 
@@ -363,3 +366,11 @@ that have MIT or BSD licenses.
 
 .. [#touranarmi] Touran, Nicholas W., et al. "Computational tools for the integrated design of advanced nuclear reactors."
    Engineering 3.4 (2017): 518-526. https://doi.org/10.1016/J.ENG.2017.04.016
+
+.. _standards and practices: https://partofthething.github.io/armi/developer/standards_and_practices.html
+.. _installation documentation: https://partofthething.github.io/armi/installation.html
+.. _documenting: https://partofthething.github.io/armi/developer/documenting.html
+.. _gallery examples: https://partofthething.github.io/armi/gallery/index.html
+.. _tutorials: https://partofthething.github.io/armi/tutorials/index.html
+.. _User Manual: https://partofthething.github.io/armi/user/index.html
+.. _release notes: https://partofthething.github.io/armi/release/index.html
