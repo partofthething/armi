@@ -186,6 +186,41 @@ class TestComponentOrigin(unittest.TestCase):
         self.assertAlmostEqual(channel.getArea(), math.pi * 9.525**2 / 4.0)
 
 
+class TestPrismaticElement(unittest.TestCase):
+    """Compacts and a coolant channel on lattice sites of their own, as in an HTGR fuel element."""
+
+    def test_coolantOnItsOwnSites(self):
+        grid = inspect.cleandoc(
+            """
+            grids:
+                element:
+                    geom: hex_corners_up
+                    symmetry: full
+                    lattice pitch:
+                        hex: 1.8796
+                    grid contents:
+                        [0, 0]: C
+                        [1, 0]: F
+                        [0, 1]: F
+                        [-1, 1]: F
+                        [-1, 0]: F
+                        [0, -1]: F
+                        [1, -1]: F
+            """
+        )
+        text = _text().replace("        fuel compact:\n", "        grid name: element\n        fuel compact:\n", 1)
+        text = text.replace("            mult: 210\n", "            latticeIDs: [F]\n", 1)
+        text = text.replace("            mult: 102\n", "            latticeIDs: [C]\n", 1)
+        b = blueprints.Blueprints.load(text + "\n" + grid).constructAssem(settings.Settings(), "fuel column")[0]
+        self.assertEqual(b.getComponentByName("fuel compact").getDimension("mult"), 6)
+        self.assertEqual(b.getComponentByName("coolant").getDimension("mult"), 1)
+        b.assignPinIndices()  # as placing the block in a core does; used to fail on the coolant site
+        self.assertEqual(len(b.getComponentByName("fuel compact").p.pinIndices), 6)
+        self.assertIsNone(b.getComponentByName("coolant").p.pinIndices)
+        kernel = b.getComponentByName("fuel compact kernel")
+        self.assertAlmostEqual(kernel.getDimension("mult"), 0.35 * 6 * math.pi * 1.245**2 / 4 / sphereVolume(0.0845))
+
+
 class TestParticleFuelExpansion(unittest.TestCase):
     def test_particleCountFixedWhenTheHostExpands(self):
         cold = _block(25.0, 25.0)

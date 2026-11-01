@@ -574,16 +574,16 @@ class HexBlock(Block):
         for c in self.iterChildrenWithFlags(primaryFlags):
             if self._setPinIndices(c, ijGetter, allIJToIndex):
                 withPinIndices.append(c)
-        # Iterate over every other thing on the grid and make sure
-        # 1) it share a lattice site with something that has pin indices, or
-        # 2) it itself declares the pin indices
+        # Iterate over every other thing on the grid: it either shares a lattice site with something that has pin
+        # indices, or declares pin indices itself, or sits on lattice sites of its own -- a coolant channel or a
+        # poison rod in a prismatic element -- and is not a pin at all.
         for c in self:
             if c.p.pinIndices is not None:
                 continue
             # Does anything with pin indices share this lattice site?
             if any(other.spatialLocator == c.spatialLocator for other in withPinIndices):
                 continue
-            if self._setPinIndices(c, ijGetter, allIJToIndex):
+            if self._setPinIndices(c, ijGetter, allIJToIndex, offPinSitesAllowed=True):
                 withPinIndices.append(c)
 
     @staticmethod
@@ -591,6 +591,7 @@ class HexBlock(Block):
         c: components.Component,
         ijGetter: Callable[[grids.IndexLocation], tuple[int, int]],
         allIJToIndex: dict[tuple[int, int], int],
+        offPinSitesAllowed: bool = False,
     ):
         localLocations = c.spatialLocator
         if isinstance(localLocations, grids.MultiIndexLocation):
@@ -601,6 +602,9 @@ class HexBlock(Block):
         elif isinstance(localLocations, grids.IndexLocation):
             localIJ = [ijGetter(localLocations)]
         else:
+            return False
+        if offPinSitesAllowed and not all(ij in allIJToIndex for ij in localIJ):
+            # On sites of its own, not the pins': it has no pin indices.
             return False
         localIndices = []
         for ij in localIJ:
