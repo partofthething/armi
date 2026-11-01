@@ -55,7 +55,7 @@ class EntryPointsPlugin(plugins.ArmiPlugin):
             cleanTemps,
             clone,
             compareCases,
-            gridGui,
+            gui,
             migrateInputs,
             modify,
             reportsEntryPoint,
@@ -73,7 +73,7 @@ class EntryPointsPlugin(plugins.ArmiPlugin):
         entryPoints.append(modify.ModifyCaseSettingsCommand)
         entryPoints.append(run.RunEntryPoint)
         entryPoints.append(runSuite.RunSuiteCommand)
-        entryPoints.append(gridGui.GridGuiEntryPoint)
+        entryPoints.append(gui.GuiEntryPoint)
 
         # testing
         entryPoints.append(cleanTemps.CleanTemps)

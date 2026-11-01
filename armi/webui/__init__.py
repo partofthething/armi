@@ -1,0 +1,43 @@
+# Copyright 2026 Ocean Atomics, LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+"""
+A browser-based editor for ARMI inputs.
+
+This serves a small single-page app from a local HTTP server so that blueprints and settings can be
+edited visually: core maps, pin lattices, block cross sections, assembly axial stacks, nuclide flags
+and custom isotopics, all against the real :py:mod:`armi.reactor.blueprints` object model. Every
+application gets it as the ``gui`` entry point::
+
+    $ python -m armi gui my-case.yaml
+
+Nothing leaves the machine. The server binds to loopback, holds one document at a time, and writes
+only where you tell it to. The server is standard library and the front end is plain ES modules
+with no build step, so there is nothing to compile.
+
+The pieces
+----------
+:py:mod:`armi.webui.document`
+    Blueprints in, JSON out, and back again. Grids get a normalized cell dictionary so the browser
+    never has to understand ascii maps.
+:py:mod:`armi.webui.preview`
+    Turns a block definition into flat shapes a browser can draw, at cold input dimensions.
+:py:mod:`armi.webui.catalog`
+    What the editor offers as choices: materials, component shapes, flags, symmetries.
+:py:mod:`armi.webui.settingsdoc`
+    The same treatment for a settings file.
+:py:mod:`armi.webui.settingseditors`
+    How a plugin says its own settings should be edited.
+:py:mod:`armi.webui.server`
+    Routing, static files, and the loopback server itself.
+"""

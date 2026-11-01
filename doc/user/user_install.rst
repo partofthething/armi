@@ -158,13 +158,12 @@ This subsection provides setup for optional items.
 
 GUI input
 ---------
-To use the :py:mod:`graphical core-map editor <armi.utils.gridEditor>` you will need to also install
-`wxPython <https://wxpython.org/pages/downloads/index.html>`_. This is not installed by default during armi installation
-because it can cause installation complexities on some platforms.
+The :py:mod:`browser-based input editor <armi.webui>` ships with ARMI and needs nothing else installed: the server
+is standard library and the front end is plain JavaScript with no build step. Open a case in it with::
 
-In any case, all GUI dependencies can be installed by::
+    (armi-venv) $ python -m armi gui my-case.yaml
 
-    (armi-venv) $ pip install armi[grids]
+Over SSH, add ``--no-browser`` and open the printed address through a port forward.
 
 GUI output
 ----------

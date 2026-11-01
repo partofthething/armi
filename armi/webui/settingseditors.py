@@ -1,0 +1,182 @@
+# Copyright 2026 Ocean Atomics, LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+"""
+How a plugin says its settings should be edited.
+
+An ARMI setting carries a type, a default, a description and sometimes a list of options, and for
+most settings that is everything an editor needs. Two kinds of setting it is not enough for:
+
+* a list whose entries follow a grammar the setting cannot express, which arrives as a text box
+  and has to be typed from memory;
+* a dict of dicts, one entry per object being configured, which arrives as a box of JSON.
+
+The plugin that defined such a setting knows what belongs in it. This is where it says so. Give
+the plugin class a ``defineSettingEditors(cs)`` static method returning ``{settingName: editor}``
+and the editor renders a real control instead:
+
+.. code-block:: python
+
+    class MyPlugin(plugins.ArmiPlugin):
+        @staticmethod
+        def defineSettingEditors(cs):
+            return {
+                "coolingMode": {
+                    "widget": "choice",
+                    "options": ["forced", "natural"],
+                    "group": "Cooling",
+                },
+            }
+
+It is a plain method rather than a plugin hook because it describes the editor, not the
+framework: a plugin that never mentions it runs exactly the same.
+
+Three widgets, deliberately few. Each is a shape of value rather than a shape of problem, so
+nothing here knows what any particular setting means:
+
+``choice``
+    One value out of a list. ``options`` are strings, or ``{"value", "label", "help"}`` mappings,
+    and may be empty where there is nothing to offer yet; ``allowOther`` lets anything be typed,
+    ``allowEmpty`` offers a blank.
+
+``choices``
+    Several values out of a list, for a list-valued setting. Same ``options``, plus ``allowOther``
+    for entries that are not on it.
+
+``table``
+    A dict of dicts, one row per key. ``columns`` describe the fields of a row, each with its own
+    ``widget`` of ``choice``, ``number`` or ``text``; ``rowLabel`` names what a row is and
+    ``newRow`` is what an added one starts as.
+
+Every editor may also carry a ``group``, which moves the setting into a section of the editor's
+own, and a ``hint`` shown under the control. Both work without a widget, which is how a plugin
+collects a handful of related settings into one section while leaving the controls alone. An
+editor naming a setting this application does not define is ignored, and one the editor cannot
+make sense of is dropped with a warning rather than taking the settings page down.
+"""
+
+from armi import getPluginManagerOrFail, runLog
+
+#: What a plugin calls its method.
+HOOK = "defineSettingEditors"
+
+#: Widgets the browser knows how to draw, and the key each one is built from. Options may be
+#: an empty list -- a plugin offering the banks a core has is offering none until the core has
+#: one, and that is a control with nothing in it rather than a mistake -- but a table with no
+#: columns is nothing at all.
+WIDGETS = {
+    "choice": ("options", True),
+    "choices": ("options", True),
+    "table": ("columns", False),
+}
+
+#: Widgets a column of a table may use.
+COLUMN_WIDGETS = ("choice", "number", "text")
+
+
+class EditorError(ValueError):
+    """An editor description that cannot be rendered."""
+
+
+def collect(cs) -> dict:
+    """Ask every registered plugin how the settings it owns should be edited.
+
+    Parameters
+    ----------
+    cs : Settings
+        The settings being edited, handed to the plugins so that an editor can be built from what
+        is in the file: the banks a core actually has, the assemblies a design actually defines.
+    """
+    editors = {}
+    for plugin in getPluginManagerOrFail().get_plugins():
+        define = getattr(plugin, HOOK, None)
+        if not callable(define):
+            continue
+        name = getattr(plugin, "__name__", str(plugin))
+        try:
+            described = define(cs) or {}
+        except Exception as ee:
+            runLog.warning(f"{name} could not describe its setting editors and was skipped: {ee}")
+            continue
+        for settingName, editor in described.items():
+            if settingName not in cs:
+                # Ordinary: a plugin may describe settings another plugin defines.
+                continue
+            try:
+                editors[settingName] = normalize(editor)
+            except EditorError as ee:
+                runLog.warning(f"{name} describes {settingName} in a way this editor cannot use: {ee}")
+    return editors
+
+
+def normalize(editor: dict) -> dict:
+    """Check one editor description and put it in the form the browser expects."""
+    if not isinstance(editor, dict):
+        raise EditorError("an editor must be a mapping")
+    widget = editor.get("widget")
+    if widget is not None and widget not in WIDGETS:
+        raise EditorError(f"unknown widget {widget!r}; use one of {sorted(WIDGETS)}")
+    if widget is not None:
+        required, mayBeEmpty = WIDGETS[widget]
+        if editor.get(required) is None or (not editor[required] and not mayBeEmpty):
+            raise EditorError(f"a {widget} needs {required}")
+    if widget is None and not (editor.get("group") or editor.get("hint")):
+        raise EditorError("an editor with no widget has nothing to say but a group or a hint")
+
+    out = {"widget": widget}
+    for key in ("group", "hint", "rowLabel", "placeholder"):
+        if editor.get(key):
+            out[key] = str(editor[key])
+    for key in ("allowOther", "allowEmpty"):
+        if key in editor:
+            out[key] = bool(editor[key])
+    if widget in ("choice", "choices"):
+        out["options"] = [_option(each) for each in editor["options"]]
+    if widget == "table":
+        out["columns"] = [_column(each) for each in editor["columns"]]
+        out["newRow"] = dict(editor.get("newRow") or {})
+    return out
+
+
+def _option(option) -> dict:
+    """One offered value, as ``{value, label, help}``."""
+    if isinstance(option, dict):
+        if "value" not in option:
+            raise EditorError("an option needs a value")
+        value = option["value"]
+        return {
+            "value": value,
+            "label": str(option.get("label") or value),
+            "help": str(option["help"]) if option.get("help") else None,
+        }
+    return {"value": option, "label": str(option), "help": None}
+
+
+def _column(column) -> dict:
+    """One field of a table row."""
+    if not isinstance(column, dict) or "key" not in column:
+        raise EditorError("a table column needs a key")
+    widget = column.get("widget", "text")
+    if widget not in COLUMN_WIDGETS:
+        raise EditorError(f"a column cannot be a {widget!r}; use one of {list(COLUMN_WIDGETS)}")
+    out = {
+        "key": str(column["key"]),
+        "label": str(column.get("label") or column["key"]),
+        "widget": widget,
+    }
+    if column.get("options"):
+        out["options"] = [_option(each) for each in column["options"]]
+    for key in ("allowOther", "placeholder", "unit"):
+        if column.get(key):
+            out[key] = column[key] if key == "allowOther" else str(column[key])
+    return out

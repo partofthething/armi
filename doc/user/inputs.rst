@@ -62,25 +62,26 @@ Many settings are provided by the ARMI Framework, and others are defined by vari
 
 .. _armi-gui:
 
-The ARMI GUI
-------------
-The ARMI GUI may be used to manipulate many common settings (though the GUI can't change all of the settings). The GUI also enables the graphical manipulation of a reactor core map, and convenient automation of commands required to submit to a cluster. The GUI is a front-end to these files. You can choose to use the GUI or not, ARMI doesn't know or care -- it just reads these files and runs them.
+The input editor
+----------------
+ARMI includes a browser-based editor for its inputs, a front end to the same text files: you can use it or not, and
+ARMI neither knows nor cares. Open a case (or a blueprints file on its own) with::
 
-Note that one settings input file is required for each ARMI case, though many ARMI cases can refer to the same Blueprints, Core Map, and Fuel Management inputs.
+    $ python -m armi gui my-case.yaml
 
-.. note:: The ARMI GUI is not yet included in the open-source ARMI framework, but a simple grid editor GUI is, as described in :ref:`grids`
+It edits core maps and pin lattices on hexagonal and Cartesian grids, block cross sections, assembly axial stacks,
+nuclide flags, custom isotopics and case settings, all against the real blueprint object model, and writes back plain
+YAML that reads like hand-written input. The server binds to loopback and nothing leaves the machine; ``--no-browser``
+prints the address instead of opening it, for use over SSH.
 
-The assembly clicker
-^^^^^^^^^^^^^^^^^^^^
-The assembly clicker (aka the :py:mod:`Grid Editor <armi.utils.gridEditor>`) allows users to define the 2-D layout of the assemblies defined in the :ref:`bp-input-file`. This can be done in hexagon or cartesian. The results of this arrangement get written to grids in blueprints. Click on the assembly palette on the right and click on the locations where you want to put the assembly. By default, the input assumes a 1/3 core model, but you can create a full core model through the menu.
+.. figure:: /.static/inputEditor-core.png
+   :width: 100%
+   :alt: The core map view of the input editor
 
-If you want one assembly type to fill all positions in a ring, right click it once it is placed and choose ``Make ring like this hex``. Once you submit the job or save the settings file (File -> Save), you will be prompted for a new name of the geometry file before the settings file is saved. The geometry setting in the main tab will also be updated.
+   The core map view: assemblies placed on the grid from the palette, with the symmetry and the counts of each type.
 
-The ARMI Environment Tab
-^^^^^^^^^^^^^^^^^^^^^^^^
-The environment tab contains important settings about which version of ARMI you will run and with which version of Python, etc. Most important is the ``ARMI location`` setting. This points to the codebase that will run. If you want to run the released version of ARMI, ensure that it is set in this setting. If you want to run a developer version, then be sure to update this setting.
-
-Other settings on this tab may need to be updated depending on your computational environment. Talk to your system admins to determine which settings are best.
+Note that one settings input file is required for each ARMI case, though many ARMI cases can refer to the same
+Blueprints, Core Map, and Fuel Management inputs.
 
 Some special settings
 ---------------------
@@ -708,8 +709,8 @@ The ARMI data model is represented schematically below, and the blueprints are d
 :ref:`custom isotopics <custom-isotopics>`:
     Special setting: defines user-specified isotopic compositions.
 
-The core map input files can be graphically manipulated with the
-:py:mod:`Grid editor <armi.utils.gridEditor>`.
+The core map input files can be edited graphically with the :py:mod:`input editor <armi.webui>`
+(``python -m armi gui``).
 
 
 .. _blocks-and-components:
