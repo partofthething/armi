@@ -1,0 +1,81 @@
+*************************
+ARMI 0.7.0 (unreleased)
+*************************
+
+The first release of this fork, branched from upstream ARMI 0.6.4. It adds fuel cycle economics, replaces the
+blueprint YAML layer, fixes a set of long-standing reactor model bugs and makes common operations much faster.
+
+Fuel cycle economics
+====================
+
+A new economics plugin (``armi.physics.economics``) costs a reactor's whole fuel cycle and writes a four-page PDF
+report for core designers and decision makers alike. Turn it on with ``econFuelCost: true``, and
+``econFuelCostReport: true`` for the report.
+
+* **The initial core, mine to spent fuel:** natural uranium (lb U\ :sub:`3`\ O\ :sub:`8`), conversion, separative work,
+  depleted tails and fabrication, each with its quantity and cost. The tails assay can be optimized for the prices.
+* **Reloads** are the fresh assemblies the run's fuel management actually loads at the start of each cycle, or a
+  projected fraction of the initial core (``econReloads``).
+* **The levelized fuel cycle cost** ($/MWh) covers every load and spent fuel (``econBackEndCost``), with each
+  front-end step paid its lead time before loading (``econLeadTime*``), discounted against the plant's generation.
+* **For core designers:** discharge burnup, specific power, uranium and separative work per GWh, uranium
+  utilization, and each cycle's fresh fuel against the electricity it makes.
+* **For decision makers:** cumulative cash flow, the sensitivity of the cost to every price, the discount rate and
+  the capacity factor, and the bridge from undiscounted to levelized cost.
+* UO\ :sub:`2`, U-metal and TRISO each have their own fabrication price, the fuel form is detected from the materials,
+  and every price is a setting.
+
+.. figure:: /.static/economicsFuelCycleReport.png
+   :width: 100%
+   :alt: The first two pages of the fuel cycle cost report for the ARMI test reactor
+
+   The first two of the report's four pages, for the ARMI test reactor at 1,000 MWt with quarter-core reloads
+   (illustrative inputs).
+
+New features
+============
+
+* Block parameters for fuel pin temperatures and pin gas pressure.
+* A material can declare that it never thermally expands.
+* ENDF/B-VIII.1 DRAGLIB nuclide names are accepted in the elemental expansion.
+* ``!include`` can be written as the value of a key in blueprints.
+
+Blueprints and YAML
+===================
+
+* Blueprints moved from ``yamlize`` to ``yamlSchema``, a document-backed YAML object mapping, and the ``yamlize``
+  dependency is gone. Round-tripping a blueprint no longer corrupts zero values, and multi-line strings are written
+  as literal block scalars so lattice maps stay readable.
+* Parsed YAML is copied without breaking its anchors and merge keys, and an edit to a merged mapping no longer leaks
+  into the mappings that merge it.
+* An aliased block design is its own design rather than a second name for one.
+* ``!include`` on the same line as its key is rejected instead of producing broken YAML.
+
+Bug fixes
+=========
+
+* Power from ``powerDensity`` was too low in partial-core models.
+* Axial expansion divided ``massHmBOL`` by the symmetry factor twice.
+* Writing a full Cartesian lattice map dropped part of the core; a grid that cannot be written now says why.
+* Fixes to mass conservation and meshes in the converters; assembly, core ring and excore collections; block area
+  caching, homogenization pitch and composite density helpers; the blueprint area check, grid saving and location
+  ordering; and ``ParameterCollection`` equality and backup restore for reshaped arrays.
+* ``plotMatrix`` leaves the caller's colormap alone, and the visualization dumpers return themselves from
+  ``__enter__``.
+
+Performance
+===========
+
+* Getting and setting number densities on composites is much faster, nuclides are looked up by name with a
+  dictionary, and the nuclide data is built once at import.
+* Parameter collections fill without per-field checks, database syncs no longer force a full garbage collection,
+  binary CCCC matrices are read in one call, and pin index lookup in ``HexBlock.assignPinIndices`` is O(1).
+* The slowest tests are faster without losing coverage.
+
+Project
+=======
+
+* Rebranded as a fork with a relaxed LLM policy, modernized CI, and Python 3.11 or newer.
+* Logging goes through the standard library logger.
+* The documentation builds without warnings against current Sphinx releases, and the README says how to build it.
+* New files carry no copyright header; see ``CLAUDE.md`` for the notice policy.
