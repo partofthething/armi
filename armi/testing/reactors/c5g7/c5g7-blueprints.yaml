@@ -116,8 +116,8 @@ blocks:
             shape: DerivedShape
             material: SaturatedWater
             isotopics: moderator
-            Tinput: 450.0
-            Thot: 450.0
+            Tinput: 20.0
+            Thot: 20.0
         # Moderator within the guide tube
         inner moderator guide tube: &guide_tube_moderator
             shape: Circle
@@ -146,21 +146,13 @@ blocks:
             flags: fission chamber structure
             latticeIDs: [FC]
         fission chamber: &fission_chamber
+            # NEA/NSC/DOC(96)2: the central guide tube holds moderator with 1.0E-8 at/(b cm) of
+            # U-235, so the "chamber" fills the whole bore of the tube.
             shape: Circle
             material: Custom
             isotopics: fission chamber
             Tinput: 20.0
             Thot: 20.0
-            od: .8190 # No documentation fission chamber dims of composition
-            latticeIDs: [FC]
-        inner moderator FC: &fission_chamber_mod
-            # No documentation of this either, but assuming fission chamber
-            # has same od as fuel, so there needs to be something in the gap.
-            shape: Circle
-            material: Void
-            Tinput: 20.0
-            Thot: 20.0
-            id: fission chamber.od
             od: guide tube.id
             latticeIDs: [FC]
         pitch: &pitch
@@ -218,7 +210,6 @@ blocks:
         guide tube: *guide_tube
         fission chamber guide tube: *fission_chamber_guide_tube
         fission chamber: *fission_chamber
-        moderator fission chamber: *fission_chamber_mod
         pitch: *pitch
 # end-block-mox
     moderator: &block_mod
