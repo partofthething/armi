@@ -1,8 +1,12 @@
-====
-ARMI
-====
+=======================
+ARMI (independent fork)
+=======================
 
-.. image:: .static/armi-logo.png
+.. important:: This is the documentation of an independent fork of ARMI\ :sup:`®`. It is not affiliated with,
+   supported by, sponsored by, or endorsed by TerraPower, LLC, which has not reviewed or approved its changes.
+   Report problems to `this fork <https://github.com/partofthething/armi/issues>`_, not to TerraPower. ARMI is a
+   registered trademark of TerraPower, LLC, named here only to identify where this software came from. See the
+   :doc:`readme` for details.
 
 .. toctree::
    :hidden:

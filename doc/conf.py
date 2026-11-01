@@ -259,7 +259,7 @@ extensions = [
     "sphinxcontrib.apidoc",
     "sphinxcontrib.jquery",  # see https://github.com/readthedocs/sphinx_rtd_theme/issues/1452
     "sphinxcontrib.plantuml",
-    "sphinxcontrib.test_reports",
+    "sphinx_test_reports",
     "sphinxext.opengraph",
 ]
 
