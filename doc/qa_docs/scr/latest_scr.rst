@@ -1,4 +1,4 @@
-SCR for ARMI 0.7.0
+SCR for ARMI 2.0.0
 ==================
 
 This is a listing of all the Software Change Request (SCR) changes in the ARMI repository, as part of the current release.

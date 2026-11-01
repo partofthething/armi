@@ -1,9 +1,10 @@
 *************************
-ARMI 0.7.0 (unreleased)
+ARMI 2.0.0 (unreleased)
 *************************
 
-The first release of this fork, branched from upstream ARMI 0.6.4. It adds fuel cycle economics, replaces the
-blueprint YAML layer, fixes a set of long-standing reactor model bugs and makes common operations much faster.
+The first release of this fork, branched from upstream ARMI 0.6.4 and numbered 2.0 to mark the fork. It adds fuel
+cycle economics, replaces the blueprint YAML layer, fixes a set of long-standing reactor model bugs and makes common
+operations much faster.
 
 Fuel cycle economics
 ====================
