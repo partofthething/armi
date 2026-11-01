@@ -249,7 +249,6 @@ extensions = [
     "sphinx.ext.autosummary",
     "sphinx.ext.doctest",
     "sphinx.ext.extlinks",
-    "sphinx.ext.imgconverter",  # to convert GH Actions badge SVGs to PNG for LaTeX
     "sphinx.ext.inheritance_diagram",
     "sphinx.ext.mathjax",
     "sphinx.ext.napoleon",  # Support for NumPy and Google style docstrings
@@ -398,6 +397,9 @@ html_last_updated_fmt = "%Y-%m-%d"
 # Output file base name for HTML help builder.
 htmlhelp_basename = "ARMIdoc"
 
+# Published on GitHub Pages by .github/workflows/docs.yaml.
+html_baseurl = "https://partofthething.github.io/armi/"
+
 html_context = {
     "conf_py_path": "/doc/",  # Path in the checkout to the docs root
     "display_github": True,  # Integrate GitHub
@@ -405,52 +407,6 @@ html_context = {
     "github_user": "partofthething",  # Username
     "github_version": "main",  # Version
 }
-
-# -- Options for LaTeX output --------------------------------------------------
-latex_engine = "xelatex"
-
-# Additional stuff for the LaTeX preamble.
-latex_elements = {
-    "papersize": "letterpaper",
-    "pointsize": "10pt",
-    "preamble": r"""\usepackage{amsmath}
-
-\usepackage{wasysym}
-\setcounter{tocdepth}{5}
-\setcounter{secnumdepth}{5}
-""",
-}
-
-# Grouping the document tree into LaTeX files. List of tuples
-# (source start file, target name, title, author, documentclass [howto/manual], toctree_only).
-latex_documents = [
-    (
-        "index",
-        "ARMI.tex",
-        "Advanced Reactor Modeling Interface (ARMI) Manual",
-        "ARMI fork maintainers, after TerraPower, LLC",
-        "manual",
-        False,
-    )
-]
-
-# The name of an image file (relative to this directory) to place at the top of the title page.
-latex_logo = None
-
-# For "manual" documents, if this is true, then toplevel headings are parts, not chapters.
-latex_toplevel_sectioning = "part"
-
-# If true, show page references after internal links.
-latex_show_pagerefs = True
-
-# If true, show URL addresses after external links.
-latex_show_urls = "inline"
-
-# Documents to append as an appendix to all manuals.
-latex_appendices = []
-
-# If false, no module index is generated.
-latex_domain_indices = ["py-modindex"]
 
 # Configuration for the sphinx-gallery
 sphinx_gallery_conf = {
@@ -478,12 +434,6 @@ warnings.filterwarnings(
     category=UserWarning,
     message="Matplotlib is currently using agg, which is a non-GUI backend, so cannot show the figure.",
 )
-
-# These are defaults in Windows in more recent versions of the imgconverter plugin and can be  removed if/when we
-# upgrade Sphinx beyond 2.2. Otherwise, 'convert' from system32 folder is used.
-if sys.platform.startswith("win"):
-    image_converter = "magick"
-    image_converter_args = ["convert"]
 
 # sphinx-needs settings
 needs_fields = {
