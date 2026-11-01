@@ -18,6 +18,9 @@ import { materialLook } from "../palette.js";
  * @param {number} options.size pixel size of the square drawing
  * @param {string|null} options.emphasis component name to pick out with heavier ink
  * @param {function} [options.onPick] called with a component name when one is clicked
+ * @param {object} [options.view] ``{zoom, cx, cy}``, the part of the block on show. The drawing reads it and
+ *   writes to it as you zoom (ctrl-wheel or pinch) and pan (drag), so passing the same object to the next
+ *   drawing keeps the view across redraws. Double-click fits the block again.
  * @returns {{node: SVGElement, materials: Array}} the drawing and the material key it used
  */
 export function drawCrossSection(preview, options = {}) {
@@ -26,12 +29,8 @@ export function drawCrossSection(preview, options = {}) {
   const pad = extent * 0.1;
   const span = (extent + pad) * 2;
 
-  const node = s("svg.sheet", {
-    width: size,
-    height: size,
-    viewBox: `${-(extent + pad)} ${-(extent + pad)} ${span} ${span}`,
-    role: "img",
-  });
+  const view = options.view || {};
+  const node = s("svg.sheet", { width: size, height: size, role: "img" });
 
   const materials = materialKey(preview.components);
   const flipped = s("g", { transform: "scale(1,-1)" });
@@ -55,7 +54,17 @@ export function drawCrossSection(preview, options = {}) {
     if (group.childNodes.length) flipped.appendChild(group);
   }
 
-  flipped.appendChild(scaleBar(extent, span));
+  const bar = s("g", { style: "pointer-events:none" });
+  node.appendChild(bar);
+  const show = () => {
+    const width = span / (view.zoom || 1);
+    const x = (view.cx || 0) - width / 2;
+    const y = (view.cy || 0) - width / 2;
+    node.setAttribute("viewBox", `${x} ${y} ${width} ${width}`);
+    bar.replaceChildren(...scaleBar(x, y + width, width));
+  };
+  show();
+  zoomAndPan(node, view, span, size, show);
   return { node, materials: [...materials.entries()].map(([name, look]) => ({ name, ...look })) };
 }
 
@@ -163,21 +172,82 @@ function materialKey(components) {
   return key;
 }
 
-function scaleBar(extent, span) {
-  const length = niceStep(extent * 2);
-  // In the margin under the drawing, so it never sits on top of a pin.
-  const x0 = -extent;
-  const y0 = -extent - span * 0.025;
-  const type = span * 0.026;
-  return s(
-    "g",
-    { style: "pointer-events:none" },
-    s("line", { x1: x0, x2: x0 + length, y1: y0, y2: y0, stroke: "#4c545e", "stroke-width": span * 0.004 }),
+/** A scale bar in the bottom margin of whatever part of the drawing is on show (screen coordinates). */
+function scaleBar(left, bottom, width) {
+  const length = niceStep(width * 0.9);
+  const x0 = left + width * 0.045;
+  const y0 = bottom - width * 0.02;
+  const type = width * 0.026;
+  return [
+    s("line", { x1: x0, x2: x0 + length, y1: y0, y2: y0, stroke: "var(--sheet)", "stroke-width": width * 0.012 }),
+    s("line", { x1: x0, x2: x0 + length, y1: y0, y2: y0, stroke: "#4c545e", "stroke-width": width * 0.004 }),
     s("text", {
-      x: x0 + length + span * 0.014, y: -(y0 - type * 0.35), transform: "scale(1,-1)",
+      x: x0 + length + width * 0.014, y: y0 + type * 0.35,
       "text-anchor": "start", "font-size": type, fill: "#6b7480", "font-family": "var(--mono)",
-    }, `${Number(length.toFixed(2))} cm`),
-  );
+      stroke: "var(--sheet)", "stroke-width": type * 0.25, "paint-order": "stroke",
+    }, `${Number(length.toPrecision(3))} cm`),
+  ];
+}
+
+/** Ctrl-wheel (or pinch) zooms about the cursor, a drag pans, a double-click fits; all through ``view``. */
+function zoomAndPan(node, view, span, size, show) {
+  const toDrawing = (event) => new DOMPoint(event.clientX, event.clientY).matrixTransform(node.getScreenCTM().inverse());
+  const visible = () => span / (view.zoom || 1);
+
+  node.addEventListener("wheel", (event) => {
+    if (!event.ctrlKey && !event.metaKey) return;
+    event.preventDefault();
+    const held = toDrawing(event);
+    const before = visible();
+    view.zoom = Math.min(200, Math.max(0.5, (view.zoom || 1) * Math.exp(-event.deltaY * 0.0015)));
+    // Keep the point under the cursor where it is: it sits at the same fraction of the new view.
+    const ratio = visible() / before;
+    view.cx = held.x + ((view.cx || 0) - held.x) * ratio;
+    view.cy = held.y + ((view.cy || 0) - held.y) * ratio;
+    show();
+  }, { passive: false });
+
+  let drag = null;
+  let justDragged = false;
+  // The click that ends a drag is not a pick.
+  node.addEventListener("click", (event) => {
+    if (justDragged) event.stopPropagation();
+  }, { capture: true });
+  node.addEventListener("pointerdown", (event) => {
+    if (event.button !== 0 && event.button !== 1) return;
+    drag = { x: event.clientX, y: event.clientY, cx: view.cx || 0, cy: view.cy || 0, moved: false, id: event.pointerId };
+  });
+  node.addEventListener("pointermove", (event) => {
+    if (!drag) return;
+    const dx = event.clientX - drag.x;
+    const dy = event.clientY - drag.y;
+    if (!drag.moved && Math.hypot(dx, dy) < 4) return; // still a click
+    if (!drag.moved) {
+      drag.moved = true;
+      node.setPointerCapture(drag.id);
+      node.style.cursor = "grabbing";
+    }
+    const perPixel = visible() / size;
+    view.cx = drag.cx - dx * perPixel;
+    view.cy = drag.cy - dy * perPixel;
+    show();
+  });
+  const release = () => {
+    if (drag?.moved) {
+      node.style.cursor = "";
+      justDragged = true;
+      setTimeout(() => { justDragged = false; }, 0);
+    }
+    drag = null;
+  };
+  node.addEventListener("pointerup", release);
+  node.addEventListener("pointercancel", release);
+  node.addEventListener("dblclick", () => {
+    view.zoom = 1;
+    view.cx = 0;
+    view.cy = 0;
+    show();
+  });
 }
 
 function niceStep(span) {

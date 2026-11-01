@@ -24,6 +24,14 @@ const DIMENSION_UNITS = {
   area: "cm²", volume: "cm³",
 };
 
+// What part of each block's drawing is on show, so a zoom survives the redraw every edit causes.
+const views = new Map();
+
+function viewOf(blockName) {
+  if (!views.has(blockName)) views.set(blockName, { zoom: 1, cx: 0, cy: 0 });
+  return views.get(blockName);
+}
+
 export function blocksView(ctx) {
   const blocks = store.section("blocks");
   const names = Object.keys(blocks);
@@ -98,6 +106,12 @@ function renderStage(ctx, blockName) {
           `on lattice ${gridName}`)
       : h("span.item__meta", "concentric, no lattice"),
     h("span.spacer"),
+    h("span.item__meta", { title: "ctrl-wheel or pinch to zoom, drag to pan, double-click to fit" },
+      "ctrl-wheel to zoom · drag to pan"),
+    h("button.btn.btn--sm", { type: "button", title: "Fit the whole block", onclick: () => {
+      Object.assign(viewOf(blockName), { zoom: 1, cx: 0, cy: 0 });
+      paint(ctx, blockName, wrap);
+    } }, "Fit"),
     h("span.item__meta", { id: "xs-extent" }, ""),
   );
 
@@ -124,6 +138,7 @@ function paint(ctx, blockName, wrap) {
       const { node, materials } = drawCrossSection(preview, {
         size: Math.max(300, size),
         emphasis: ctx.state.component,
+        view: viewOf(blockName),
         onPick: (name) => {
           ctx.state.component = name;
           ctx.refresh();
