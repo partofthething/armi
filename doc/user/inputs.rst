@@ -64,21 +64,17 @@ Many settings are provided by the ARMI Framework, and others are defined by vari
 
 The input editor
 ----------------
-ARMI includes a browser-based editor for its inputs, a front end to the same text files: you can use it or not, and
-ARMI neither knows nor cares. Open a case (or a blueprints file on its own) with::
+You do not have to write these files by hand. ARMI's browser-based :doc:`input editor <input_editor>` opens a case
+and lets you paint the core map, edit pin lattices, draw block cross sections to scale, stack assemblies and change
+settings, then writes the same YAML back out::
 
     $ python -m armi gui my-case.yaml
 
-It edits core maps and pin lattices on hexagonal and Cartesian grids, block cross sections, assembly axial stacks,
-nuclide flags, custom isotopics and case settings, all against the real blueprint object model, and writes back plain
-YAML that reads like hand-written input. The server binds to loopback and nothing leaves the machine; ``--no-browser``
-prints the address instead of opening it, for use over SSH.
-
-.. figure:: /.static/inputEditor-core.png
+.. figure:: /.static/inputEditor-block.png
    :width: 100%
-   :alt: The core map view of the input editor
+   :alt: The block view of the input editor
 
-   The core map view: assemblies placed on the grid from the palette, with the symmetry and the counts of each type.
+   A block drawn from its component definitions as you edit them. See :doc:`input_editor` for a tour of every view.
 
 Note that one settings input file is required for each ARMI case, though many ARMI cases can refer to the same
 Blueprints, Core Map, and Fuel Management inputs.

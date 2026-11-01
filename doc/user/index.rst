@@ -12,6 +12,7 @@ ARMI input files, running various kinds of ARMI runs, analyzing ARMI output file
    :numbered:
 
    inputs
+   input_editor
    outputs
    settings_report
    params_report
