@@ -22,12 +22,18 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "armi"
 version = "2.0.0"
-description = "An open-source nuclear reactor analysis automation framework that helps design teams increase efficiency and quality."
+description = "An independent fork of ARMI, the open-source nuclear reactor analysis automation framework. Not affiliated with or endorsed by TerraPower, LLC."
 license-files = ["LICENSE.md", "AUTHORS"]
 requires-python = ">=3.11"
 readme = "README.rst"
+# TerraPower, LLC wrote the software this fork derives from; it does not maintain or support the fork, so it is
+# credited without a contact address. Questions go to the maintainer.
 authors = [
-    { name="TerraPower, LLC", email="armi-devs@terrapower.com" },
+    { name="TerraPower, LLC (original ARMI)" },
+    { name="Nick Touran" },
+]
+maintainers = [
+    { name="Nick Touran", email="nick@partofthething.com" },
 ]
 dependencies = [
     "coverage>=7.2.0", # Code coverage tool. Sadly baked into every Case.

@@ -2,14 +2,26 @@
 ARMI Introduction
 #################
 
-The Advanced Reactor Modeling Interface (ARMI\ :sup:`®`) is an open-source tool that streamlines your nuclear reactor
-design/analysis needs by providing a software *reactor at your fingertips* and a rich ecosystem of utilities working in
-concert. It is made for and by professional reactor analysis teams.
+.. important:: **This is an independent fork. It is not affiliated with, supported by, sponsored by, or endorsed by
+   TerraPower, LLC.**
 
-.. note:: This repository is a fork of ARMI that allows less restricted use of Large Language Models (LLMs) and AI
-   coding assistants in development, including for writing tests. It is based on the open-source ARMI originally
-   developed by TerraPower, LLC. The LLM usage policy for this fork is in
-   ``doc/developer/standards_and_practices.rst``.
+   It is derived from the open-source ARMI\ :sup:`®` software that TerraPower, LLC released under the Apache
+   License 2.0, and it has diverged substantially from it. TerraPower has not reviewed, tested, or approved any of
+   its changes, and is not responsible for them. Please do not contact TerraPower for support with this fork, and do
+   not report its problems to TerraPower's ARMI project: use
+   `this fork's issue tracker <https://github.com/partofthething/armi/issues>`_.
+   TerraPower's own ARMI is at https://github.com/terrapower/armi.
+
+   ARMI and TerraPower are registered trademarks of TerraPower, LLC. They are used here only to say where this software
+   came from, as Section 6 of the Apache License 2.0 allows; that use implies no trademark license, affiliation, or
+   endorsement.
+
+This fork of the Advanced Reactor Modeling Interface (ARMI\ :sup:`®`) is an open-source tool that streamlines your
+nuclear reactor design/analysis needs by providing a software *reactor at your fingertips* and a rich ecosystem of
+utilities working in concert. It is made for and by professional reactor analysis teams.
+
+.. note:: This fork allows less restricted use of Large Language Models (LLMs) and AI coding assistants in its
+   development, including for writing tests. Its LLM usage policy is in ``doc/developer/standards_and_practices.rst``.
 
 ARMI:
 
@@ -274,7 +286,10 @@ engineering and commercial reality.
 History of ARMI
 ***************
 ARMI was originally created by TerraPower, LLC starting in 2009 and was released under an open-source license in 2019.
-This repository is a fork of that project that differs primarily in its policy on LLM usage.
+This repository is an independent fork of that open-source release, maintained separately from TerraPower and without
+its involvement. It differs in its policy on LLM usage and in its own development since the fork, starting with
+release 2.0.0: see the release notes in ``doc/release``. Files carry their original copyright notices, and the
+changes made here are recorded in this repository's version history.
 
 
 System Requirements
@@ -287,8 +302,8 @@ parallel runs over large clusters (using the optional ``mpi4py`` library).
 
 Getting Help
 ************
-You can get help with this fork of ARMI by making issues on its
-`GitHub page <https://github.com/partofthething/armi/issues>`_.
+You can get help with this fork by making issues on its `GitHub page <https://github.com/partofthething/armi/issues>`_.
+TerraPower does not support this fork; please do not contact TerraPower or its ARMI developers about it.
 
 Disclaimers
 ***********
@@ -311,8 +326,14 @@ style, it is not considered worth the API-breaking cost to our downstream users 
 
 License
 *******
-TerraPower and ARMI are registered trademarks of TerraPower, LLC. Other trademarks and registered trademarks used in
+TerraPower and ARMI are registered trademarks of TerraPower, LLC. This independent fork uses them only to identify the
+origin of the software, as Section 6 of the Apache License 2.0 allows. That use implies no trademark license, and no
+affiliation with, sponsorship by, or endorsement by TerraPower, LLC. Other trademarks and registered trademarks used in
 this Manual are the property of the respective trademark holders.
+
+This fork is distributed under the same license as the software it is derived from. The copyright notices of
+TerraPower, LLC and other contributors are kept as the license requires; changes made in this fork are the
+responsibility of its maintainers, not of TerraPower.
 
 The ARMI system is licensed as follows:
 

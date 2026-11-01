@@ -311,7 +311,10 @@ source_suffix = ".rst"
 root_doc = "index"
 
 # General information about the project.
-copyright = f"2009-{datetime.datetime.now().year}, TerraPower, LLC"
+copyright = (
+    f"2009-{datetime.datetime.now().year}, TerraPower, LLC and other ARMI contributors, "
+    "including this fork's maintainers"
+)
 project = "ARMI"
 
 # Use the pre-existing version definition.
@@ -360,7 +363,8 @@ html_theme = "sphinx_rtd_theme"
 
 # (Optional) Logo. Should be small enough to fit the navbar (ideally 24x24). Path should be relative to the ``.static``
 # files directory.
-html_logo = os.path.join(STATIC_DIR, "armiicon_24x24.ico")
+# No logo: the ARMI and TerraPower marks belong to TerraPower, LLC, and this fork is not theirs.
+html_logo = None
 
 # Theme options are theme-specific and customize the look and feel of a theme further.
 html_theme_options = {
@@ -382,7 +386,7 @@ html_style = "css/theme_fixes.css"
 
 # The name of an image file (within the static path) to use as favicon of the docs. This file should be a icon file
 # (.ico) being 16x16 or 32x32 pixels large.
-html_favicon = os.path.join(STATIC_DIR, "armiicon_16x16.ico")
+html_favicon = None
 
 # Add any paths that contain custom static files (such as style sheets) here, relative to this directory. They are
 # copied after the builtin static files, so a file named "default.css" will overwrite the builtin "default.css".
@@ -424,14 +428,14 @@ latex_documents = [
         "index",
         "ARMI.tex",
         "Advanced Reactor Modeling Interface (ARMI) Manual",
-        "TerraPower, LLC",
+        "ARMI fork maintainers, after TerraPower, LLC",
         "manual",
         False,
     )
 ]
 
 # The name of an image file (relative to this directory) to place at the top of the title page.
-latex_logo = os.path.join(STATIC_DIR, "armi-logo.png")
+latex_logo = None
 
 # For "manual" documents, if this is true, then toplevel headings are parts, not chapters.
 latex_toplevel_sectioning = "part"
@@ -463,7 +467,6 @@ sphinx_gallery_conf = {
         ]
     ),
     "within_subsection_order": FileNameSortKey,
-    "default_thumb_file": os.path.join(STATIC_DIR, "TerraPowerLogo.png"),
 }
 
 suppress_warnings = ["autoapi.python_import_resolution", "config.cache", "autosectionlabel.*"]
