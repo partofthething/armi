@@ -3128,6 +3128,30 @@ class TestCartesianBlock(unittest.TestCase):
                 self.assertEqual(block.getSymmetryFactor(), factor)
                 self.assertAlmostEqual(block.getVolume(), 40.0 / factor)
 
+    def test_symmetryFactorBothAxesAndEverySide(self):
+        """Both axes are cut alike on a quarter core; nothing is cut anywhere on a full core or off-center origin."""
+        block = blocks.CartesianBlock("volume", height=10.0)
+        block.add(components.Square("fuel", "UZr", Tinput=25.0, Thot=25.0, widthOuter=2.0, mult=1.0))
+        block.parent = self.rCenter.core
+
+        def factors(domain, boundary, throughCenter, cells):
+            self.rCenter.core.symmetry = geometry.SymmetryType(domain, boundary, throughCenter)
+            out = []
+            for i, j in cells:
+                block.spatialLocator = self.rCenter.core.spatialGrid[i, j, 0]
+                block.clearCache()
+                out.append(block.getSymmetryFactor())
+            return out
+
+        quarter = (geometry.DomainType.QUARTER_CORE, geometry.BoundaryType.REFLECTIVE)
+        full = (geometry.DomainType.FULL_CORE, geometry.BoundaryType.NO_SYMMETRY)
+        # the i axis is halved just like the j axis
+        self.assertEqual(factors(*quarter, True, [(3, 0), (0, 3), (2, 3)]), [2.0, 2.0, 1.0])
+        # a full core is whole on the negative side of the origin as well
+        self.assertEqual(factors(*full, True, [(-4, 0), (0, -4), (-2, -3)]), [1.0, 1.0, 1.0])
+        # with the origin on a lattice line instead of at an assembly center, no cell sits on an axis
+        self.assertEqual(factors(*quarter, False, [(0, 0), (0, 3), (3, 0)]), [1.0, 1.0, 1.0])
+
     def test_getPitchSquare(self):
         self.assertEqual(self.cartesianBlock.getPitch(), (self.PITCH, self.PITCH))
 
