@@ -1,0 +1,40 @@
+/* Small adjustments on top of sphinx-book-theme. */
+
+/* The book layout navigates from the sidebar and the article header; the inherited pydata top navbar only
+   repeated the search box. */
+.bd-header {
+    display: none;
+}
+
+img {
+    max-width: 100% !important;
+}
+
+/* move equation numbers to the right side of the equation */
+span.eqno {
+    float: right;
+}
+
+/* sphinx-needs tables */
+table.need.need.need > tbody > tr > td {
+    padding: 0.5em 0.5em !important;
+}
+
+/* style test needs by their result */
+tr.needs_passed td {
+    background-color: rgba(0, 250, 0, 0.2) !important;
+}
+
+tr.needs_failure td {
+    background-color: rgba(250, 0, 0, 0.2) !important;
+}
+
+tr.needs_skipped td {
+    background-color: rgba(0, 0, 0, 0.1) !important;
+}
+
+/* log files and raw data dumps stay compact */
+div[class^="highlight"] pre,
+pre.literal-block {
+    line-height: 1.25;
+}

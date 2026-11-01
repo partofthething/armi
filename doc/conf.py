@@ -33,7 +33,6 @@ import subprocess
 import sys
 import warnings
 
-import sphinx_rtd_theme  # noqa: F401
 from docutils import nodes, statemachine
 from docutils.parsers.rst import Directive, directives
 from sphinx.domains.python import PythonDomain
@@ -255,9 +254,8 @@ extensions = [
     "sphinx.ext.viewcode",
     "sphinx_gallery.gen_gallery",
     "sphinx_needs",  # needed for requirements tracking
-    "sphinx_rtd_theme",  # needed here for loading jquery in sphinx 6
     "sphinxcontrib.apidoc",
-    "sphinxcontrib.jquery",  # see https://github.com/readthedocs/sphinx_rtd_theme/issues/1452
+    "sphinxcontrib.jquery",  # the sphinx-needs tables use jQuery
     "sphinxcontrib.plantuml",
     "sphinx_test_reports",
     "sphinxext.opengraph",
@@ -297,11 +295,11 @@ napoleon_use_rtype = True
 nbsphinx_kernel_name = "python3"
 
 ogp_site_url = "https://partofthething.github.io/armi/"
-ogp_image = "https://partofthething.github.io/armi/_static/armiSchematicView.png"
-ogp_site_name = "Advanced Reactor Modeling Interface"
+ogp_image = "https://partofthething.github.io/armi/_static/logo-512.png"
+ogp_site_name = "ARMI (independent fork)"
 
 # Add any paths that contain templates here, relative to this directory.
-templates_path = [".templates"]
+
 
 # The suffix of source filenames.
 source_suffix = ".rst"
@@ -357,35 +355,34 @@ modindex_common_prefix = ["armi."]
 
 # -- Options for HTML output ---------------------------------------------------
 
-# The theme to use for HTML and HTML Help pages. See the documentation for a list of builtin themes.
-html_theme = "sphinx_rtd_theme"
+# The theme to use for HTML and HTML Help pages.
+html_theme = "sphinx_book_theme"
+html_title = "ARMI (independent fork)"
 
-# (Optional) Logo. Should be small enough to fit the navbar (ideally 24x24). Path should be relative to the ``.static``
-# files directory.
-# No logo: the ARMI and TerraPower marks belong to TerraPower, LLC, and this fork is not theirs.
-html_logo = None
+# The fork's own mark: a small hexagonal core map. Deliberately not the ARMI or TerraPower logos.
+html_logo = os.path.join(STATIC_DIR, "logo.svg")
 
-# Theme options are theme-specific and customize the look and feel of a theme further.
 html_theme_options = {
-    "logo_only": False,
-    "prev_next_buttons_location": "bottom",
-    "style_external_links": True,
-    "style_nav_header_background": "#233C5B",  # TP blue looks better than green
-    "vcs_pageview_mode": "",
-    # Toc options
-    "collapse_navigation": True,
-    "includehidden": True,
-    "navigation_depth": -1,
-    "sticky_navigation": True,
-    "titles_only": False,
+    "repository_url": "https://github.com/partofthething/armi",
+    "repository_branch": "main",
+    "path_to_docs": "doc",
+    "use_repository_button": True,
+    "use_issues_button": True,
+    # Much of the site (API reference, gallery) is generated at build time and has no source to edit.
+    "use_edit_page_button": False,
+    "home_page_in_toc": True,
+    "show_toc_level": 2,
+    "logo": {"text": "ARMI (independent fork)"},
+    # No "By <author>" line: the copyright line already credits TerraPower and the fork's maintainers.
+    "footer_content_items": ["copyright.html", "last-updated.html"],
+    "announcement": ("An independent fork of ARMI, not affiliated with, supported by, or endorsed by TerraPower, LLC."),
 }
 
-# as long as this file @import's the theme's main css it won't break anything
-html_style = "css/theme_fixes.css"
+html_css_files = ["css/custom.css"]
 
 # The name of an image file (within the static path) to use as favicon of the docs. This file should be a icon file
 # (.ico) being 16x16 or 32x32 pixels large.
-html_favicon = None
+html_favicon = os.path.join(STATIC_DIR, "favicon.ico")
 
 # Add any paths that contain custom static files (such as style sheets) here, relative to this directory. They are
 # copied after the builtin static files, so a file named "default.css" will overwrite the builtin "default.css".
@@ -400,13 +397,6 @@ htmlhelp_basename = "ARMIdoc"
 # Published on GitHub Pages by .github/workflows/docs.yaml.
 html_baseurl = "https://partofthething.github.io/armi/"
 
-html_context = {
-    "conf_py_path": "/doc/",  # Path in the checkout to the docs root
-    "display_github": True,  # Integrate GitHub
-    "github_repo": "armi",  # Repo name
-    "github_user": "partofthething",  # Username
-    "github_version": "main",  # Version
-}
 
 # Configuration for the sphinx-gallery
 sphinx_gallery_conf = {

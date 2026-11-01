@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" role="img">
+<title>Hexagonal core map mark</title>
+<path d="M64.00,45.10 L80.37,54.55 L80.37,73.45 L64.00,82.90 L47.63,73.45 L47.63,54.55 Z" fill="#ffb454" stroke="#b97f36" stroke-width="2.4" stroke-linejoin="round"/>
+<path d="M100.37,45.10 L116.74,54.55 L116.74,73.45 L100.37,82.90 L84.01,73.45 L84.01,54.55 Z" fill="#a8c6ea" stroke="#286ec3" stroke-width="2.4" stroke-linejoin="round"/>
+<path d="M82.19,76.60 L98.55,86.05 L98.55,104.95 L82.19,114.40 L65.82,104.95 L65.82,86.05 Z" fill="#a2dbc8" stroke="#1aa070" stroke-width="2.4" stroke-linejoin="round"/>
+<path d="M45.81,76.60 L62.18,86.05 L62.18,104.95 L45.81,114.40 L29.45,104.95 L29.45,86.05 Z" fill="#f1c0ad" stroke="#d56031" stroke-width="2.4" stroke-linejoin="round"/>
+<path d="M27.63,45.10 L43.99,54.55 L43.99,73.45 L27.63,82.90 L11.26,73.45 L11.26,54.55 Z" fill="#a8c6ea" stroke="#286ec3" stroke-width="2.4" stroke-linejoin="round"/>
+<path d="M45.81,13.60 L62.18,23.05 L62.18,41.95 L45.81,51.40 L29.45,41.95 L29.45,23.05 Z" fill="#a2dbc8" stroke="#1aa070" stroke-width="2.4" stroke-linejoin="round"/>
+<path d="M82.19,13.60 L98.55,23.05 L98.55,41.95 L82.19,51.40 L65.82,41.95 L65.82,23.05 Z" fill="#f1c0ad" stroke="#d56031" stroke-width="2.4" stroke-linejoin="round"/>
+<circle cx="64" cy="64" r="5.2" fill="#fff6e8" stroke="#b97f36" stroke-width="2"/>
+</svg>

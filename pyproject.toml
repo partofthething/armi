@@ -85,7 +85,7 @@ test = [
 ]
 docs = [
     # Officially, we build our docs with Python 3.13.
-    "docutils>=0.21.2", # Needed by sphinx-rtd-theme
+    "docutils>=0.21.2", # reStructuredText, the docs source format
     "ipykernel>=6.0.0", # iPython kernel to run Jupyter notebooks
     "Jinja2>=3.1.6", # Used in numpydoc and nbconvert
     "nbsphinx>=0.9.6", # Parses Jupyter notebooks
@@ -96,9 +96,9 @@ docs = [
     "setuptools",  # needed for conf.py tooling
     "sphinx-gallery>=0.13.0", # Builds an HTML version of a Python script and puts it into a gallery
     "sphinx-needs>=8.5.0", # Requirements traceability matrices for QA
-    "sphinx-rtd-theme>=3.0.2", # Read-The-Docs theme for Sphinx
+    "sphinx-book-theme>=1.4.0", # The docs theme
     "sphinx-test-reports>=1.1.0", # sphinx-needs test reports in the STR
-    "Sphinx>=7.4.7", # central library used to build our docs
+    "Sphinx>=8.2", # central library used to build our docs (sphinx-book-theme needs 8.2)
     "sphinxcontrib-apidoc>=0.5.0", # More easily document our API
     "sphinxcontrib-htmlhelp>=2.1.0", # renders HTML help files
     "sphinxcontrib-jquery>=4.1", # Handle missing jquery errors
