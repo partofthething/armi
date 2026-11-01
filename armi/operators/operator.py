@@ -967,8 +967,8 @@ class Operator:
         elif interactState == "BOC" and cycle < self.cs[CONF_DEFERRED_INTERFACES_CYCLE]:
             nameCheck = lambda i: i.name not in self.cs[CONF_DEFERRED_INTERFACE_NAMES]
         elif interactState == "BOL":
-            nameCheck = (
-                lambda i: i.name not in self.cs[CONF_DEFERRED_INTERFACE_NAMES] and i.name not in excludedInterfaceNames
+            nameCheck = lambda i: (
+                i.name not in self.cs[CONF_DEFERRED_INTERFACE_NAMES] and i.name not in excludedInterfaceNames
             )
 
         # Finally, find the active interfaces.

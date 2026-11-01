@@ -825,7 +825,7 @@ class Core(composites.Composite):
 
         # filter based on ring. The grid defines what a ring is: hexagonal rings for hex grids, and square rings
         # (1-based Chebyshev distance from the center) for Cartesian grids.
-        assems.select(lambda a: (a.spatialLocator.getRingPos()[0] == ring))
+        assems.select(lambda a: a.spatialLocator.getRingPos()[0] == ring)
 
         # filter based on typeSpec
         if typeSpec:

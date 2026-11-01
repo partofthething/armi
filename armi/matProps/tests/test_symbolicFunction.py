@@ -748,8 +748,8 @@ class TestSymbolicFunction(unittest.TestCase):
     def test_symbolicExamples(self):
         """Test a handful of complicated symbolic equations."""
         # example 1
-        func = lambda x, y, z: 10**5 * (
-            (-540 / (1 + math.exp(-0.02 * (x - 220))) + 520) + (-120 / (1 + math.exp(-0.02 * (x - 122))) + 92)
+        func = lambda x, y, z: (
+            10**5 * ((-540 / (1 + math.exp(-0.02 * (x - 220))) + 520) + (-120 / (1 + math.exp(-0.02 * (x - 122))) + 92))
         )
         self.setEqnField("10**5*((-540/(1+exp(-0.02*(X-220)))+ 520)+ (-120/(1+exp(-0.02*(X-122)))+ 92))")
         self.functionTest(func, 1)

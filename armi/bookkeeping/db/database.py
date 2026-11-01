@@ -261,7 +261,7 @@ class Database:
             return unknown
         repo_exists = (
             subprocess.run(
-                "git rev-parse --git-dir".split(),
+                ["git", "rev-parse", "--git-dir"],
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
             ).returncode

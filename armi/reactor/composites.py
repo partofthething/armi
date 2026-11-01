@@ -2325,7 +2325,7 @@ class Composite(ArmiObject):
         children = self.iterChildren(*args, **kwargs)
         # Each entry is either (c, ) or (c, c.material) if the child has a material attribute
         stitched = map(
-            lambda c: ((c,) if getattr(c, "material", None) is None else (c, c.material)),
+            lambda c: (c,) if getattr(c, "material", None) is None else (c, c.material),
             children,
         )
         # Iterator that iterates over each "sub" iterator. If we have ((c0, ), (c1, m1)), this produces a single

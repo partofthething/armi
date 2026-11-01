@@ -99,8 +99,10 @@ def getFissionProductModelSettingValidators(inspector):
 
     queries.append(
         Query(
-            lambda: inspector.cs[CONF_FP_MODEL] != "explicitFissionProducts"
-            and not bool(inspector.cs["initializeBurnChain"]),
+            lambda: (
+                inspector.cs[CONF_FP_MODEL] != "explicitFissionProducts"
+                and not bool(inspector.cs["initializeBurnChain"])
+            ),
             (
                 "The burn chain is not being initialized and the fission product model is not set "
                 "to `explicitFissionProducts`. This will likely fail."
@@ -112,8 +114,10 @@ def getFissionProductModelSettingValidators(inspector):
 
     queries.append(
         Query(
-            lambda: inspector.cs[CONF_FP_MODEL] != "explicitFissionProducts"
-            and inspector.cs[CONF_FISSION_PRODUCT_LIBRARY_NAME] != "",
+            lambda: (
+                inspector.cs[CONF_FP_MODEL] != "explicitFissionProducts"
+                and inspector.cs[CONF_FISSION_PRODUCT_LIBRARY_NAME] != ""
+            ),
             (
                 "The explicit fission product model is disabled and the fission product model "
                 "library is set. This will have no impact on the results, but it is best to "
@@ -126,8 +130,9 @@ def getFissionProductModelSettingValidators(inspector):
 
     queries.append(
         Query(
-            lambda: inspector.cs[CONF_FP_MODEL] == "explicitFissionProducts"
-            and bool(inspector.cs["initializeBurnChain"]),
+            lambda: (
+                inspector.cs[CONF_FP_MODEL] == "explicitFissionProducts" and bool(inspector.cs["initializeBurnChain"])
+            ),
             (
                 "The explicit fission product model is enabled, but initializing the burn chain is "
                 "also enabled. This will likely fail."
@@ -139,8 +144,10 @@ def getFissionProductModelSettingValidators(inspector):
 
     queries.append(
         Query(
-            lambda: inspector.cs[CONF_FP_MODEL] == "explicitFissionProducts"
-            and inspector.cs[CONF_FISSION_PRODUCT_LIBRARY_NAME] == "",
+            lambda: (
+                inspector.cs[CONF_FP_MODEL] == "explicitFissionProducts"
+                and inspector.cs[CONF_FISSION_PRODUCT_LIBRARY_NAME] == ""
+            ),
             (
                 "The explicit fission product model is enabled and the fission product model "
                 "library is disabled. May result in no fission product nuclides being added to the "

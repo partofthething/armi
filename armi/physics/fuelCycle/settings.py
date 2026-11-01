@@ -135,8 +135,10 @@ def getFuelCycleSettingValidators(inspector):
 
     queries.append(
         settingsValidation.Query(
-            lambda: inspector.cs[CONF_SHUFFLE_SEQUENCE_FILE]
-            and not inspector._csRelativePathExists(inspector.cs[CONF_SHUFFLE_SEQUENCE_FILE]),
+            lambda: (
+                inspector.cs[CONF_SHUFFLE_SEQUENCE_FILE]
+                and not inspector._csRelativePathExists(inspector.cs[CONF_SHUFFLE_SEQUENCE_FILE])
+            ),
             "The specified shuffle sequence file '{0}' cannot be found.".format(
                 inspector.cs[CONF_SHUFFLE_SEQUENCE_FILE]
             ),
@@ -151,9 +153,11 @@ def getFuelCycleSettingValidators(inspector):
 
     queries.append(
         settingsValidation.Query(
-            lambda: inspector.cs[CONF_SHUFFLE_LOGIC]
-            and not inspector._csRelativePathExists(inspector.cs[CONF_SHUFFLE_LOGIC])
-            and importlib.util.find_spec(inspector.cs[CONF_SHUFFLE_LOGIC]) is None,
+            lambda: (
+                inspector.cs[CONF_SHUFFLE_LOGIC]
+                and not inspector._csRelativePathExists(inspector.cs[CONF_SHUFFLE_LOGIC])
+                and importlib.util.find_spec(inspector.cs[CONF_SHUFFLE_LOGIC]) is None
+            ),
             "The specified shuffle logic module or file '{0}' cannot be found. Shuffling will not occur.".format(
                 inspector.cs[CONF_SHUFFLE_LOGIC]
             ),

@@ -366,10 +366,12 @@ class Inspector:
         )
 
         self.addQuery(
-            lambda: self.cs["runType"] != operators.RunTypes.SNAPSHOTS
-            and self.cs["loadStyle"] == "fromDB"
-            and self.cs["startCycle"] == 0
-            and self.cs["startNode"] == 0,
+            lambda: (
+                self.cs["runType"] != operators.RunTypes.SNAPSHOTS
+                and self.cs["loadStyle"] == "fromDB"
+                and self.cs["startCycle"] == 0
+                and self.cs["startNode"] == 0
+            ),
             "Starting from cycle 0, and time node 0 was chosen. Restart runs load from "
             "the time node just before the restart. There is no time node to load from "
             "before cycle 0 node 0. Either switch to the snapshot operator, start from "
@@ -379,8 +381,10 @@ class Inspector:
         )
 
         self.addQuery(
-            lambda: self.cs["runType"] == operators.RunTypes.SNAPSHOTS
-            and not (self.cs["dumpSnapshot"] or self.cs["defaultSnapshots"]),
+            lambda: (
+                self.cs["runType"] == operators.RunTypes.SNAPSHOTS
+                and not (self.cs["dumpSnapshot"] or self.cs["defaultSnapshots"])
+            ),
             "The Snapshots operator was specified, but no dump snapshots were chosen."
             "Please specify snapshot steps with the `dumpSnapshot` setting.",
             "",
@@ -407,9 +411,11 @@ class Inspector:
             return any(fName == os.path.split(copyFile)[1] for copyFile in self.cs["copyFilesFrom"])
 
         self.addQuery(
-            lambda: self.cs[CONF_EXPLICIT_REPEAT_SHUFFLES]
-            and not self._csRelativePathExists(self.cs[CONF_EXPLICIT_REPEAT_SHUFFLES])
-            and not _willBeCopiedFrom(self.cs[CONF_EXPLICIT_REPEAT_SHUFFLES]),
+            lambda: (
+                self.cs[CONF_EXPLICIT_REPEAT_SHUFFLES]
+                and not self._csRelativePathExists(self.cs[CONF_EXPLICIT_REPEAT_SHUFFLES])
+                and not _willBeCopiedFrom(self.cs[CONF_EXPLICIT_REPEAT_SHUFFLES])
+            ),
             "The specified repeat shuffle file `{0}` does not exist, and won't be copied. Run will crash.".format(
                 self.cs[CONF_EXPLICIT_REPEAT_SHUFFLES]
             ),
@@ -418,9 +424,11 @@ class Inspector:
         )
 
         self.addQuery(
-            lambda: self.cs[CONF_SHUFFLE_SEQUENCE_FILE]
-            and not self._csRelativePathExists(self.cs[CONF_SHUFFLE_SEQUENCE_FILE])
-            and not _willBeCopiedFrom(self.cs[CONF_SHUFFLE_SEQUENCE_FILE]),
+            lambda: (
+                self.cs[CONF_SHUFFLE_SEQUENCE_FILE]
+                and not self._csRelativePathExists(self.cs[CONF_SHUFFLE_SEQUENCE_FILE])
+                and not _willBeCopiedFrom(self.cs[CONF_SHUFFLE_SEQUENCE_FILE])
+            ),
             "The specified shuffle sequence file `{0}` does not exist. Run will crash.".format(
                 self.cs[CONF_SHUFFLE_SEQUENCE_FILE]
             ),
@@ -464,7 +472,7 @@ class Inspector:
         )
 
         self.addQuery(
-            lambda: (not self.cs["tightCoupling"] and self.cs["tightCouplingMaxNumIters"] != 4),
+            lambda: not self.cs["tightCoupling"] and self.cs["tightCouplingMaxNumIters"] != 4,
             "You've requested a non default number of tight coupling iterations but left tightCoupling: False."
             "Do you want to set tightCoupling to True?",
             "",
@@ -472,7 +480,7 @@ class Inspector:
         )
 
         self.addQuery(
-            lambda: (not self.cs["tightCoupling"] and self.cs["tightCouplingSettings"]),
+            lambda: not self.cs["tightCoupling"] and self.cs["tightCouplingSettings"],
             "You've requested non default tight coupling settings but tightCoupling: False."
             "Do you want to set tightCoupling to True?",
             "",
@@ -514,7 +522,7 @@ class Inspector:
 
         if self.cs["cycles"] == []:
             self.addQuery(
-                lambda: (self.cs["availabilityFactors"] and not _factorsAreValid(self.cs["availabilityFactors"])),
+                lambda: self.cs["availabilityFactors"] and not _factorsAreValid(self.cs["availabilityFactors"]),
                 "`availabilityFactors` was not set to a list compatible with the number of cycles. "
                 "Please update input or use constant duration.",
                 "Use constant availability factor specified in `availabilityFactor` setting?",
@@ -522,7 +530,7 @@ class Inspector:
             )
 
             self.addQuery(
-                lambda: (self.cs["powerFractions"] and not _factorsAreValid(self.cs["powerFractions"])),
+                lambda: self.cs["powerFractions"] and not _factorsAreValid(self.cs["powerFractions"]),
                 "`powerFractions` was not set to a compatible list. "
                 "Please update input or use full power at all cycles.",
                 "Use full power for all cycles?",
@@ -530,7 +538,7 @@ class Inspector:
             )
 
             self.addQuery(
-                lambda: (self.cs["cycleLengths"] and not _factorsAreValid(self.cs["cycleLengths"], maxVal=1e10)),
+                lambda: self.cs["cycleLengths"] and not _factorsAreValid(self.cs["cycleLengths"], maxVal=1e10),
                 "`cycleLengths` was not set to a list compatible with the number of cycles."
                 " Please update input or use constant duration.",
                 "Use constant cycle length specified in `cycleLength` setting?",
@@ -595,7 +603,7 @@ class Inspector:
         )
 
         self.addQuery(
-            lambda: (self.cs[CONF_ZONE_DEFINITIONS] and self.cs[CONF_ZONES_FILE]),
+            lambda: self.cs[CONF_ZONE_DEFINITIONS] and self.cs[CONF_ZONES_FILE],
             f"Cannot specify both {CONF_ZONE_DEFINITIONS} and {CONF_ZONES_FILE}. Please remove one and resubmit.",
             "",
             self.NO_ACTION,

@@ -297,7 +297,7 @@ class HistoryTrackerInterface(interfaces.Interface):
                 out.write(tabulate.tabulate((location,), tableFmt="plain"))
                 out.write("\n\n\n")
 
-                headers = "EOL bottom top center".split()
+                headers = ["EOL", "bottom", "top", "center"]
                 data = [("", b.p.zbottom, b.p.ztop, b.p.z) for b in self.nonStationaryBlocks(a)]
                 out.write(tabulate.tabulate(data, headers=headers, tableFmt="plain", floatFmt="10.3f"))
 

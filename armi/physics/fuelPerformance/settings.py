@@ -85,13 +85,15 @@ def defineValidators(inspector):
     return [
         Query(
             lambda: (
-                inspector.cs[CONF_AXIAL_EXPANSION]
-                or inspector.cs[CONF_BOND_REMOVAL]
-                or inspector.cs[CONF_FGR_REMOVAL]
-                or inspector.cs[CONF_CLADDING_WASTAGE]
-                or inspector.cs[CONF_CLADDING_STRAIN]
-            )
-            and inspector.cs[CONF_FUEL_PERFORMANCE_ENGINE] == "",
+                (
+                    inspector.cs[CONF_AXIAL_EXPANSION]
+                    or inspector.cs[CONF_BOND_REMOVAL]
+                    or inspector.cs[CONF_FGR_REMOVAL]
+                    or inspector.cs[CONF_CLADDING_WASTAGE]
+                    or inspector.cs[CONF_CLADDING_STRAIN]
+                )
+                and inspector.cs[CONF_FUEL_PERFORMANCE_ENGINE] == ""
+            ),
             "A fuel performance behavior has been selected but no fuel performance engine is selected.",
             "",
             inspector.NO_ACTION,
