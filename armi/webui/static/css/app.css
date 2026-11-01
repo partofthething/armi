@@ -442,6 +442,64 @@ textarea.input { resize: vertical; min-height: 60px; font-family: var(--mono); f
 .statusbar__slot--dim { color: var(--text-faint); }
 .statusbar__spacer { flex: 1; }
 
+/* -------------------------------------------------------------- run -- */
+
+/* The Run button sits apart from Save: it starts something, it does not just write a file. */
+.btn--run { margin-left: 6px; border-color: var(--good); color: var(--good); font-weight: 500; }
+.btn--run:hover:not(:disabled) { background: rgba(86, 197, 150, 0.12); border-color: var(--good); }
+.btn--run[data-state="running"] { background: rgba(86, 197, 150, 0.16); }
+
+/* A console docked between the workspace and the status bar while a run is shown. */
+.shell--running { grid-template-rows: var(--top-h) 1fr minmax(160px, 32vh) var(--status-h); }
+.shell--running .statusbar { grid-row: 4; }
+
+.runpanel {
+  grid-row: 3;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--ink);
+  border-top: 1px solid var(--line);
+}
+.runpanel[hidden] { display: none; }
+.runpanel__head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 5px 12px;
+  background: var(--chrome);
+  border-bottom: 1px solid var(--line-soft);
+  font-size: 12px;
+}
+.runpanel__title { font-weight: 600; color: var(--text); }
+.runpanel__spacer { flex: 1; }
+.runpanel__time { font-family: var(--mono); color: var(--text-faint); }
+.runpanel__state {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  color: var(--text-dim);
+}
+.runpanel__state[data-state="running"]  { color: var(--amber); border-color: var(--amber-dim); }
+.runpanel__state[data-state="finished"] { color: var(--good);  border-color: var(--good); }
+.runpanel__state[data-state="failed"],
+.runpanel__state[data-state="stopped"]  { color: var(--alarm); border-color: var(--alarm-dim); }
+.runpanel__log {
+  flex: 1;
+  min-height: 0;
+  margin: 0;
+  padding: 8px 12px;
+  overflow: auto;
+  font-family: var(--mono);
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--text-dim);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
 /* -------------------------------------------------------------- overlay -- */
 
 .overlay {

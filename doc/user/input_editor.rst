@@ -126,6 +126,17 @@ plugin that defines them, filtered by default to the ones that differ from their
 and description. Every setting shows its own description. Saving writes only the settings that differ from their
 defaults, which keeps a settings file short enough to read.
 
+Running the case
+----------------
+**Run** (or Ctrl+Enter) runs the open case, exactly as ``python -m <app> run case.yaml`` would from a terminal:
+the application the editor was started with runs it, so ``python -m myapp gui`` runs it with ``myapp``'s plugins.
+A run reads the files on disk, so any unsaved blueprints or settings are saved first. It runs in its own process in
+the settings file's folder, where its outputs land, and its screen output goes to ``<case>.gui-run.log`` beside them.
+
+A console docked under the workspace follows the log as it grows, with how long the run has taken and a Stop button
+that ends the run and anything it started. Hide the console and the run carries on; shift-click Run to bring it
+back, which also works after reloading the page. One run at a time per editor.
+
 
 Teaching the editor about your settings
 =======================================

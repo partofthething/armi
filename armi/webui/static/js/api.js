@@ -59,4 +59,8 @@ export const api = {
   settings: () => call("GET", "/api/settings"),
   putSettings: (values) => call("PUT", "/api/settings", { values }),
   saveSettings: (path, style) => call("POST", "/api/settings/save", { path, style }),
+
+  startRun: () => call("POST", "/api/run", {}),
+  runStatus: (offset) => call("GET", offset === null || offset === undefined ? "/api/run" : `/api/run?offset=${offset}`),
+  stopRun: () => call("POST", "/api/run/stop", {}),
 };

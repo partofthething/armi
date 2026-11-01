@@ -4,6 +4,7 @@ import { api } from "./api.js";
 import { h, fill } from "./dom.js";
 import { icon } from "./icons.js";
 import { pickPath } from "./picker.js";
+import { runPanel } from "./run.js";
 import { store } from "./store.js";
 import { dialog, field, selectInput, toast } from "./ui.js";
 
@@ -42,6 +43,7 @@ const el = {
   undo: document.getElementById("act-undo"),
   redo: document.getElementById("act-redo"),
   save: document.getElementById("act-save"),
+  run: document.getElementById("act-run"),
 };
 
 let current = viewFromHash() || "core";
@@ -173,6 +175,7 @@ function syncDirty() {
   el.undo.title = store.undoLabel ? `Undo ${store.undoLabel} (Ctrl+Z)` : "Nothing to undo";
   el.redo.title = store.redoLabel ? `Redo ${store.redoLabel} (Ctrl+Shift+Z)` : "Nothing to redo";
   el.save.disabled = !store.document;
+  el.run.disabled = !store.session?.settings?.open;
 }
 
 function baseName(path) {
@@ -310,6 +313,36 @@ async function openSettings() {
   }
 }
 
+// -- running ----------------------------------------------------------------------------------
+
+/**
+ * Run the case. A run reads the files on disk, so unsaved edits are saved first: the blueprints
+ * the way the Save button would, the settings the way the settings page would.
+ */
+async function runCase() {
+  if (!store.session?.settings?.open) {
+    toast("Open a case settings file to run it", { kind: "error" });
+    return;
+  }
+  if (store.dirty) {
+    await saveBlueprints();
+    if (store.dirty) return;
+  }
+  try {
+    const state = await api.state();
+    if (state.settings?.dirty) await api.saveSettings(state.settings.path, "short");
+    await runPanel.start();
+    toast(`Running ${baseName(state.settings?.path)}`, { kind: "ok" });
+  } catch (error) {
+    toast("The run did not start", { kind: "error", detail: error.message });
+  }
+}
+
+runPanel.onState((state) => {
+  el.run.dataset.state = state || "";
+  el.run.textContent = state === "running" ? "Running" : "Run";
+});
+
 // -- keyboard ---------------------------------------------------------------------------------
 
 function onKeyDown(event) {
@@ -320,6 +353,11 @@ function onKeyDown(event) {
     event.preventDefault();
     if (event.shiftKey) saveBlueprintsAs();
     else saveBlueprints();
+    return;
+  }
+  if (accel && event.key === "Enter") {
+    event.preventDefault();
+    runCase();
     return;
   }
   if (accel && event.key.toLowerCase() === "z") {
@@ -341,6 +379,7 @@ function onKeyDown(event) {
 el.undo.onclick = () => store.undo();
 el.redo.onclick = () => store.redo();
 el.save.onclick = (event) => (event.shiftKey ? saveBlueprintsAs() : saveBlueprints());
+el.run.onclick = (event) => (event.shiftKey ? runPanel.toggle() : runCase());
 document.getElementById("file-blueprints").onclick = openBlueprints;
 document.getElementById("file-settings").onclick = openSettings;
 document.addEventListener("keydown", onKeyDown);
@@ -369,6 +408,7 @@ store
   .then(() => {
     syncChrome();
     renderView();
+    if (store.session?.run) runPanel.reopen();
   })
   .catch((error) => {
     fill(

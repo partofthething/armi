@@ -20,6 +20,9 @@ nothing beyond ARMI and runs anywhere ARMI does, including over SSH (``--no-brow
 loopback). It replaces the wxPython grid editor: the ``grids`` entry point and the ``grids`` extra are gone, and with
 them ARMI's last GUI dependency.
 
+The editor can also run the case it has open (**Run**, Ctrl+Enter) and follow its log in a docked console, with the
+application it was started from, so a plugin's settings and physics come along.
+
 .. figure:: /.static/inputEditor-core.png
    :width: 100%
    :alt: Core map view of the input editor

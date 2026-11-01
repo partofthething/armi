@@ -250,6 +250,9 @@ class _Handler(http.server.BaseHTTPRequestHandler):
             ("GET", "/api/settings"): session.getSettings,
             ("PUT", "/api/settings"): lambda: session.putSettings(body),
             ("POST", "/api/settings/save"): lambda: session.saveSettings(body),
+            ("POST", "/api/run"): lambda: session.startRun(body),
+            ("GET", "/api/run"): lambda: session.runStatus(query),
+            ("POST", "/api/run/stop"): lambda: session.stopRun(body),
         }
         handler = routes.get(route)
         if handler is None:

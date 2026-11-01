@@ -15,7 +15,7 @@ import traceback
 
 from armi import materials, runLog
 from armi.settings.fwSettings.globalSettings import CONF_LOADING_FILE, CONF_MATERIAL_NAMESPACE_ORDER
-from armi.webui import catalog, preview, settingsdoc
+from armi.webui import catalog, preview, runs, settingsdoc
 from armi.webui.document import BlueprintsDocument, DocumentError
 
 # Suffixes offered by the file picker.
@@ -54,6 +54,8 @@ class Session:
         self.doc = None
         self.settings = None
         self.dirty = False
+        self.settingsDirty = False
+        self.run = None
         self.rootDir = pathlib.Path.cwd()
         self._catalog = None
         self._catalogOrder = None
@@ -131,7 +133,9 @@ class Session:
             "settings": {
                 "path": str(self.settings.path) if self.settings and self.settings.path else None,
                 "open": self.settings is not None,
+                "dirty": self.settingsDirty,
             },
+            "run": self.run.state if self.run else None,
             "cwd": str(self.rootDir),
         }
 
@@ -297,6 +301,7 @@ class Session:
             self.settings.apply(values)
         except settingsdoc.SettingsError as ee:
             return 400, {"error": str(ee)}
+        self.settingsDirty = True
         return 200, self.settings.toDict()
 
     def saveSettings(self, body):
@@ -308,7 +313,41 @@ class Session:
             return 409, {"error": str(ee), "ignored": list(self.settings.ignored)}
         except Exception as ee:
             return 400, {"error": str(ee)}
+        self.settingsDirty = False
         return 200, {"path": str(written), "state": self.state()}
+
+    # -- running the case -------------------------------------------------------------------------
+
+    def startRun(self, body):
+        """Run the open case as it is saved on disk."""
+        if self.run is not None and self.run.running:
+            return 409, {"error": "A run is already going. Stop it first."}
+        if self.settings is None or self.settings.path is None:
+            return 400, {"error": "Open or save a case settings file to run it."}
+        if self.dirty or self.settingsDirty:
+            return 409, {"error": "Save your changes first: a run uses the files as they are on disk."}
+        try:
+            self.run = runs.CaseRun(self.settings.path)
+        except OSError as ee:
+            return 500, {"error": f"Could not start the run: {ee}"}
+        runLog.important(f"Started `{' '.join(self.run.command)}` in {self.run.workdir}")
+        return 200, self.run.read(0)
+
+    def runStatus(self, query):
+        if self.run is None:
+            return 200, {"state": None}
+        offset = query.get("offset")
+        try:
+            offset = int(offset) if offset is not None else None
+        except ValueError:
+            return 400, {"error": "offset must be a whole number of bytes"}
+        return 200, self.run.read(offset)
+
+    def stopRun(self, body):
+        if self.run is None or not self.run.running:
+            return 409, {"error": "Nothing is running."}
+        self.run.stop()
+        return 200, self.run.read(None)
 
     # -- file picker ------------------------------------------------------------------------------
 
