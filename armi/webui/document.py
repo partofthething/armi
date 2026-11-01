@@ -43,6 +43,7 @@ SECTIONS = (
     "custom isotopics",
     "components",
     "component groups",
+    "particles",
     "blocks",
     "assemblies",
     "systems",

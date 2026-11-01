@@ -21,6 +21,7 @@ Special logic is required for handling component links.
 from armi import materials, runLog
 from armi.nucDirectory import nuclideBases
 from armi.reactor import components, composites
+from armi.reactor.components import particles
 from armi.reactor.flags import Flags
 from armi.utils import densityTools
 from armi.utils.yamlSchema import Field, KeyedList, YamlObject
@@ -148,6 +149,8 @@ class ComponentBlueprint(YamlObject):
     orientation = Field(type=str, default=None)
     mergeWith = Field(type=str, default=None)
     area = Field(type=float, default=None)
+    particles = Field(type=str, default=None)
+    packingFraction = Field(type=float, default=None)
 
     def construct(self, blueprint, matMods, inputHeightsConsideredHot):
         """Construct a component or group.
@@ -210,6 +213,29 @@ class ComponentBlueprint(YamlObject):
                 raise IOError(msg)
 
         return constructedObject
+
+    def constructParticleLayers(self, blueprint, host, inputHeightsConsideredHot):
+        """
+        Build the particles dispersed in ``host``, if this component has any.
+
+        Returns the particles' layers as components, innermost first, already attached to ``host`` (see
+        :py:mod:`armi.reactor.components.particles`). They belong in the same block as the host.
+        """
+        if self.particles is None:
+            if self.packingFraction is not None:
+                raise ValueError(f"Component {self.name} has a packingFraction but no particles.")
+            return []
+        if self.packingFraction is None:
+            raise ValueError(f"Component {self.name} has particles ({self.particles}) but no packingFraction.")
+        designs = blueprint.particleDesigns or {}
+        if self.particles not in designs:
+            raise ValueError(
+                f"Component {self.name} holds particles {self.particles}, which the blueprints' particles section "
+                f"does not define. Defined: {sorted(designs.keys()) if designs else 'none'}."
+            )
+        layers = designs[self.particles].construct(blueprint, host, inputHeightsConsideredHot)
+        particles.attachParticleLayers(host, layers, self.packingFraction)
+        return layers
 
     def _setComponentCustomDensity(self, comp, blueprint, matMods, inputHeightsConsideredHot):
         """Apply a custom density to a material with custom isotopics but not a 'custom material'."""
@@ -299,6 +325,9 @@ class ComponentBlueprint(YamlObject):
             elif attr.name == "flags":
                 # Don't pass these to the component constructor. These are used to
                 # override the flags derived from the type, if present.
+                continue
+            elif attr.name in ("particles", "packingFraction"):
+                # Particles are built as components of their own, after the block's components.
                 continue
             else:
                 value = attr.__get__(self)
@@ -439,6 +468,79 @@ class ComponentKeyedList(KeyedList):
 
     itemType = ComponentBlueprint
     keyField = ComponentBlueprint.name
+
+
+class ParticleLayerBlueprint(YamlObject):
+    """
+    One spherical layer of a particle: a kernel, a buffer, a coating.
+
+    Its shape is always ``ParticleLayer``, its inner diameter defaults to the outer diameter of the layer inside it, and
+    its temperatures default to those of the component the particles are dispersed in.
+    """
+
+    name = Field(type=str)
+    flags = Field(type=str, default=None)
+    material = Field(type=str)
+    isotopics = Field(type=str, default=None)
+    Tinput = Field(type=float, default=None)
+    Thot = Field(type=float, default=None)
+    od = Field(type=float)
+    id = Field(type=float, default=None)
+
+    def componentBlueprint(self, host, innerDiameter):
+        """The ordinary component blueprint of this layer, dispersed in ``host``."""
+        design = ComponentBlueprint()
+        design.name = f"{host.name} {self.name}"
+        design.shape = "ParticleLayer"
+        design.material = self.material
+        design.isotopics = self.isotopics
+        design.Tinput = host.inputTemperatureInC if self.Tinput is None else self.Tinput
+        design.Thot = host.temperatureInC if self.Thot is None else self.Thot
+        design.od = ComponentDimension(self.od)
+        design.id = ComponentDimension(innerDiameter if self.id is None else self.id)
+        return design
+
+
+class ParticleBlueprint(KeyedList):
+    """
+    The layers of one kind of particle, innermost first.
+
+    Example
+    -------
+    ::
+
+        particles:
+          TRISO:
+            kernel: {material: UO2, od: 0.0425, flags: fuel depletable}
+            buffer: {material: Graphite, od: 0.0625}
+            inner PyC: {material: Graphite, od: 0.0695}
+            SiC: {material: SiC, od: 0.0765}
+            outer PyC: {material: Graphite, od: 0.0845}
+    """
+
+    particle_name = Field(type=str)
+    keyField = ParticleLayerBlueprint.name
+    itemType = ParticleLayerBlueprint
+
+    def construct(self, blueprint, host, inputHeightsConsideredHot):
+        """Build this particle's layers, named after their host, for dispersing in ``host``."""
+        layers = []
+        inner = 0.0
+        for design in self.values():
+            layer = design.componentBlueprint(host, inner).construct(blueprint, {}, inputHeightsConsideredHot)
+            # A layer's flags come from its own name (or flags), not its host's: a "fuel compact" holds kernels
+            # that are fuel and coatings that are not.
+            layer.p.flags = Flags.fromStringIgnoreErrors(design.flags or design.name)
+            inner = layer.getDimension("od", cold=True)
+            layers.append(layer)
+        return layers
+
+
+class ParticleDesigns(KeyedList):
+    """The ``particles:`` section of the blueprints: every kind of particle, by name."""
+
+    keyField = ParticleBlueprint.particle_name
+    itemType = ParticleBlueprint
 
 
 class GroupedComponent(YamlObject):

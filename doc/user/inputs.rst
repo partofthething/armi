@@ -891,6 +891,54 @@ desirable when some burnable poison pins use the same cladding as the fuel pins.
 
 .. note:: A ``grid`` with the name ``fuelgrid`` must be defined as well in the grid input section.
 
+.. _particle-fuel:
+
+Particle fuel
+^^^^^^^^^^^^^
+Fuel and absorbers made of small coated particles dispersed in a matrix -- TRISO fuel in compacts or pebbles, B4C grains
+in burnable poison rods -- are described in two parts. A top-level ``particles:`` section defines each kind of particle
+as a stack of spherical layers, innermost first; a component then holds those particles at a packing fraction, and its
+own material is the matrix::
+
+    particles:
+        TRISO:
+            kernel: {material: UCO, isotopics: MHTGR UCO, od: 0.0425, flags: fuel depletable}
+            buffer: {material: Graphite, isotopics: buffer carbon, od: 0.0625}
+            inner PyC: {material: Graphite, od: 0.0695}
+            SiC: {material: SiC, od: 0.0765}
+            outer PyC: {material: Graphite, od: 0.0845}
+    blocks:
+        fuel: &block_fuel
+            grid name: standard element
+            fuel compact:
+                shape: Circle
+                material: Graphite
+                Tinput: 25.0
+                Thot: 900.0
+                od: 1.245
+                latticeIDs: [F]
+                particles: TRISO
+                packingFraction: 0.35
+
+Each layer takes ``material``, ``isotopics``, ``od`` and optionally ``flags``, ``id`` (by default the ``od`` of the
+layer inside it) and ``Tinput``/``Thot`` (by default the host's).
+
+ARMI builds every layer as a component of its own, a
+:py:class:`~armi.reactor.components.particles.ParticleLayer` named after its host (``fuel compact kernel``,
+``fuel compact SiC``...), next to the host in the same block. Everything that works on a block's components -- number
+densities, masses, homogenization, depletion, the database, cross section generation -- therefore sees each layer with
+its own material, temperature and composition, and the kernel depletes on its own.
+
+Spheres do not grow with the height of the block they are in, so a layer counts particles *per centimeter of block
+height*: its ``mult`` is the number of particles in one centimeter of the block, and its area is that count times the
+volume of one shell. Volumes and masses then scale with block height like any other component's. The particle count is
+fixed from the packing fraction and the cold dimensions when the block is built, and does not change as the host or the
+particles expand; the host's area is its outline less its particles, so the host is the matrix and host plus particles
+fill the outline.
+
+A code that can draw particles (OpenMC, through the ``armi-openmc`` plugin) finds them from the host's
+``particleLayers``; one that cannot simply sees the host and its layers as homogeneous components.
+
 
 .. _naming-flags:
 

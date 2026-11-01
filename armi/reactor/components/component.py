@@ -219,6 +219,8 @@ class Component(composites.Composite, metaclass=ComponentType):
         self.setType(name)
         self.p.mergeWith = mergeWith
         self.p.customIsotopicsName = isotopics
+        #: Layers of particles dispersed in this component (see ``armi.reactor.components.particles``).
+        self.particleLayers = []
 
     @property
     def temperatureInC(self):
@@ -461,6 +463,10 @@ class Component(composites.Composite, metaclass=ComponentType):
                 area += comp.getComponentArea(cold=cold, Tc=Tc)
             else:
                 raise ValueError(f"Option {arg} does not exist")
+
+        # Particles dispersed in this component take their volume out of it: what is left is the matrix.
+        for layer in getattr(self, "particleLayers", ()):
+            area -= layer.getComponentArea(cold=cold)
 
         self._checkNegativeArea(area, cold)
         return area

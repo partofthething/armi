@@ -89,6 +89,10 @@ report for core designers and decision makers alike. Turn it on with ``econFuelC
 New features
 ============
 
+* Particle fuel: a ``particles:`` blueprint section describes TRISO-like particles layer by layer, and any component can
+  hold them at a packing fraction (``particles: TRISO``, ``packingFraction: 0.35``). Each layer becomes a component of
+  the block, counted per centimeter of block height so that masses scale with height (:ref:`particle-fuel`).
+* New materials for gas-cooled reactors and TRISO fuel: ``SiC``, ``UCO`` (UC0.5O1.5) and ``Helium``.
 * Block parameters for fuel pin temperatures and pin gas pressure.
 * A material can declare that it never thermally expands.
 * ENDF/B-VIII.1 DRAGLIB nuclide names are accepted in the elemental expansion.

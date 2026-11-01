@@ -214,6 +214,17 @@ class BlockBlueprint(KeyedList):
         for c in components.values():
             c.resolveLinkedDims(components)
 
+        # Particles dispersed in a component become components of their own, once the host's dimensions and
+        # multiplicity (which may come from the grid) are final.
+        for componentDesign in self:
+            host = components.get(componentDesign.name)
+            if host is None or not isinstance(host, Component):
+                continue
+            for layer in componentDesign.constructParticleLayers(blueprint, host, cs[CONF_INPUT_HEIGHTS_HOT]):
+                if layer.name in components:
+                    raise ValueError(f"Particle layer {layer.name} in block {self.name} repeats a component name.")
+                components[layer.name] = layer
+
         boundingComp = sorted(components.values())[-1]
         # give a temporary name (will be updated by b.makeName as real blocks populate systems)
         b = self._getBlockClass(boundingComp)(name=f"block-bol-{axialIndex:03d}")

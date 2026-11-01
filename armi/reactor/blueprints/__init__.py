@@ -91,6 +91,7 @@ from armi.reactor.blueprints.blockBlueprint import BlockKeyedList
 from armi.reactor.blueprints.componentBlueprint import (
     ComponentGroups,
     ComponentKeyedList,
+    ParticleDesigns,
 )
 from armi.reactor.blueprints.gridBlueprint import Grids, Triplet
 from armi.reactor.blueprints.reactorBlueprint import SystemBlueprint, Systems
@@ -195,6 +196,7 @@ class Blueprints(YamlObject, metaclass=_BlueprintsPluginCollector):
     gridDesigns = Field(key="grids", type=Grids, default=None)
     componentDesigns = Field(key="components", type=ComponentKeyedList, default=None)
     componentGroups = Field(key="component groups", type=ComponentGroups, default=None)
+    particleDesigns = Field(key="particles", type=ParticleDesigns, default=None)
 
     # These are used to set up new attributes that come from plugins.
     _resolveFunctions = []

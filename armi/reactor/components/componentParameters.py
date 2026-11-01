@@ -42,6 +42,16 @@ def getComponentParameterDefinitions():
         )
 
         pb.defParam(
+            "packingFraction",
+            units=units.UNITLESS,
+            description=(
+                "Volume fraction of this component's outline taken by the particles dispersed in it, at input "
+                "dimensions. None for a component without particles."
+            ),
+            default=None,
+        )
+
+        pb.defParam(
             "mergeWith",
             units=units.UNITLESS,
             description="Label of other component to merge with",
