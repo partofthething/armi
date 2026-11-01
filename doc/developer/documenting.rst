@@ -31,15 +31,7 @@ your ARMI virtual environment with:
 
     pip install -e .[docs]
 
-You also need to have the following utilities available in your PATH:
-
-* `Graphviz <https://graphviz.org/>`_
-* `Pandoc <https://pandoc.org/>`_
-
-If you want to build the documentation into a PDF using the Sphinx LaTeX builder, you also need:
-
-* LaTeX (`MikTeX <https://miktex.org/>`_ on Windows)
-* `ImageMagick <https://imagemagick.org/>`_
+You also need `Graphviz <https://graphviz.org/>`_ available in your PATH. The documentation is built as HTML only.
 
 The documentation depends on at least one submodule as well, so you must be sure it is available in
 your source tree with:
@@ -119,9 +111,9 @@ tree. The example will be added to the gallery during the next documentation bui
 Using Jupyter Notebooks
 =======================
 For interactive tutorials, it's convenient to build actual Jupyter notebooks and commit them to the
-documentation to be rendered by Sphinx using the nbsphinx plugin. When this is done, notebooks
-without any output should be committed to the repository so that Sphinx actually executes the
-notebooks with the up-to-date code when the  documentation is built. To do this, you can clean the
+documentation to be rendered by Sphinx using the myst-nb extension, which runs every notebook on each
+build so that the tutorials always show output from the current code. Commit notebooks without output,
+to keep the repository small. To do this, you can clean the
 output with:
 
 .. code-block:: bash

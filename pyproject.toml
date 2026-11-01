@@ -88,8 +88,7 @@ docs = [
     "docutils>=0.21.2", # reStructuredText, the docs source format
     "ipykernel>=6.0.0", # iPython kernel to run Jupyter notebooks
     "Jinja2>=3.1.6", # Used in numpydoc and nbconvert
-    "nbsphinx>=0.9.6", # Parses Jupyter notebooks
-    "pandoc", # Must be in the path (to convert file formats)
+    "myst-nb>=1.4.0", # Renders and runs the tutorial Jupyter notebooks (no pandoc needed)
     "pylint", # Generates UML diagrams
     "pytest", # autodoc imports the test modules, which document the tests the STR traces
     "pypdf", # Generating a single PDF file for the Sphinx documentation

@@ -44,7 +44,7 @@ from doc.getTestResults import getTestResult
 # handle python import locations for this execution
 PYTHONPATH = os.path.abspath("..")
 sys.path.insert(0, PYTHONPATH)
-# Also add to os.environ which will be used by the nbsphinx extension environment
+# Also add to os.environ, for the kernels that run the tutorial notebooks
 os.environ["PYTHONPATH"] = PYTHONPATH
 # Add dochelpers.py and automateScr.py from doc/.static/ directory
 sys.path.insert(0, ".static")
@@ -226,7 +226,7 @@ def setup(app):
     if not os.path.exists(dataDir):
         os.mkdir(dataDir)
 
-    # Copy resources needed to build the tutorial notebooks. nbsphinx runs each notebook from its own directory, so the
+    # Copy resources needed to build the tutorial notebooks. Each notebook runs from its own directory, so the
     # notebooks that live with the tests are copied next to the other tutorials.
     for path in _TUTORIAL_FILES:
         safeCopy(path, dataDir)
@@ -243,7 +243,7 @@ sys.path.insert(0, os.path.abspath(".."))
 # Add any Sphinx extension module names here, as strings. They can be extensions coming with Sphinx
 # (named 'sphinx.ext.*') or your custom ones.
 extensions = [
-    "nbsphinx",
+    "myst_nb",  # renders and runs the tutorial notebooks, without pandoc
     "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
     "sphinx.ext.doctest",
@@ -292,7 +292,11 @@ napoleon_use_ivar = True
 napoleon_use_param = True
 napoleon_use_rtype = True
 
-nbsphinx_kernel_name = "python3"
+# Run every tutorial notebook on each build, so they are known to work with this version of ARMI.
+nb_execution_mode = "force"
+nb_execution_timeout = 600
+nb_execution_raise_on_error = True
+nb_kernel_rgx_aliases = {".*": "python3"}
 
 ogp_site_url = "https://partofthething.github.io/armi/"
 ogp_image = "https://partofthething.github.io/armi/_static/logo-512.png"
@@ -334,6 +338,7 @@ exclude_patterns = [
     "logs",
     "Thumbs.db",
     "user/grids.rst",  # only rendered by being included in user/inputs.rst
+    "tutorials/armi-example-app/**",  # the example app's files are pulled in by literalinclude, not parsed
 ]
 
 rst_epilog = r"""
