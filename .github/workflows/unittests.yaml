@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-24.04
     strategy:
       matrix:
-        python: ['3.11', '3.12', '3.13', '3.14']
+        python: ['3.11', '3.12', '3.13', '3.14', '3.15']
 
     steps:
       - uses: actions/checkout@v6
@@ -29,10 +29,11 @@ jobs:
         uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python }}
-      - name: Install mpi libs
+      - name: Install mpi and hdf5 libs
+        # libhdf5-dev lets h5py build from source on a Python it has no wheels for yet (3.15 for now).
         run: |
           sudo apt-get update
-          sudo apt-get -y install libopenmpi-dev
+          sudo apt-get -y install libopenmpi-dev libhdf5-dev pkg-config
       - name: Run Tests
         run: |
           set -x
