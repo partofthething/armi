@@ -13,6 +13,7 @@ ARMI input files, running various kinds of ARMI runs, analyzing ARMI output file
 
    inputs
    input_editor
+   included_plugins
    outputs
    settings_report
    params_report
