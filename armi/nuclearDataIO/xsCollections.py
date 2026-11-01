@@ -213,7 +213,7 @@ class XSCollection:
         totalScatterComponents = {
             "elastic": self.elasticScatter,
             "inelastic": self.inelasticScatter,
-            "n2n": self.n2nScatter * 2.0,
+            "n2n": self.n2nScatter * 2.0 if self.n2nScatter is not None else None,
         }
         for sType, sMatrix in totalScatterComponents.items():
             if sMatrix is not None:

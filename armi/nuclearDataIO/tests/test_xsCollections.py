@@ -14,6 +14,7 @@
 
 """Module that tests methods within xsCollections."""
 
+import copy
 import os
 import unittest
 
@@ -60,6 +61,18 @@ class TestXsCollections(unittest.TestCase):
             totalScatter[0, 0],
             (nuc.micros.elasticScatter[0, 0] + 2.0 * nuc.micros.n2nScatter[0, 0]),
         )
+
+    def test_totalScatteringMatrixWithoutN2n(self):
+        """A library with no (n,2n) scattering block still gives a total scattering matrix.
+
+        Libraries that keep one production-weighted scattering block (OpenMC-made ISOTXS, for one) have no
+        ``n2nScatter`` at all; the missing matrix has to be skipped like the others, not multiplied.
+        """
+        micros = copy.deepcopy(self.microLib.nuclides[0].micros)
+        micros.n2nScatter = None
+        micros.inelasticScatter = None
+        totalScatter = micros.getTotalScatterMatrix()
+        self.assertAlmostEqual(totalScatter[0, 0], micros.elasticScatter[0, 0])
 
     def test_plotNucXs(self):
         """Testing this plotting method here because we need a XS library to run the test."""
