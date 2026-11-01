@@ -2,9 +2,58 @@
 ARMI 2.0.0 (unreleased)
 *************************
 
-The first release of this fork, branched from upstream ARMI 0.6.4 and numbered 2.0 to mark the fork. It adds fuel
-cycle economics, replaces the blueprint YAML layer, fixes a set of long-standing reactor model bugs and makes common
-operations much faster.
+The first release of this fork, branched from upstream ARMI 0.6.4 and numbered 2.0 to mark the fork. It adds a
+browser-based input editor in place of the wxPython one, fuel cycle economics, replaces the blueprint YAML layer,
+fixes a set of long-standing reactor model bugs and makes common operations much faster.
+
+Browser-based input editor
+==========================
+
+ARMI now ships a browser-based editor for its inputs, and every application gets it as the ``gui`` entry point::
+
+    $ python -m armi gui my-case.yaml
+
+It is a front end to the same text files: anything it writes reads like hand-written YAML, and anything written by
+hand opens in it. The server is standard library and the front end is plain JavaScript with no build step, so it needs
+nothing beyond ARMI and runs anywhere ARMI does, including over SSH (``--no-browser``, or ``--host`` to serve beyond
+loopback). It replaces the wxPython grid editor: the ``grids`` entry point and the ``grids`` extra are gone, and with
+them ARMI's last GUI dependency.
+
+.. figure:: /.static/inputEditor-core.png
+   :width: 100%
+   :alt: Core map view of the input editor
+
+   **Core map.** Paint assemblies onto hexagonal or Cartesian grids from the palette, fill rings, expand a
+   one-third core to full, and keep a running count of each assembly type.
+
+.. figure:: /.static/inputEditor-lattice.png
+   :width: 100%
+   :alt: Pin lattice view of the input editor
+
+   **Pin lattices.** Edit lattice maps position by position, with each lattice ID traced to the components that claim
+   it and the blocks that use the lattice.
+
+.. figure:: /.static/inputEditor-block.png
+   :width: 100%
+   :alt: Block view of the input editor
+
+   **Blocks.** A true-scale cross section drawn from the component definitions, with the area of every component and its
+   share of the block, so a dimension or pitch error shows up before a run does.
+
+.. figure:: /.static/inputEditor-assembly.png
+   :width: 100%
+   :alt: Assembly view of the input editor
+
+   **Assemblies.** The axial stack as an elevation and a table of heights, cross section types, mesh and material
+   modifications; drag to reorder, insert above or below.
+
+.. figure:: /.static/inputEditor-settings.png
+   :width: 100%
+   :alt: Settings view of the input editor
+
+   **Settings.** Every setting from every plugin, with its description, searchable and filtered to what differs from
+   the default; saving writes only those, so settings files stay short. Plugins can give their own settings a proper
+   control (a choice, a multi-select or a table) instead of a text box.
 
 Fuel cycle economics
 ====================
