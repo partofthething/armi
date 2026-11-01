@@ -87,6 +87,8 @@ venv*/
 *.flux_ufg
 *.h5
 *.html
+# ...except the input editor's page, which is source.
+!armi/webui/static/*.html
 *.mp4
 *.nucdata
 *.out

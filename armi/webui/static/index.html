@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en" data-theme="graphite">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ARMI Input Editor</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='16' height='16' rx='3' fill='%23151a21'/><circle cx='8' cy='8' r='4.4' fill='none' stroke='%23ffb454' stroke-width='1.4'/><circle cx='8' cy='8' r='1.4' fill='%23ffb454'/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;450;500;600&display=swap">
+<link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+
+<div class="shell">
+
+  <header class="topbar">
+    <div class="topbar__identity">
+      <svg class="mark" viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.5"/>
+        <circle cx="12" cy="12" r="2.6" fill="currentColor"/>
+        <path d="M12 3v3.2M12 17.8V21M3 12h3.2M17.8 12H21" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+      <span class="topbar__app" id="app-name">ARMI</span>
+    </div>
+
+    <div class="topbar__file">
+      <button class="filebtn" id="file-blueprints" type="button">
+        <span class="filebtn__kind">Blueprints</span>
+        <span class="filebtn__name" id="bp-name">nothing open</span>
+      </button>
+      <button class="filebtn" id="file-settings" type="button">
+        <span class="filebtn__kind">Settings</span>
+        <span class="filebtn__name" id="cs-name">nothing open</span>
+      </button>
+      <span class="savestate" id="savestate" data-state="clean">Saved</span>
+    </div>
+
+    <div class="topbar__actions">
+      <button class="btn" id="act-undo" type="button" title="Undo (Ctrl+Z)">Undo</button>
+      <button class="btn" id="act-redo" type="button" title="Redo (Ctrl+Shift+Z)">Redo</button>
+      <button class="btn btn--primary" id="act-save" type="button" title="Save (Ctrl+S). Shift-click to save somewhere else.">Save</button>
+    </div>
+  </header>
+
+  <div class="workspace">
+    <nav class="rail" id="rail" aria-label="Editor sections"></nav>
+    <aside class="navigator" id="navigator"></aside>
+    <main class="stage" id="stage"></main>
+    <aside class="inspector" id="inspector"></aside>
+  </div>
+
+  <footer class="statusbar">
+    <span class="statusbar__slot" id="status-primary"></span>
+    <span class="statusbar__slot statusbar__slot--dim" id="status-secondary"></span>
+    <span class="statusbar__spacer"></span>
+    <span class="statusbar__slot statusbar__slot--dim" id="status-hint"></span>
+  </footer>
+
+</div>
+
+<div class="overlay" id="overlay" hidden></div>
+<div class="toasts" id="toasts" aria-live="polite"></div>
+
+<script type="module" src="/js/main.js"></script>
+</body>
+</html>
