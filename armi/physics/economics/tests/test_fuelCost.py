@@ -1,5 +1,6 @@
 """Tests for the fuel cost of a core, its interface and its report."""
 
+import dataclasses
 import os
 import unittest
 from types import SimpleNamespace
@@ -45,29 +46,115 @@ class TestFuelCost(unittest.TestCase):
         self.assertNotAlmostEqual(unitCosts.tailsAssay, self.cs[econSettings.CONF_ECON_TAILS_ASSAY])
 
     def test_levelizedCost(self):
-        levelized = economicsInterface.costCore(self.r.core, self.cs)
-        purchases = levelized.purchases
-        self.assertEqual(len(purchases), 4)
-        self.assertAlmostEqual(purchases[0][1], levelized.fuelCost.total)
-        energy = sum(mwh for _, mwh in levelized.generation)
-        self.assertAlmostEqual(levelized.undiscountedLcoe, 4 * levelized.fuelCost.total / energy)
-        self.assertGreater(levelized.lcoe, levelized.undiscountedLcoe)
-        self.assertIn("Overnight cost", economicsInterface.summarize(levelized))
+        lc = economicsInterface.costCore(self.r.core, self.cs)
+        self.assertEqual(len(lc.charges), 4)
+        self.assertEqual(lc.source, "projected")
+        initialCore = lc.fuelCost
+        self.assertAlmostEqual(lc.costs[0].total, initialCore.total)
 
-        byCategory = levelized.lcoeByCategory()
-        self.assertAlmostEqual(sum(byCategory.values()), levelized.lcoe)
-        self.assertAlmostEqual(sum(levelized.lcoeByCategory(discounted=False).values()), levelized.undiscountedLcoe)
-        self.assertIn("/SWU", levelized.fuelCost.unitCosts.describe())
+        spend = lc.spendByCategory()
+        backEnd = lc.totalGeneration * self.cs[econSettings.CONF_ECON_BACK_END_COST]
+        self.assertAlmostEqual(spend["backEnd"], backEnd)
+        self.assertAlmostEqual(lc.totalSpend, 4 * initialCore.total + backEnd)
+        self.assertAlmostEqual(lc.undiscountedLcoe, lc.totalSpend / lc.totalGeneration)
+        self.assertGreater(lc.lcoe, lc.undiscountedLcoe)
+        self.assertAlmostEqual(sum(lc.lcoeByCategory().values()), lc.lcoe)
+        self.assertIn("Fuel cycle cost", economicsInterface.summarize(lc))
+        self.assertIn("/SWU", lc.unitCosts.describe())
+
+        # ore is paid its lead time before the initial core is loaded
+        oreYear = lc.cashFlows("ore")[0][0]
+        self.assertAlmostEqual(oreYear, -self.cs[econSettings.CONF_ECON_LEAD_ORE])
+
+    def test_leadTimesCostMoney(self):
+        """Paying for fuel earlier raises its levelized cost, and does not change what is paid."""
+        lc = economicsInterface.costCore(self.r.core, self.cs)
+        noLead = lc.repriced(dataclasses.replace(lc.unitCosts, leadTimes={}))
+        self.assertGreater(lc.lcoe, noLead.lcoe)
+        self.assertAlmostEqual(lc.totalSpend, noLead.totalSpend)
+
+    def test_quantities(self):
+        core = economicsInterface.costCore(self.r.core, self.cs).fuelCost
+        self.assertAlmostEqual(core.oreUranium * (1 - core.unitCosts.conversionLoss), core.feed)
+        self.assertAlmostEqual(core.feed - core.uranium, core.tails)
+        self.assertGreater(core.u3o8Lb, core.oreUranium * 2.2)
+
+    def test_cycleSummaries(self):
+        lc = economicsInterface.costCore(self.r.core, self.cs)
+        summaries = lc.cycleSummaries()
+        self.assertEqual(len(summaries), 4)
+        self.assertAlmostEqual(sum(s.total for s in summaries), lc.totalSpend)
+        self.assertAlmostEqual(sum(s.generation for s in summaries), lc.totalGeneration)
+
+    def test_batchReloads(self):
+        """A third-core reload costs a third of the initial core each later cycle."""
+        cs = self.cs.modified(newSettings={econSettings.CONF_ECON_RELOAD_FRACTION: 1 / 3})
+        lc = economicsInterface.costCore(self.r.core, cs)
+        self.assertAlmostEqual(lc.costs[1].total, lc.fuelCost.total / 3)
+        self.assertGreater(lc.cycleSummaries()[0].costPerMWh, lc.cycleSummaries()[1].costPerMWh)
+
+    def test_sensitivities(self):
+        lc = economicsInterface.costCore(self.r.core, self.cs)
+        rows = {name: (low, high) for name, low, high, _, _ in lc.sensitivities()}
+        low, high = rows[fuelCost.CATEGORY_LABELS["ore"]]
+        self.assertLess(low, lc.lcoe)
+        self.assertGreater(high, lc.lcoe)
+        cfLow, cfHigh = rows["Capacity factor"]
+        self.assertGreater(cfLow, cfHigh)
+
+    def test_reloadsFromRun(self):
+        """Fresh assemblies the fuel management loads at a cycle's start become that cycle's reload."""
+        cs = self.cs.modified(newSettings={econSettings.CONF_ECON_RELOADS: "run"})
+        interface = economicsInterface.EconomicsInterface(self.r, cs)
+        interface.interactInit()
+        self.assertEqual(interface.levelizedCost.source, "projected")
+
+        old = next(a for a in self.r.core if fuelCost.isFresh(a))
+        for b in old:
+            b.p.percentBu = 1.0
+        fresh = self.r.core.createAssemblyOfType(old.getType(), cs=cs)
+        self.r.core.removeAssembly(old, discharge=True)
+        self.r.core.add(fresh, old.spatialLocator)
+        try:
+            interface.interactBOC(1)
+            interface.interactBOC(2)
+            interface.interactEOL()
+        finally:
+            self.r.core.removeAssembly(fresh, discharge=False)
+            self.r.core.add(old, fresh.spatialLocator)
+            for b in old:
+                b.p.percentBu = 0.0
+
+        lc = interface.levelizedCost
+        self.assertEqual(lc.source, "run")
+        self.assertEqual([ch.cycle for ch in lc.reloads], [1])
+        expected = sum(b.getHMMass() for b in fresh) * self.r.core.powerMultiplier / 1000.0
+        self.assertAlmostEqual(lc.costs[1].heavyMetal, expected, places=6)
+        self.assertIsNone(lc.cycleSummaries()[2].loaded)
+
+    def test_reloadSourceAuto(self):
+        self.assertFalse(economicsInterface.reloadsFromRun(self.cs.modified(newSettings={"fuelHandlerName": ""})))
+        withHandler = self.cs.modified(newSettings={"fuelHandlerName": "SomeFuelHandler"})
+        self.assertTrue(economicsInterface.reloadsFromRun(withHandler))
 
     def test_interfaceAndReport(self):
         interface = self.o.getInterface("economics")
         self.assertIsNotNone(interface)
         with directoryChangers.TemporaryDirectoryChanger():
-            interface.cs = self.cs.modified(newSettings={econSettings.CONF_ECON_FUEL_COST_REPORT: True})
+            interface.cs = self.cs.modified(
+                newSettings={econSettings.CONF_ECON_FUEL_COST_REPORT: True, econSettings.CONF_ECON_RELOADS: "projected"}
+            )
             interface.interactInit()
             self.assertGreater(self.r.core.p.fuelCostInitialCore, 0.0)
             self.assertGreater(self.r.core.p.fuelCostLcoe, 0.0)
             self.assertTrue(os.path.exists(f"{self.cs.caseTitle}-fuel-cost.pdf"))
+
+    def test_dischargeBurnup(self):
+        """Whole-core reloads burn each load for one cycle: thermal energy of a cycle over the core's heavy metal."""
+        lc = economicsInterface.costCore(self.r.core, self.cs)
+        cycle = lc.cycles[0]
+        perCycle = lc.thermalPowerMW * cycle.capacityFactor * cycle.length * 365.25
+        self.assertAlmostEqual(lc.dischargeBurnup, perCycle / lc.fuelCost.heavyMetal)
 
     def test_reportPath(self):
         with directoryChangers.TemporaryDirectoryChanger():

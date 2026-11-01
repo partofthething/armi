@@ -3,7 +3,9 @@ Settings for the economics plugin.
 
 Default prices are rough mid-2020s market and literature values in US dollars, good for a first estimate and meant
 to be overridden. Fabrication costs are per kg of heavy metal and cover the whole fuel form, e.g. pellets, rods and
-assembly hardware for UO2, or kernels, coatings and compacts for TRISO.
+assembly hardware for UO2, or kernels, coatings and compacts for TRISO. The spent fuel fee defaults to the US Nuclear
+Waste Policy Act's 1 mill/kWh, and the lead times to the usual front-end schedule (ore bought about two years before
+the fuel is loaded, fabrication paid about half a year before).
 """
 
 from armi.settings import setting
@@ -25,6 +27,12 @@ CONF_ECON_FAB_COST_TRISO = "econFabCostTRISO"
 CONF_ECON_THERMAL_EFFICIENCY = "econThermalEfficiency"
 CONF_ECON_DISCOUNT_RATE = "econDiscountRate"
 CONF_ECON_RELOAD_FRACTION = "econReloadFraction"
+CONF_ECON_RELOADS = "econReloads"
+CONF_ECON_BACK_END_COST = "econBackEndCost"
+CONF_ECON_LEAD_ORE = "econLeadTimeOre"
+CONF_ECON_LEAD_CONVERSION = "econLeadTimeConversion"
+CONF_ECON_LEAD_ENRICHMENT = "econLeadTimeEnrichment"
+CONF_ECON_LEAD_FABRICATION = "econLeadTimeFabrication"
 
 #: Fuel forms with their own fabrication cost, and the setting that holds it.
 FUEL_FORMS = {
@@ -34,6 +42,18 @@ FUEL_FORMS = {
 }
 
 
+#: Front-end cost categories and the setting that holds how long before loading each is paid.
+LEAD_TIMES = {
+    "ore": CONF_ECON_LEAD_ORE,
+    "conversion": CONF_ECON_LEAD_CONVERSION,
+    "enrichment": CONF_ECON_LEAD_ENRICHMENT,
+    "fabrication": CONF_ECON_LEAD_FABRICATION,
+}
+
+#: Where the reloads come from.
+RELOAD_SOURCES = ("auto", "run", "projected")
+
+
 def defineSettings():
     """Define the economics settings."""
     return [
@@ -41,7 +61,10 @@ def defineSettings():
             CONF_ECON_FUEL_COST,
             default=False,
             label="Fuel cost",
-            description="Compute the cost of the fresh core's fuel and its levelized cost of electricity at startup.",
+            description=(
+                "Cost the fuel cycle: the initial core at startup, every reload, and spent fuel, levelized against the "
+                "electricity the plant makes."
+            ),
         ),
         setting.Setting(
             CONF_ECON_FUEL_COST_REPORT,
@@ -137,8 +160,50 @@ def defineSettings():
             CONF_ECON_RELOAD_FRACTION,
             default=1.0,
             label="Reload fraction",
-            description="Fraction of the initial core's fuel bought again at the start of every later cycle: 1 for "
-            "whole-core refueling, about 1/n for an n-batch core.",
+            description="Fraction of the initial core's fuel bought again at the start of every later cycle when the "
+            "reloads are projected: 1 for whole-core refueling, about 1/n for an n-batch core.",
+        ),
+        setting.Setting(
+            CONF_ECON_RELOADS,
+            default="auto",
+            label="Reloads",
+            description=(
+                "Where the reloads come from. `run` costs the fresh assemblies the run's fuel management loads at "
+                "the start of each cycle and reports at the end of the run. `projected` buys "
+                f"`{CONF_ECON_RELOAD_FRACTION}` of the initial core every cycle and reports at startup. `auto` uses "
+                "`run` when a fuel handler is set and the run has more than one cycle, `projected` otherwise."
+            ),
+            options=list(RELOAD_SOURCES),
+        ),
+        setting.Setting(
+            CONF_ECON_BACK_END_COST,
+            default=1.0,
+            label="Spent fuel cost ($/MWh)",
+            description="Spent fuel storage and disposal, as a fee on net generation, in dollars per MWh.",
+        ),
+        setting.Setting(
+            CONF_ECON_LEAD_ORE,
+            default=2.0,
+            label="Ore lead time (y)",
+            description="Years before the fuel is loaded that the natural uranium is paid for.",
+        ),
+        setting.Setting(
+            CONF_ECON_LEAD_CONVERSION,
+            default=1.5,
+            label="Conversion lead time (y)",
+            description="Years before the fuel is loaded that conversion to UF6 is paid for.",
+        ),
+        setting.Setting(
+            CONF_ECON_LEAD_ENRICHMENT,
+            default=1.0,
+            label="Enrichment lead time (y)",
+            description="Years before the fuel is loaded that enrichment is paid for.",
+        ),
+        setting.Setting(
+            CONF_ECON_LEAD_FABRICATION,
+            default=0.5,
+            label="Fabrication lead time (y)",
+            description="Years before the fuel is loaded that fabrication is paid for.",
         ),
     ]
 
@@ -152,6 +217,15 @@ def defineValidators(inspector):
         return (value >= 0.0 if allowZero else value > 0.0) and (value <= 1.0 if allowOne else value < 1.0)
 
     return [
+        *(
+            Query(
+                lambda name=name: cs[name] < 0.0,
+                f"`{name}` must not be negative.",
+                "",
+                inspector.NO_ACTION,
+            )
+            for name in (CONF_ECON_BACK_END_COST, *LEAD_TIMES.values())
+        ),
         Query(
             lambda: not cs[CONF_ECON_TAILS_ASSAY] < cs[CONF_ECON_FEED_ASSAY],
             f"`{CONF_ECON_TAILS_ASSAY}` must be below `{CONF_ECON_FEED_ASSAY}`.",
