@@ -1,0 +1,57 @@
+file format: 3.0
+
+# Helium
+#
+# Natural helium as an ideal gas at one atmosphere. Gas-cooled reactors run at several MPa: scale the density to the
+# coolant pressure with custom isotopics or a material modification where it matters (it rarely does for neutronics).
+# Transport properties from the German nuclear safety standard KTA 3102.1, which correlates them for HTGR helium.
+
+material type: Fluid
+composition:
+  HE4: balance
+
+density:
+  function:
+    T:
+      min: -263.15
+      max: 1726.85
+    type: symbolic
+    # ideal gas, p = 101325 Pa, M = 4.002602 g/mol, in kg/m^3
+    equation: 101325.0 * 4.002602e-3 / (8.314462618 * (T+273.15))
+  references:
+    - ref: Ideal gas law at 101325 Pa.
+      type: open literature
+
+thermal conductivity:
+  function:
+    T:
+      min: -173.15
+      max: 1426.85
+    type: symbolic
+    # KTA 3102.1 at p = 1.01325 bar: k = 2.682e-3 (1 + 1.123e-3 p) T^(0.71 (1 - 2e-4 p)) W/m-K
+    equation: 2.682e-3 * (1.0 + 1.123e-3 * 1.01325) * (T+273.15)**(0.71 * (1.0 - 2.0e-4 * 1.01325))
+  references:
+    - ref: KTA 3102.1, "Reactor Core Design for High-Temperature Gas-Cooled Reactors, Part 1 - Calculation of the Material Properties of Helium", 1978.
+      type: open literature
+
+dynamic viscosity:
+  function:
+    T:
+      min: -173.15
+      max: 1426.85
+    type: symbolic
+    equation: 3.674e-7 * (T+273.15)**0.7
+  references:
+    - ref: KTA 3102.1, "Reactor Core Design for High-Temperature Gas-Cooled Reactors, Part 1 - Calculation of the Material Properties of Helium", 1978.
+      type: open literature
+
+specific heat capacity:
+  function:
+    T:
+      min: -173.15
+      max: 1426.85
+    type: constant
+    value: 5195.0
+  references:
+    - ref: KTA 3102.1, "Reactor Core Design for High-Temperature Gas-Cooled Reactors, Part 1 - Calculation of the Material Properties of Helium", 1978.
+      type: open literature

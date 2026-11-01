@@ -44,6 +44,20 @@ class Graphite(Material):
         self.refDens = 1.8888
 
 
+class SiC(Material):
+    """Silicon carbide (CVD beta-SiC), as in TRISO coatings. Theoretical density 3.21 g/cm^3 at room temperature."""
+
+    YAML_PATH = os.path.join(_RESOURCES_DIR, "SiC.yaml")
+
+    def __init__(self):
+        Material.__init__(self)
+        self.refDens = 3.21
+
+    def pseudoDensity(self, Tk: float = None, Tc: float = None) -> float:
+        """2D-expanded density in g/cc, at the TD_frac of theoretical density."""
+        return super().pseudoDensity(Tk=Tk, Tc=Tc) * self.getTD()
+
+
 class HastelloyN(Material):
     YAML_PATH = os.path.join(_RESOURCES_DIR, "HastelloyN.yaml")
 
@@ -149,6 +163,25 @@ class Uranium(FuelMaterial):
 
     def pseudoDensity(self, Tk: float = None, Tc: float = None) -> float:
         """2D-expanded density in g/cc."""
+        return super().pseudoDensity(Tk=Tk, Tc=Tc) * self.getTD()
+
+
+class UCO(FuelMaterial):
+    """
+    Uranium oxycarbide, UC0.5O1.5: the kernel of NGNP and MHTGR-350 TRISO particles.
+
+    Theoretical density 11.03 g/cm^3 at room temperature; kernels are typically 95% of it (use TD_frac).
+    """
+
+    enrichedNuclide = "U235"
+    YAML_PATH = os.path.join(_RESOURCES_DIR, "UCO.yaml")
+
+    def __init__(self):
+        FuelMaterial.__init__(self)
+        self.refDens = 11.03
+
+    def pseudoDensity(self, Tk: float = None, Tc: float = None) -> float:
+        """2D-expanded density in g/cc, at the TD_frac of theoretical density."""
         return super().pseudoDensity(Tk=Tk, Tc=Tc) * self.getTD()
 
 

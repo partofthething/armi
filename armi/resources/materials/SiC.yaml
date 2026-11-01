@@ -1,0 +1,51 @@
+file format: 3.0
+
+# Silicon carbide
+#
+# Chemical-vapor-deposited (CVD) beta-SiC, as in the coatings of TRISO fuel particles and SiC/SiC composite cladding.
+# Unirradiated properties from Snead et al. [#snead2007]_. The density follows from the theoretical density at room
+# temperature (3.21 g/cm^3, set in the Python class) and the linear expansion below, so that mass is conserved as
+# components expand; use the TD_frac material modification for less-than-theoretical density.
+#
+# [#snead2007] L.L. Snead, T. Nozawa, Y. Katoh, T.-S. Byun, S. Kondo, D.A. Petti, "Handbook of SiC properties for
+#    fuel performance modeling", Journal of Nuclear Materials 371 (2007) 329-377. doi:10.1016/j.jnucmat.2007.05.016
+
+material type: SimpleSolid
+composition:
+  SI: [70.045, 70.045]
+  C: balance
+
+linear expansion:
+  function:
+    T:
+      min: -148.15
+      max: 1000.0
+    type: symbolic
+    # Integral of alpha(T) = (-1.8276 + 0.0178 T - 1.5544e-5 T^2 + 4.5246e-9 T^3) 1e-6 /K (125-1273 K) from 20 C, in %
+    equation: 1.0e-4 * ((-1.8276 * (T+273.15) + 0.0089 * (T+273.15)**2 - 5.18133e-6 * (T+273.15)**3 + 1.131150e-9 * (T+273.15)**4) - (-1.8276 * 293.15 + 0.0089 * 293.15**2 - 5.18133e-6 * 293.15**3 + 1.131150e-9 * 293.15**4))
+  references:
+    - ref: Snead et al., "Handbook of SiC properties for fuel performance modeling", J. Nucl. Mater. 371 (2007) 329-377, Eq. 3.
+      type: open literature
+
+thermal conductivity:
+  function:
+    T:
+      min: 26.85
+      max: 1526.85
+    type: symbolic
+    # unirradiated CVD SiC
+    equation: 1.0 / (-0.0003 + 1.05e-5 * (T+273.15))
+  references:
+    - ref: Snead et al., "Handbook of SiC properties for fuel performance modeling", J. Nucl. Mater. 371 (2007) 329-377, Eq. 6.
+      type: open literature
+
+specific heat capacity:
+  function:
+    T:
+      min: -73.15
+      max: 2126.85
+    type: symbolic
+    equation: 925.65 + 0.3772 * (T+273.15) - 7.9259e-5 * (T+273.15)**2 - 3.1946e7 / (T+273.15)**2
+  references:
+    - ref: Snead et al., "Handbook of SiC properties for fuel performance modeling", J. Nucl. Mater. 371 (2007) 329-377, Eq. 1.
+      type: open literature

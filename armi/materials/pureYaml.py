@@ -56,6 +56,10 @@ class Cu(Material):
     YAML_PATH = os.path.join(_RESOURCES_DIR, "Cu.yaml")
 
 
+class Helium(Fluid):
+    YAML_PATH = os.path.join(_RESOURCES_DIR, "Helium.yaml")
+
+
 class Hafnium(SimpleSolid):
     YAML_PATH = os.path.join(_RESOURCES_DIR, "Hafnium.yaml")
 

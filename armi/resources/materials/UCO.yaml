@@ -1,0 +1,47 @@
+file format: 3.0
+
+# Uranium oxycarbide, UC0.5O1.5
+#
+# The uranium oxycarbide kernel of the TRISO particles specified for the NGNP and the MHTGR-350 benchmark
+# (NEA/NSC/R(2017)4, Table I.4). Composition by mass for UC0.5O1.5 with natural uranium; set the enrichment with the
+# U235_wt_frac material modification and the kernel density with TD_frac.
+#
+# The theoretical density, 11.03 g/cm^3 at room temperature (set in the Python class), is that of the equivalent
+# 0.75 UO2 + 0.25 UC2 phase mixture (10.96 and 11.28 g/cm^3). Kernels are typically about 95% dense, which is the
+# benchmark's 10.5 g/cm^3.
+#
+# UCO thermal expansion data are scarce; the UO2 correlation of Popov et al. [#ornltm2000]_ stands in for it, the
+# kernel being mostly UO2 by volume. Do not rely on it for kernel thermomechanics.
+#
+# [#ornltm2000] Thermophysical Properties of MOX and UO2 Fuels Including the Effects of Irradiation. S.G. Popov,
+#    et.al. Oak Ridge National Laboratory. ORNL/TM-2000/351 https://rsicc.ornl.gov/fmdp/tm2000-351.pdf
+
+material type: Fuel
+composition:
+  U235: [0.6314, 0.6314]
+  U238: [88.1755, 88.1755]
+  C: [2.2406, 2.2406]
+  O: balance
+
+linear expansion:
+  function:
+    T:
+      min: 0
+      max: 2349.85
+    type: piecewise
+    functions:
+      - function:
+          T:
+            min: 0
+            max: 649.85
+          type: symbolic
+          equation: -0.266 + 9.802e-4 * (T+273.15) - 2.705e-8 * (T+273.15)**2 + 4.391e-11 * (T+273.15)**3
+      - function:
+          T:
+            min: 649.85
+            max: 2349.85
+          type: symbolic
+          equation: -0.328 + 1.179e-3* (T+273.15) - 2.429e-7 * (T+273.15)**2 + 1.219e-10 * (T+273.15)**3
+  references:
+  - ref: UO2 correlation as a stand-in. Popov, S.G., et al. ORNL/TM-2000/351 "Thermophysical Properties of MOX and UO2 Fuels Including the Effects of Irradiation" Oak Ridge National Laboratory, 2000.
+    type: open literature
