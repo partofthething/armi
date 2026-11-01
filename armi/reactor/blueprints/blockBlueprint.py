@@ -20,7 +20,7 @@ from typing import Iterable, Iterator, Set
 
 from armi import getPluginManagerOrFail, runLog
 from armi.materials.material import Material
-from armi.reactor import blocks, parameters
+from armi.reactor import blocks, grids, parameters
 from armi.reactor.blueprints import componentBlueprint
 from armi.reactor.components.component import Component
 from armi.reactor.composites import Composite
@@ -157,6 +157,14 @@ class BlockBlueprint(KeyedList):
                 for key in byComponentMatModKeys:
                     if key not in validMatModOptions:
                         raise ValueError(f"{c} in block {self.name} has invalid material modification: {key}")
+
+            if componentDesign.origin is not None:
+                # An off-center component, such as a control channel beside the pin lattice: its center in the
+                # block, in cm.
+                if componentDesign.latticeIDs:
+                    raise ValueError(f"{c} in block {self.name} has both an origin and latticeIDs; use one.")
+                x, y = (float(v) for v in componentDesign.origin[:2])
+                c.spatialLocator = grids.CoordinateLocation(x, y, 0.0, None)
 
             if spatialGrid:
                 componentLocators = gridDesign.getMultiLocator(spatialGrid, componentDesign.latticeIDs)

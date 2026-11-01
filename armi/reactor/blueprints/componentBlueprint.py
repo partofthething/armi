@@ -326,8 +326,9 @@ class ComponentBlueprint(YamlObject):
                 # Don't pass these to the component constructor. These are used to
                 # override the flags derived from the type, if present.
                 continue
-            elif attr.name in ("particles", "packingFraction"):
-                # Particles are built as components of their own, after the block's components.
+            elif attr.name in ("particles", "packingFraction", "origin"):
+                # Particles are built as components of their own, after the block's components, and the origin
+                # becomes the component's location in its block.
                 continue
             else:
                 value = attr.__get__(self)

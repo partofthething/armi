@@ -171,6 +171,21 @@ class TestParticleFuel(unittest.TestCase):
         self.assertAlmostEqual(self.b.getNumberDensity("U235"), expected)
 
 
+class TestComponentOrigin(unittest.TestCase):
+    def test_originPlacesAComponentOffCenter(self):
+        channel = (
+            r"\1control channel:\n\1    shape: Circle\n\1    material: Void\n\1    Tinput: 25.0\n"
+            r"\1    Thot: 25.0\n\1    od: 9.525\n\1    origin: [8.449, 4.878]\n\1block graphite:"
+        )
+        text = re.sub(r"( +)block graphite:", channel, _text(), count=1)
+        b = blueprints.Blueprints.load(text).constructAssem(settings.Settings(), "fuel column")[0]
+        channel = b.getComponentByName("control channel")
+        x, y, _ = channel.spatialLocator.getLocalCoordinates()
+        self.assertAlmostEqual(x, 8.449)
+        self.assertAlmostEqual(y, 4.878)
+        self.assertAlmostEqual(channel.getArea(), math.pi * 9.525**2 / 4.0)
+
+
 class TestParticleFuelExpansion(unittest.TestCase):
     def test_particleCountFixedWhenTheHostExpands(self):
         cold = _block(25.0, 25.0)

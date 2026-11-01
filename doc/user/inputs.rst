@@ -891,6 +891,21 @@ desirable when some burnable poison pins use the same cladding as the fuel pins.
 
 .. note:: A ``grid`` with the name ``fuelgrid`` must be defined as well in the grid input section.
 
+Off-center components
+^^^^^^^^^^^^^^^^^^^^^
+A component that sits off the block's center but on no lattice position -- a control or shutdown channel beside the
+pin lattice -- takes its center in the block, in cm, as ``origin``::
+
+    RSC channel:
+        shape: Circle
+        material: Helium
+        Tinput: 20.0
+        Thot: 20.0
+        od: 9.525
+        origin: [8.449, 4.878]
+
+A component has either an ``origin`` or ``latticeIDs``, not both.
+
 .. _particle-fuel:
 
 Particle fuel
