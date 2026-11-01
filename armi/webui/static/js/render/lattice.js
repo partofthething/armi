@@ -379,7 +379,7 @@ export class LatticeView {
     node.addEventListener("wheel", (event) => {
       if (!event.ctrlKey && !event.metaKey) return;
       event.preventDefault();
-      this.setZoom(this.zoom * (event.deltaY < 0 ? 1.12 : 1 / 1.12));
+      this.setZoom(this.zoom * (event.deltaY < 0 ? 1.12 : 1 / 1.12), { x: event.clientX, y: event.clientY });
     }, { passive: false });
   }
 
@@ -405,9 +405,24 @@ export class LatticeView {
     return { i: found.i, j: found.j, key, spec: this.spec.cells[key] ?? null, x: local.x, y: -local.y };
   }
 
-  setZoom(zoom) {
+  /** Zoom to ``zoom``, keeping the drawing under ``anchor`` (a client point) where it is. */
+  setZoom(zoom, anchor = null) {
     this.zoom = Math.min(8, Math.max(0.25, zoom));
-    if (this.spec) this.render(this.spec);
+    if (!this.spec) return;
+    const held = anchor && this._toModel(anchor);
+    this.render(this.spec);
+    if (!held) return;
+    const now = this._toClient(held);
+    this.pan = { x: this.pan.x + anchor.x - now.x, y: this.pan.y + anchor.y - now.y };
+    this.node.style.transform = `translate(${this.pan.x}px, ${this.pan.y}px)`;
+  }
+
+  _toModel({ x, y }) {
+    return new DOMPoint(x, y).matrixTransform(this.node.getScreenCTM().inverse());
+  }
+
+  _toClient(point) {
+    return new DOMPoint(point.x, point.y).matrixTransform(this.node.getScreenCTM());
   }
 
   resetView() {
