@@ -1,4 +1,4 @@
-# Copyright 2019 TerraPower, LLC
+# Copyright 2019 TerraPower, LLC, and Nick Touran 2026-
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -35,7 +35,7 @@ import sys
 import textwrap
 import time
 import trace
-from typing import Dict, Optional, Sequence, Set, Union
+from typing import Dict, List, Optional, Sequence, Set, Union
 
 import coverage
 
@@ -94,6 +94,13 @@ class Case:
 
         # This is used in parameter sweeps.
         self._independentVariables = {}
+
+        # What a SuiteRunner runs for this case: ``"module:function"``, or None for the full operator loop.
+        self.task: Optional[str] = None
+        # The application design object the inputs were rendered from, if any (see SuiteBuilder).
+        self.design = None
+        # Input files beyond the settings and blueprints that the case's results depend on.
+        self.extraInputFiles: List[str] = []
 
     @property
     def independentVariables(self):

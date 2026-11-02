@@ -1,4 +1,4 @@
-# Copyright 2019 TerraPower, LLC
+# Copyright 2019 TerraPower, LLC, and Nick Touran 2026-
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ armi.cases.case : An individual item of a case suite.
 
 import os
 import traceback
-from typing import Optional, Sequence
+from typing import Dict, List, Optional, Sequence
 
 from armi import runLog, settings
 from armi.cases import case as armicase
@@ -203,15 +203,20 @@ class CaseSuite:
                 clone.add(case.clone(modifiedSettings=modifiedSettings, writeStyle=writeStyle))
         return clone
 
-    def run(self):
+    def run(self, runner=None):
         """
-        Run each case, one after the other.
+        Run each case, one after the other, or with a :py:class:`~armi.cases.runners.SuiteRunner`.
+
+        With a runner, cases run in parallel (locally, over SSH, ...) in dependency order, cases whose inputs have not
+        changed since they last succeeded are not rerun, and each case's result is returned by title.
 
         Warning
         -------
         Suite running may not work yet if the cases have interdependencies. We typically run on a HPC but are still
         working on a platform independent way of handling HPCs.
         """
+        if runner is not None:
+            return runner.run(self)
         for ci, case in enumerate(self):
             runLog.important(f"Running case {ci + 1}/{len(self)}: {case}")
             with directoryChangers.DirectoryChanger(case.directory):
@@ -221,6 +226,61 @@ class CaseSuite:
                     # allow all errors and continue to next run
                     runLog.error(f"{case} failed during execution.")
                     traceback.print_exc()
+
+    def results(self) -> Dict[str, dict]:
+        """The result each case's last run by a :py:class:`~armi.cases.runners.SuiteRunner` left, by title."""
+        from armi.utils import caseWorker as worker
+
+        found = {}
+        for case in self:
+            result = worker.readJson(os.path.join(case.directory, worker.RESULT_FILE))
+            if result is not None:
+                found[case.title] = result
+        return found
+
+    def resultsTable(self) -> List[dict]:
+        """
+        One row per case: its title, status and wall time, its independent variables, then its task's scalar results.
+
+        Non-scalar results (lists, nested dicts) stay in each case's result file.
+        """
+        rows = []
+        results = self.results()
+        for case in self:
+            result = results.get(case.title, {})
+            row = {
+                "case": case.title,
+                "status": result.get("status", "not run"),
+                "wallSeconds": result.get("wallSeconds"),
+            }
+            row.update(case.independentVariables or result.get("independentVariables", {}))
+            row.update(
+                {
+                    k: v
+                    for k, v in result.get("results", {}).items()
+                    if isinstance(v, (str, int, float, bool, type(None)))
+                }
+            )
+            rows.append(row)
+        return rows
+
+    def writeResultsTable(self, path: str) -> str:
+        """Write :py:meth:`resultsTable` as CSV, with a column for every key any row has."""
+        import csv
+
+        rows = self.resultsTable()
+        columns = list(dict.fromkeys(k for row in rows for k in row))
+        with open(path, "w", newline="") as f:
+            writer = csv.DictWriter(f, fieldnames=columns)
+            writer.writeheader()
+            writer.writerows(rows)
+        return path
+
+    def toDataFrame(self):
+        """:py:meth:`resultsTable` as a pandas DataFrame (pandas must be installed)."""
+        import pandas as pd
+
+        return pd.DataFrame(self.resultsTable()).set_index("case")
 
     def compare(
         self,

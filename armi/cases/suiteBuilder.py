@@ -1,4 +1,4 @@
-# Copyright 2019 TerraPower, LLC
+# Copyright 2019 TerraPower, LLC, and Nick Touran 2026-
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -28,6 +28,7 @@ import random
 from typing import List
 
 from armi.cases import suite
+from armi.cases.inputModifiers.inputModifiers import DesignModifier
 
 
 def getInputModifiers(cls):
@@ -66,8 +67,29 @@ class SuiteBuilder:
     or be unnecessary.
     """
 
-    def __init__(self, baseCase):
+    def __init__(self, baseCase=None, design=None, renderDesign=None):
+        r"""
+        Build from a base case, or from an application's design object and the function that renders it.
+
+        Parameters
+        ----------
+        baseCase : Case, optional
+            The case whose settings and blueprints the modifiers perturb.
+        design : object, optional
+            An application's higher-level design model. Each case gets a deep copy, changed by the suite's
+            :py:class:`~armi.cases.inputModifiers.inputModifiers.DesignModifier`\ s.
+        renderDesign : callable(design, directory), optional
+            Writes a design's ARMI inputs into ``directory`` and returns the settings file path, or a dict of every
+            input file it wrote with the settings file under ``"settings"``. All of them count toward the case's
+            input hash, so a case reruns exactly when one of its inputs changes.
+        """
+        if (baseCase is None) == (design is None):
+            raise ValueError("Build a suite from either a base case or a design, not both or neither.")
+        if design is not None and renderDesign is None:
+            raise ValueError("A suite built from a design needs the renderDesign function that writes its inputs.")
         self.baseCase = baseCase
+        self.design = design
+        self.renderDesign = renderDesign
         self.modifierSets = []
 
         from armi.cases.inputModifiers import inputModifiers
@@ -80,7 +102,14 @@ class SuiteBuilder:
         return len(self.modifierSets)
 
     def __repr__(self):
-        return "<SuiteBuilder len:{} baseCase:{}>".format(len(self), self.baseCase)
+        return "<SuiteBuilder len:{} base:{}>".format(len(self), self.baseCase or self.title)
+
+    @property
+    def title(self) -> str:
+        """The base case's title, or the design's ``name`` if it has one."""
+        if self.baseCase is not None:
+            return self.baseCase.title
+        return getattr(self.design, "name", "design")
 
     def addDegreeOfFreedom(self, inputModifiers):
         """
@@ -105,7 +134,16 @@ class SuiteBuilder:
         """
         self.modifierSets.append(inputModifierSet)
 
-    def buildSuite(self, namingFunc=None):
+    def addSweep(self, sweep):
+        """
+        Add every point of a :py:class:`~armi.cases.sweeps.Sweep` as a case.
+
+        Sweeps express mixed shapes (products, concatenations, filters) directly, and can be used with any builder.
+        """
+        for point in sweep:
+            self.addModifierSet(tuple(point))
+
+    def buildSuite(self, namingFunc=None, task=None):
         """
         Builds a ``CaseSuite`` based on the modifierSets contained in the SuiteBuilder.
 
@@ -126,6 +164,14 @@ class SuiteBuilder:
             If not supplied the path will be ``./case-suite/<0000>/<title>-<0000>``, where
             ``<0000>`` is the four-digit case index, and ``<title>`` is the ``baseCase.title``.
 
+            In a suite built from a design, the case is passed as ``None`` (it does not exist until the design is
+            rendered). The design is rendered into the directory of the returned path, and the settings file it
+            writes is renamed to that path, so the file name sets the case title as usual.
+
+        task : str, optional
+            ``"module:function"`` that each case runs instead of the full operator loop when the suite is run by a
+            :py:class:`~armi.cases.runners.SuiteRunner`. See :py:mod:`armi.cases.tasks`.
+
         Raises
         ------
         RuntimeError
@@ -134,44 +180,81 @@ class SuiteBuilder:
         Returns
         -------
         caseSuite : CaseSuite
-            Derived from the ``baseCase`` and modifications.
+            Derived from the ``baseCase`` (or design) and modifications.
         """
-        caseSuite = suite.CaseSuite(self.baseCase.cs)
-
         if namingFunc is None:
 
             def namingFunc(index, _case, _mods):
                 uniquePart = "{:0>4}".format(index)
-                return os.path.join(
-                    ".",
-                    "case-suite",
-                    uniquePart,
-                    self.baseCase.title + "-" + uniquePart,
-                )
+                return os.path.join(".", "case-suite", uniquePart, self.title + "-" + uniquePart)
 
+        cases = []
         for index, modList in enumerate(self.modifierSets):
-            case = copy.deepcopy(self.baseCase)
-            previousMods = []
-            case.bp._prepConstruction(case.cs)
+            _checkOrder(modList)
+            designMods = [m for m in modList if isinstance(m, DesignModifier)]
+            inputMods = [m for m in modList if not isinstance(m, DesignModifier)]
+            if self.design is None:
+                if designMods:
+                    raise TypeError(f"{designMods[0]} modifies a design, but this suite is built from a base case.")
+                case = copy.deepcopy(self.baseCase)
+                case.bp._prepConstruction(case.cs)
+                for mod in inputMods:
+                    case.cs, case.bp = mod(case.cs, case.bp)
+                case.cs.path = namingFunc(index, case, modList)
+            else:
+                case = self._renderCase(namingFunc(index, None, modList), designMods)
+                if inputMods:
+                    case.bp._prepConstruction(case.cs)
+                    for mod in inputMods:
+                        case.cs, case.bp = mod(case.cs, case.bp)
+                    # the rendered inputs are already on disk; bring them up to date with the ordinary modifiers
+                    case.writeInputs()
             for mod in modList:
-                # it may seem late to figure this out, but since we are doing it now, someone could
-                # filter these conditions out before the buildSuite. optionally, we could have a
-                # flag for "skipInvalidModficationCombos=False"
-                shouldHaveBeenBefore = [fail for fail in getattr(mod, "FAIL_IF_AFTER", ()) if fail in previousMods]
-
-                if any(shouldHaveBeenBefore):
-                    raise RuntimeError(
-                        "{} must occur before {}".format(mod, ",".join(repr(m) for m in shouldHaveBeenBefore))
-                    )
-
-                previousMods.append(type(mod))
-                case.cs, case.bp = mod(case.cs, case.bp)
                 case.independentVariables.update(mod.independentVariable)
+            case.task = task
+            cases.append(case)
 
-            case.cs.path = namingFunc(index, case, modList)
+        if self.baseCase is not None:
+            caseSuite = suite.CaseSuite(self.baseCase.cs)
+        else:
+            from armi import settings
+
+            caseSuite = suite.CaseSuite(cases[0].cs if cases else settings.Settings())
+        for case in cases:
             caseSuite.add(case)
-
         return caseSuite
+
+    def _renderCase(self, settingsPath, designMods):
+        """Apply the design modifiers to a copy of the design and render it into the case directory."""
+        from armi import settings
+        from armi.cases.case import Case
+
+        design = copy.deepcopy(self.design)
+        for mod in designMods:
+            design = mod.modifyDesign(design)
+        directory = os.path.abspath(os.path.dirname(settingsPath) or ".")
+        os.makedirs(directory, exist_ok=True)
+        written = self.renderDesign(design, directory)
+        paths = dict(written) if isinstance(written, dict) else {"settings": written}
+        settingsPath = os.path.join(directory, os.path.basename(settingsPath))
+        if os.path.abspath(paths["settings"]) != settingsPath:
+            os.replace(paths["settings"], settingsPath)
+            paths["settings"] = settingsPath
+        cs = settings.Settings(settingsPath)
+        case = Case(cs)
+        case.design = design
+        case.extraInputFiles = sorted({os.path.abspath(p) for p in paths.values()})
+        return case
+
+
+def _checkOrder(modList):
+    """Raise if a modifier comes after one it must precede (its ``FAIL_IF_AFTER``)."""
+    previousMods = []
+    for mod in modList:
+        shouldHaveBeenBefore = [fail for fail in getattr(mod, "FAIL_IF_AFTER", ()) if fail in previousMods]
+        if any(shouldHaveBeenBefore):
+            raise RuntimeError("{} must occur before {}".format(mod, ",".join(repr(m) for m in shouldHaveBeenBefore)))
+        previousMods.append(type(mod))
 
 
 class FullFactorialSuiteBuilder(SuiteBuilder):

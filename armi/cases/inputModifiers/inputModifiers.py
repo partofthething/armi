@@ -1,4 +1,4 @@
-# Copyright 2019 TerraPower, LLC
+# Copyright 2019 TerraPower, LLC, and Nick Touran 2026-
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -52,6 +52,61 @@ class InputModifier:
     def __call__(self, cs, bp):
         """Perform the desired modifications to input objects."""
         raise NotImplementedError
+
+
+class FunctionModifier(InputModifier):
+    """
+    Modify the settings and blueprints with a function, for one-off changes that do not deserve a class.
+
+    Examples
+    --------
+    >>> FunctionModifier(lambda cs, bp: (cs.modified(newSettings={"power": p}), bp), power=p)
+    """
+
+    def __init__(self, function, **independentVariable):
+        InputModifier.__init__(self, independentVariable=independentVariable)
+        self.function = function
+
+    def __call__(self, cs, bp):
+        return self.function(cs, bp)
+
+
+class DesignModifier(InputModifier):
+    r"""
+    Modify an application's own design object before it is rendered into settings and blueprints.
+
+    Many applications describe a reactor with a higher-level design model (a core design, a fuel assembly
+    specification) and generate ARMI inputs from it. Varying that model is usually far simpler than editing the
+    blueprints it produces. A suite built with ``SuiteBuilder(design=..., renderDesign=...)`` applies its
+    ``DesignModifier``\ s to a copy of the design, renders each design into its case directory, and then applies any
+    ordinary modifiers to the rendered settings and blueprints.
+
+    Subclasses implement :py:meth:`modifyDesign`, which may change the design in place and must return it.
+    """
+
+    def modifyDesign(self, design):
+        """Return the modified design."""
+        raise NotImplementedError
+
+    def __call__(self, cs, bp):
+        raise TypeError(f"{self} modifies a design and needs a suite built from one (SuiteBuilder(design=...)).")
+
+
+class DesignFunctionModifier(DesignModifier):
+    """
+    Modify the design with a function taking and returning the design.
+
+    Examples
+    --------
+    >>> DesignFunctionModifier(lambda d: d.withPower(p), power=p)
+    """
+
+    def __init__(self, function, **independentVariable):
+        DesignModifier.__init__(self, independentVariable=independentVariable)
+        self.function = function
+
+    def modifyDesign(self, design):
+        return self.function(design)
 
 
 class SamplingInputModifier(InputModifier):
