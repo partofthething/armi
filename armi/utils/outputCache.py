@@ -1,4 +1,5 @@
 # Copyright 2019 TerraPower, LLC
+# Copyright 2026 Nick Touran
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -143,8 +144,13 @@ def _hashFiles(paths: List[PathLike]):
 
 
 def _makeOutputManifest(outputFiles: list, folderLocation: list) -> None:
-    """Make a json file with the output names and expected hash."""
-    manifest = {outputFile: _hashFiles([outputFile]) for outputFile in outputFiles}
+    """
+    Make a json file with the output names and expected hash.
+
+    Outputs are named by file name alone, as :py:func:`store` copies them, so outputs given by any path (absolute, or
+    relative to any directory) come back to wherever :py:func:`retrieveOutput` is told.
+    """
+    manifest = {os.path.basename(outputFile): _hashFiles([outputFile]) for outputFile in outputFiles}
     with open(os.path.join(folderLocation, MANIFEST_NAME), "w") as manifestJSON:
         json.dump(manifest, manifestJSON)
 

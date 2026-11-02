@@ -163,6 +163,23 @@ class TestOutputCache(unittest.TestCase):
         self.assertTrue(os.path.exists(os.path.join(folderLoc, "CRC-manifest.json")))
         self.assertTrue(os.path.exists(os.path.join(folderLoc, "something_outFile1.txt")))
 
+    def test_roundTripWithPathsOutsideTheWorkingDirectory(self):
+        exe = os.path.abspath("code.exe")
+        with open(exe, "w") as f:
+            f.write("code")
+        os.makedirs("run")
+        deck = os.path.abspath(os.path.join("run", "deck.inp"))
+        listing = os.path.abspath(os.path.join("run", "deck.out"))
+        for path, text in ((deck, "deck"), (listing, "listing")):
+            with open(path, "w") as f:
+                f.write(text)
+        cacheDir = os.path.abspath("roundtrip_cache")
+        outputCache.store(exe, [deck], [listing], cacheDir)
+        os.remove(listing)
+        self.assertTrue(outputCache.retrieveOutput(exe, [deck], cacheDir))
+        with open(listing) as f:
+            self.assertEqual(f.read(), "listing")
+
     def test_cacheCall(self):
         """Mock up a simple test for cacheCall() where we call a (non-existant) MC2-3 executable, but bypass it because
         there are existing outputs already.
