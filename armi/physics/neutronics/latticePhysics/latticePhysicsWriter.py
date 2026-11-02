@@ -102,8 +102,6 @@ class LatticePhysicsWriter(interfaces.InputWriter):
         self.ductHeterogeneous = self.xsSettings.ductHeterogeneous
         self.traceIsotopeThreshold = self.xsSettings.traceIsotopeThreshold
 
-        self.executeExclusive = self.xsSettings.xsExecuteExclusive
-        self.priority = self.xsSettings.xsPriority
         self.maxAtomNumberToModelInfDilute = (
             self.xsSettings.xsMaxAtomNumber if self.xsSettings.xsMaxAtomNumber is not None else 999
         )

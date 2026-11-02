@@ -53,8 +53,6 @@ CONF_MERGE_INTO_FUEL = "mergeIntoFuel"
 CONF_MESH_PER_CM = "meshSubdivisionsPerCm"
 CONF_REACTION_DRIVER = "nuclideReactionDriver"
 CONF_XSID = "xsID"
-CONF_XS_EXECUTE_EXCLUSIVE = "xsExecuteExclusive"
-CONF_XS_PRIORITY = "xsPriority"
 CONF_COMPONENT_AVERAGING = "averageByComponent"
 CONF_XS_MAX_ATOM_NUMBER = "xsMaxAtomNumber"
 CONF_MIN_DRIVER_DENSITY = "minDriverDensity"
@@ -119,8 +117,6 @@ _VALID_INPUTS_BY_GEOMETRY_TYPE = {
         CONF_BLOCK_REPRESENTATION,
         CONF_EXTERNAL_FLUX_FILE_LOCATION,
         CONF_COMPONENT_AVERAGING,
-        CONF_XS_EXECUTE_EXCLUSIVE,
-        CONF_XS_PRIORITY,
         CONF_XS_MAX_ATOM_NUMBER,
         CONF_XS_TEMP_ISOTOPE,
     },
@@ -132,8 +128,6 @@ _VALID_INPUTS_BY_GEOMETRY_TYPE = {
         CONF_BLOCK_REPRESENTATION,
         CONF_EXTERNAL_FLUX_FILE_LOCATION,
         CONF_COMPONENT_AVERAGING,
-        CONF_XS_EXECUTE_EXCLUSIVE,
-        CONF_XS_PRIORITY,
         CONF_XS_MAX_ATOM_NUMBER,
         CONF_MIN_DRIVER_DENSITY,
         CONF_XS_TEMP_ISOTOPE,
@@ -152,8 +146,6 @@ _VALID_INPUTS_BY_GEOMETRY_TYPE = {
         CONF_BLOCK_REPRESENTATION,
         CONF_EXTERNAL_FLUX_FILE_LOCATION,
         CONF_COMPONENT_AVERAGING,
-        CONF_XS_EXECUTE_EXCLUSIVE,
-        CONF_XS_PRIORITY,
         CONF_XS_MAX_ATOM_NUMBER,
         CONF_MIN_DRIVER_DENSITY,
         CONF_DUCT_HETEROGENEOUS,
@@ -171,8 +163,6 @@ _VALID_INPUTS_BY_GEOMETRY_TYPE = {
         CONF_BLOCK_REPRESENTATION,
         CONF_EXTERNAL_FLUX_FILE_LOCATION,
         CONF_COMPONENT_AVERAGING,
-        CONF_XS_EXECUTE_EXCLUSIVE,
-        CONF_XS_PRIORITY,
         CONF_XS_MAX_ATOM_NUMBER,
         CONF_MIN_DRIVER_DENSITY,
         CONF_XS_TEMP_ISOTOPE,
@@ -201,8 +191,6 @@ _SINGLE_XS_SCHEMA = vol.Schema(
         vol.Optional(CONF_XS_FILE_LOCATION): [str],
         vol.Optional(CONF_EXTERNAL_FLUX_FILE_LOCATION): str,
         vol.Optional(CONF_MESH_PER_CM): vol.Coerce(float),
-        vol.Optional(CONF_XS_EXECUTE_EXCLUSIVE): bool,
-        vol.Optional(CONF_XS_PRIORITY): vol.Coerce(float),
         vol.Optional(CONF_XS_MAX_ATOM_NUMBER): vol.Coerce(int),
         vol.Optional(CONF_MIN_DRIVER_DENSITY): vol.Coerce(float),
         vol.Optional(CONF_COMPONENT_AVERAGING): bool,
@@ -425,15 +413,6 @@ class XSModelingOptions:
         This is a lattice physics configuration option that can be used to control
         subregion meshing of the representative block in 1D problems.
 
-    xsExecuteExclusive : bool
-        The mpi task that results from this xsID will reserve a full processor and
-        no others will allocate to it. This is useful for time balancing when you
-        have one task that takes much longer than the others.
-
-    xsPriority: int
-        The priority of the mpi tasks that results from this xsID. Lower priority
-        will execute first. starting longer jobs first is generally more efficient.
-
     xsMaxAtomNumber : int
         The maximum atom number to model for infinite dilute isotopes in lattice physics.
         This is used to avoid modeling isotopes with a large atomic number
@@ -499,8 +478,6 @@ class XSModelingOptions:
         mergeIntoClad=None,
         mergeIntoFuel=None,
         meshSubdivisionsPerCm=None,
-        xsExecuteExclusive=None,
-        xsPriority=None,
         xsMaxAtomNumber=None,
         averageByComponent=False,
         minDriverDensity=0.0,
@@ -534,8 +511,6 @@ class XSModelingOptions:
         self.ductHeterogeneous = ductHeterogeneous
         self.traceIsotopeThreshold = traceIsotopeThreshold
         # these are related to execution
-        self.xsExecuteExclusive = xsExecuteExclusive
-        self.xsPriority = xsPriority
         self.xsTempIsotope = xsTempIsotope
         self.requiredRAM = requiredRAM
 
@@ -723,8 +698,6 @@ class XSModelingOptions:
                 CONF_BLOCK_REPRESENTATION: blockRepresentation,
             }
 
-        defaults[CONF_XS_EXECUTE_EXCLUSIVE] = False
-        defaults[CONF_XS_PRIORITY] = 5
         defaults[CONF_COMPONENT_AVERAGING] = False
         defaults[CONF_MEMORY_REQUIREMENT] = 0.0
 

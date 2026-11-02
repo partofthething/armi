@@ -183,44 +183,13 @@ creates an ``Action`` and broadcasts it as appropriate::
     ``action``. See example below.
 
 
-Example using ``scatter``
--------------------------
+Independent calculations
+------------------------
 
-When trying two independent actions at the same time, you can use ``scatter`` to distribute the work. The following example
-shows how different operations can be performed in parallel::
-
-    class SomeInterface(interfaces.Interface):
-
-        def interactEveryNode(self, cycle, node):
-            actions = []
-            # pseudo code for getting a bunch of different actions
-            for opt in self.cs['someSetting']:
-                actions.append(factory(opt))
-            
-            distrib = mpiActions.DistributeStateAction()
-            distrib.broadcast()
-            
-            # this line any existing reactor on workers to ensure consistency
-            distrib.invoke(self.o, self.r, self.cs)
-            # the 3 lines above are equivalent to:
-            # mpiActions.DistributeStateAction.invokeAsMaster(self.o, self.r, self.cs)
-
-            results = mpiActions.runActions(self.o, self.r, self.cs, actions)
-
-            # do something to apply the results.
-            for bi, b in enumerate(self.r.getBlocks():
-                b.p.what = extractBlockResult(results, bi)
-
-    def factory(opt):
-        if opt == 'WHAT':
-            return WhatAction()
-
-    class WhatAction(mpiActions.MpiAction):
-
-        def invokeHook(self):
-            # does something
-            # somehow gathers results.
-            return self.gather(results)
+To run several *different* calculations at the same time (one per perturbed state, or one per external code input),
+don't hand-schedule actions across ranks. Use :py:func:`armi.cases.branches.runBranches` or
+:py:meth:`SuiteRunner.runCommands <armi.cases.runners.SuiteRunner.runCommands>`, described at the end of this page,
+which run on the MPI ranks or on any other backend.
 
 
 A simplified approach
@@ -232,20 +201,15 @@ that the reactor state is synchronized across all nodes, and then use the reacto
     class SomeInterface(interfaces.Interface):
 
         def interactEveryNode(self, cycle, node):
-            actions = []
-            # pseudo code for getting a bunch of different actions
-            for opt in self.cs['someSetting']:
-                actions.append(factory(opt))
-            
             mpiActions.DistributeStateAction.invokeAsMaster(self.o, self.r, self.cs)
-            results = mpiActions.runActions(self.o, self.r, self.cs, actions)
+            WhatAction.invokeAsMaster(self.o, self.r, self.cs)
 
     class WhatAction(mpiActions.MpiAction):
 
         def invokeHook(self):
 
-            # do something
-            for a in self.generateMyObjects(self.r):
+            # do something to this rank's share of the assemblies
+            for a in self.mpiIter(self.r.core.getAssemblies()):
                 a.p.someParam = func(a)
                 for b in a:
                     b.p.someParam = func(b)

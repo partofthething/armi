@@ -1,4 +1,5 @@
 # Copyright 2019 TerraPower, LLC
+# Copyright 2026 Nick Touran
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -52,18 +53,20 @@ sends it to the workers, and then both the primary and the workers
 
 In order to create a new, custom MPI Action, inherit from :py:class:`~armi.mpiActions.MpiAction`,
 and override the :py:meth:`~armi.mpiActions.MpiAction.invokeHook` method.
+
+MPI actions are for collective work within one calculation, on state every rank shares. To run many independent
+calculations (perturbed states, external code inputs) in parallel, use :py:func:`armi.cases.branches.runBranches` or
+:py:meth:`armi.cases.runners.SuiteRunner.runCommands`, which run on MPI ranks, forked processes or a cluster alike.
 """
 
-import collections
 import gc
-import math
 import pickle
 import timeit
 
-from armi import context, interfaces, runLog, settings, utils
+from armi import context, interfaces, runLog, settings
 from armi.reactor import reactors
 from armi.reactor.parameters import parameterDefinitions
-from armi.utils import iterables, tabulate
+from armi.utils import iterables
 
 
 class MpiAction:
@@ -78,18 +81,6 @@ class MpiAction:
         self.o = None
         self.r = None
         self.cs = None
-        self.serial = False
-        # items can be set to exclusive if they will take considerably longer
-        # they will be queued first, and the CPUs for this action will not
-        # be used for any other purpose (except when number of exclusive actions > num CPU groups)
-        self.runActionExclusive = False
-        # lower number is higher; halfway between 1-10.. probably dont need more
-        # than 10 priorities but negative nums work too...
-        self.priority = 5
-
-    @property
-    def parallel(self):
-        return not self.serial
 
     @classmethod
     def invokeAsMaster(cls, o, r, cs):
@@ -163,8 +154,6 @@ class MpiAction:
         method, returns the original object when called by the primary node, or the broadcasted
         object when called on the worker nodes.
         """
-        if self.serial:
-            return obj if obj is not None else self
         if context.MPI_SIZE > 1:
             result = self._mpiOperationHelper(obj, context.MPI_COMM.bcast)
         # the following if-branch prevents the creation of duplicate objects on the primary node
@@ -188,8 +177,6 @@ class MpiAction:
         -----
         The returned list will contain a reference to the original gathered object, without making a copy of it.
         """
-        if self.serial:
-            return [obj if obj is not None else self]
         if context.MPI_SIZE > 1:
             result = self._mpiOperationHelper(obj, context.MPI_COMM.gather)
             if context.MPI_RANK == 0:
@@ -282,252 +269,6 @@ class MpiAction:
             Dependent on implementation
         """
         raise NotImplementedError()
-
-
-def runActions(o, r, cs, actions, numPerNode=None, serial=False):
-    """Run a series of MpiActions in parallel, or in series if :code:`serial=True`.
-
-    Notes
-    -----
-    The number of actions DOES NOT need to match :code:`context.MPI_SIZE`.
-
-    Calling this method may invoke MPI Split which will change the MPI_SIZE during the action. This allows someone to
-    call MPI operations without being blocked by tasks which are not doing the same thing.
-    """
-    if not context.MPI_DISTRIBUTABLE or serial:
-        return runActionsInSerial(o, r, cs, actions)
-
-    useForComputation = [True] * context.MPI_SIZE
-    if numPerNode is not None:
-        if numPerNode < 1:
-            raise ValueError("numPerNode must be >= 1")
-        numThisNode = {nodeName: 0 for nodeName in context.MPI_NODENAMES}
-        for rank, nodeName in enumerate(context.MPI_NODENAMES):
-            # if we have more processors than tasks, disable the extra
-            useForComputation[rank] = numThisNode[nodeName] < numPerNode
-            numThisNode[nodeName] += 1
-
-    queue, numBatches = _makeQueue(actions, useForComputation)
-    runLog.extra(f"Running {len(actions)} MPI actions in parallel over {numBatches} batches")
-    results = []
-    batchNum = 0
-    while queue:
-        actionsThisRound = []
-        batchNum += 1
-        runLog.extra(f"MPI actions, batch {batchNum} of {numBatches}:\n")
-        for useRank in useForComputation:
-            actionsThisRound.append(queue.pop(0) if useRank and queue else None)
-        distrib = distributeActions(actionsThisRound, useForComputation)
-        distrib.broadcast()
-        results.append(distrib.invoke(o, r, cs))
-    return results
-
-
-def runBatchedActions(o, r, cs, actionsByNode, serial=False):
-    """Run a series of MpiActions in parallel, or in series if :code:`serial=True`.
-
-    Notes
-    -----
-    This method takes a set of actions that have been batched by the user beforehand.
-
-    This is useful for heterogeneous work packages where some tasks have significantly larger
-    or smaller memory requirements. The user can place an appropriate amount of work on each node.
-    """
-    if not context.MPI_DISTRIBUTABLE or serial:
-        actions = []
-        for _node, nodeActions in actionsByNode.items():
-            actions.extend(nodeActions)
-        return runActionsInSerial(o, r, cs, actions)
-
-    # count how many actions will run on each node
-    nodes = set(context.MPI_NODENAMES)
-    numToRunOnThisNode = {nodeName: 0 for nodeName in context.MPI_NODENAMES}
-    for nodeName in nodes:
-        numToRunOnThisNode[nodeName] = len(actionsByNode.get(nodeName, []))
-
-    # determine which ranks will run the actions
-    numAssigned = {nodeName: 0 for nodeName in nodes}
-    useForComputation = [True] * len(context.MPI_NODENAMES)
-    for rank, nodeName in enumerate(context.MPI_NODENAMES):
-        # if we have more processors than tasks, disable the extra
-        useForComputation[rank] = numAssigned[nodeName] < numToRunOnThisNode[nodeName]
-        if useForComputation[rank]:
-            numAssigned[nodeName] += 1
-
-    # check that we do not request more tasks than processors on a node
-    for nodeName in nodes:
-        if numToRunOnThisNode[nodeName] > numAssigned[nodeName]:
-            msg = (
-                f"There are more actions ({numToRunOnThisNode[nodeName]}) than ranks available "
-                f"({numAssigned[nodeName]}) on {nodeName}!"
-            )
-            runLog.error(msg)
-            raise ValueError(msg)
-
-    totalActions = sum(len(actions) for node, actions in actionsByNode.items())
-    runLog.extra(f"Running {totalActions} MPI actions in parallel over {len(actionsByNode)} nodes.")
-
-    results = []
-    actionsThisRound = []
-    for rank, nodeName in enumerate(context.MPI_NODENAMES):
-        queue = actionsByNode.get(nodeName, [])
-        actionsThisRound.append(queue.pop(0) if useForComputation[rank] and queue else None)
-
-    distrib = distributeActions(actionsThisRound, useForComputation)
-    distrib.broadcast()
-    results.append(distrib.invoke(o, r, cs))
-
-    return results
-
-
-def distributeActions(actionsThisRound, useForComputation):
-    useForComputation = _disableForExclusiveTasks(actionsThisRound, useForComputation)
-    realActions = [
-        (context.MPI_NODENAMES[rank], rank, act) for rank, act in enumerate(actionsThisRound) if act is not None
-    ]
-    tableText = tabulate.tabulate(realActions, headers=["Nodename", "Rank", "Action"])
-    runLog.extra(f"Distributing {len(realActions)} MPI actions for parallel processing:\n{tableText}")
-    return DistributionAction(actionsThisRound)
-
-
-def _disableForExclusiveTasks(actionsThisRound, useForComputation):
-    # disable processors that are exclusive for next
-    indicesToDisable = [
-        i for i, action in enumerate(actionsThisRound) if action is not None and action.runActionExclusive
-    ]
-    for i in indicesToDisable:
-        useForComputation[i] = False
-    return useForComputation
-
-
-def _makeQueue(actions, useForComputation):
-    """
-    Sort actions by priority in a queue, if more exclusive than CPUs makes all non-exclusive.
-
-    Notes
-    -----
-    All exclusive actions will occur first regardless of the priority.
-    All non-exclusive actions will be after all exclusive actions regardless of the priority.
-    Within these 2 bins, priority matters.
-    In the event that more exclusive actions are requested than CPUs - 1, all actions will
-    be changed to non-exclusive but previously evaluated order will remain.
-    CPUs - 1 is to reserve at least 1 CPU for non-exclusive actions.
-    """
-
-    def sortActionPriority(action):
-        # exclusive actions first and those groups of CPUs only get 1 action
-        exclusivePriority = 1 if action.runActionExclusive else 2
-        return (exclusivePriority, action.priority)
-
-    queue = list(sorted(actions, key=sortActionPriority))
-    minCPUsForRemainingTasks = 1
-    nExclusiveCPUs = len([action for action in queue if action.runActionExclusive])
-    nCPUsAvailable = len([rank for rank in useForComputation if rank])
-    if nExclusiveCPUs + minCPUsForRemainingTasks > nCPUsAvailable:
-        # there are more exclusive tasks than sets of CPUs, so just make them all
-        # non-exclusive and evenly balance them
-        for action in queue:
-            action.runActionExclusive = False
-        numBatches = int(math.ceil(len(actions) / float(nCPUsAvailable)))
-    else:
-        nLeftoverCPUs = nCPUsAvailable - nExclusiveCPUs
-        nLeftoverActions = len(actions) - nExclusiveCPUs
-        numBatches = int(math.ceil(nLeftoverActions / nLeftoverCPUs))
-    return queue, numBatches
-
-
-def runActionsInSerial(o, r, cs, actions):
-    """Run a series of MpiActions in serial.
-
-    Notes
-    -----
-    This will set the `MpiAction.serial` attribute to :code:`True`, and the `MpiAction.broadcast` and `MpiAction.gather`
-    methods will basically just return the value being supplied.
-    """
-    results = []
-    runLog.extra("Running {} MPI actions in serial".format(len(actions)))
-    numActions = len(actions)
-    for aa, action in enumerate(actions):
-        canDistribute = context.MPI_DISTRIBUTABLE
-        action.serial = True
-        context.MPI_DISTRIBUTABLE = False
-        runLog.extra("Running action {} of {}: {}".format(aa + 1, numActions, action))
-        results.append(action.invoke(o, r, cs))
-        action.serial = False  # return to original state
-        context.MPI_DISTRIBUTABLE = canDistribute
-    return results
-
-
-class DistributionAction(MpiAction):
-    """
-    Scatters the workload of multiple actions to available resources.
-
-    Notes
-    -----
-    This currently only works from the root (of COMM_WORLD). Eventually, it would be nice to make
-    it possible for sub-tasks to manage their own communicators and spawn their own work within some
-    sub-communicator.
-
-    This performs an MPI Split operation and takes over the context.MPI_COMM and associated variables.
-    For this reason, it is possible that when someone thinks they have distributed information to all
-    nodes, it may only be a subset that was necessary to perform the number of actions needed by this
-    DsitributionAction.
-    """
-
-    def __init__(self, actions):
-        MpiAction.__init__(self)
-        self._actions = actions
-
-    def __reduce__(self):
-        """Reduce prevents from unnecessary actions to others, after all we only want to scatter.
-
-        Consequently, the worker nodes _actions will be None.
-        """
-        return DistributionAction, (None,)
-
-    def invokeHook(self):
-        """
-        Overrides invokeHook to distribute work amongst available resources as requested.
-
-        Notes
-        -----
-        Two things about this method make it non-recursive
-        """
-        canDistribute = context.MPI_DISTRIBUTABLE
-        mpiComm = context.MPI_COMM
-        mpiRank = context.MPI_RANK
-        mpiSize = context.MPI_SIZE
-        mpiNodeNames = context.MPI_NODENAMES
-
-        if self.cs["verbosity"] == "debug" and mpiRank == 0:
-            runLog.debug("Printing diagnostics for MPI actions!")
-            objectCountDict = collections.defaultdict(int)
-            for debugAction in self._actions:
-                utils.classesInHierarchy(debugAction, objectCountDict)
-                for objekt, count in objectCountDict.items():
-                    runLog.debug("There are {} {} in MPI action {}".format(count, objekt, debugAction))
-
-        actionResult = None
-        try:
-            action = mpiComm.scatter(self._actions, root=0)
-            # create a new communicator that only has these specific processes running
-            hasAction = action is not None
-            context.MPI_COMM = mpiComm.Split(int(hasAction))
-            context.MPI_RANK = context.MPI_COMM.Get_rank()
-            context.MPI_SIZE = context.MPI_COMM.Get_size()
-            context.MPI_DISTRIBUTABLE = context.MPI_SIZE > 1
-            context.MPI_NODENAMES = context.MPI_COMM.allgather(context.MPI_NODENAME)
-            if hasAction:
-                actionResult = action.invoke(self.o, self.r, self.cs)
-        finally:
-            # restore the global variables
-            context.MPI_DISTRIBUTABLE = canDistribute
-            context.MPI_COMM = mpiComm
-            context.MPI_RANK = mpiRank
-            context.MPI_SIZE = mpiSize
-            context.MPI_NODENAMES = mpiNodeNames
-
-        return actionResult
 
 
 class MpiActionError(Exception):

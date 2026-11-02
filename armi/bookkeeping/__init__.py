@@ -85,7 +85,6 @@ class BookkeepingPlugin(plugins.ArmiPlugin):
         if isinstance(cmd, mpiActions.MpiAction):
             for donotReset in (
                 mpiActions.DistributeStateAction,
-                mpiActions.DistributionAction,
                 memoryProfiler.PrintSystemMemoryUsageAction,
                 memoryProfiler.ProfileMemoryUsageAction,
             ):

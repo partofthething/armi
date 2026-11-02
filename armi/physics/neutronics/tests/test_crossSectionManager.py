@@ -993,7 +993,6 @@ class TestXSGM(unittest.TestCase):
                     averageByComponent=True,
                     xsMaxAtomNumber=60,
                     criticalBuckling=False,
-                    xsPriority=2,
                 )
             }
         )
