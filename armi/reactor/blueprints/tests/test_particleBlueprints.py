@@ -369,3 +369,62 @@ class TestPebbleCell(unittest.TestCase):
     def test_homogenizedNumberDensitiesHoldTheKernels(self):
         expected = 4.11729e-3 * PEBBLE_PARTICLES * sphereVolume(0.0502) / sphereVolume(7.5918)
         self.assertAlmostEqual(self.b.getNumberDensity("U235") / expected, 1.0)
+
+
+class TestParticlesInTheDatabase(unittest.TestCase):
+    """Particle layers come back from a database dispersed in their host, as the blueprints built them."""
+
+    SYSTEMS = inspect.cleandoc(
+        """
+        systems:
+            core:
+                grid name: core
+                origin: {x: 0.0, y: 0.0, z: 0.0}
+        grids:
+            core:
+                geom: GEOM
+                symmetry: full
+                lattice pitch: PITCH
+                lattice map: |
+                    SPEC
+        """
+    )
+
+    def _roundTrip(self, text, geom, pitch, spec):
+        from armi.bookkeeping.db import Database
+        from armi.reactor import reactors
+        from armi.utils.directoryChangers import TemporaryDirectoryChanger
+
+        systems = self.SYSTEMS.replace("GEOM", geom).replace("PITCH", pitch).replace("SPEC", spec)
+        cs = settings.Settings().modified(newSettings={"nCycles": 1, "burnSteps": 0})
+        bp = blueprints.Blueprints.load(text + "\n" + systems)
+        r = reactors.factory(cs, bp)
+        with TemporaryDirectoryChanger():
+            with Database("particles.h5", "w") as db:
+                db.writeToDB(r)
+            with Database("particles.h5", "r") as db:
+                loaded = db.load(0, 0, cs=cs, bp=bp)
+        return r.core.getFirstBlock(), loaded.core.getFirstBlock()
+
+    def _assertSame(self, built, loaded, host):
+        layers = [c for c in loaded if isinstance(c, ParticleLayer)]
+        hostLoaded = loaded.getComponentByName(host)
+        self.assertEqual([c.name for c in hostLoaded.particleLayers], [c.name for c in layers])
+        self.assertTrue(all(c.host is hostLoaded for c in layers))
+        for name in [host, *(c.name for c in layers)]:
+            self.assertAlmostEqual(
+                loaded.getComponentByName(name).getVolume(), built.getComponentByName(name).getVolume()
+            )
+        self.assertAlmostEqual(loaded.getVolume(), built.getVolume())
+        self.assertAlmostEqual(loaded.getMass("U235"), built.getMass("U235"))
+
+    def test_compacts(self):
+        built, loaded = self._roundTrip(_text(), "hex", "{hex: 36.0}", "F")
+        self._assertSame(built, loaded, "fuel compact")
+
+    def test_pebble(self):
+        packing = PEBBLE_PARTICLES * sphereVolume(0.09154) / sphereVolume(5.0)
+        text = PEBBLE_BLUEPRINT.replace("PACKING", repr(packing))
+        built, loaded = self._roundTrip(text, "cartesian", "{x: 7.5918, y: 7.5918}", "P")
+        self._assertSame(built, loaded, "fuel zone")
+        self.assertTrue(loaded.getComponentByName("fuel zone kernel").is3D)

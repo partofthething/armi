@@ -230,6 +230,20 @@ def getCircleParameterDefinitions():
     return pDefs
 
 
+def getParticleLayerParameterDefinitions():
+    """Return parameters for ParticleLayer: a circle's, and the component the particles are dispersed in."""
+    pDefs = getCircleParameterDefinitions()
+    with pDefs.createBuilder(location=ParamLocation.AVERAGE, saveToDB=True) as pb:
+        pb.defParam(
+            "particleHost",
+            units=units.UNITLESS,
+            description="Name of the component (in the same block) these particles are dispersed in",
+            default=None,
+        )
+
+    return pDefs
+
+
 def getHexagonParameterDefinitions():
     """Return parameters for Hexagon."""
     pDefs = parameters.ParameterDefinitionCollection()

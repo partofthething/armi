@@ -50,7 +50,7 @@ class ParticleLayer(ShapedComponent):
 
     THERMAL_EXPANSION_DIMS = {"od", "id"}
 
-    pDefs = componentParameters.getCircleParameterDefinitions()
+    pDefs = componentParameters.getParticleLayerParameterDefinitions()
 
     def __init__(
         self,
@@ -82,6 +82,13 @@ class ParticleLayer(ShapedComponent):
 
     def getBoundingCircleOuterDiameter(self, Tc=None, cold=False):
         return self.getDimension("od", cold=cold, Tc=Tc)
+
+    def resolveLinkedDims(self, components):
+        """Resolve linked dimensions, and relink these particles to their host (when loading from a database)."""
+        ShapedComponent.resolveLinkedDims(self, components)
+        host = components.get(self.p.particleHost)
+        if self.host is None and host is not None:
+            _link(host, self)
 
     def getComponentArea(self, cold=False, Tc=None):
         """Area (cm^2): particles per cm of block height times the volume of one shell."""
@@ -136,10 +143,18 @@ def attachParticleLayers(host, layers, packingFraction):
     else:
         hostVolume = host.getComponentArea(cold=True)  # all copies of the host, per cm of height
     count = packingFraction * hostVolume / particleVolume
+    host.particleLayers = []
     for layer in layers:
-        layer.is3D = host.is3D
         layer.setDimension("mult", count)
-        layer.host = host
-    host.particleLayers = list(layers)
+        _link(host, layer)
     host.p.packingFraction = packingFraction
     return count
+
+
+def _link(host, layer):
+    """Disperse ``layer`` in ``host``: the host's layers stay ordered innermost first."""
+    layer.host = host
+    layer.p.particleHost = host.name
+    layer.is3D = host.is3D
+    host.particleLayers = sorted([*host.particleLayers, layer], key=lambda c: c.getDimension("od", cold=True))
+    host.clearCache()
