@@ -1333,6 +1333,12 @@ class CartesianAssembly(Assembly):
     _BLOCK_TYPE = blocks.CartesianBlock
 
 
+class SphericalAssembly(Assembly):
+    """An assembly of spherical unit cells, such as a pebble's cell for lattice physics."""
+
+    _BLOCK_TYPE = blocks.SphericalBlock
+
+
 class RZAssembly(Assembly):
     """
     RZAssembly are assemblies in RZ geometry; they need to be different objects than HexAssembly

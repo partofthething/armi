@@ -518,6 +518,8 @@ class Component(composites.Composite, metaclass=ComponentType):
             volume = self.getArea() * self.parent.getHeight()
         else:
             volume = self.getComponentVolume()
+            for layer in getattr(self, "particleLayers", ()):
+                volume -= layer.getComponentVolume()
 
         self._checkNegativeVolume(volume)
         return volume

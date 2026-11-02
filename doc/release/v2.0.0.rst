@@ -92,6 +92,8 @@ New features
 * Particle fuel: a ``particles:`` blueprint section describes TRISO-like particles layer by layer, and any component can
   hold them at a packing fraction (``particles: TRISO``, ``packingFraction: 0.35``). Each layer becomes a component of
   the block, counted per centimeter of block height so that masses scale with height (:ref:`particle-fuel`).
+* Pebbles: particles can be dispersed in a ``Sphere``, and a block whose largest component is a ``Sphere`` is a
+  ``SphericalBlock``, the unit cell of a pebble bed for lattice physics.
 * New materials for gas-cooled reactors and TRISO fuel: ``SiC``, ``UCO`` (UC0.5O1.5) and ``Helium``.
 * Block parameters for fuel pin temperatures and pin gas pressure.
 * A material can declare that it never thermally expands.

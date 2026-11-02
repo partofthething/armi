@@ -13,6 +13,11 @@ its ``mult`` is the number of particles in one centimeter of its block, and its 
 volume of one spherical shell. Volume, mass and every number density then scale with block height exactly as an
 extruded component's do.
 
+A host that is itself three-dimensional (a :py:class:`~armi.reactor.components.volumetricShapes.Sphere`, such as the
+fuel zone of a pebble) has a volume that does not scale with height either. Its particles are then three-dimensional
+too: ``mult`` is the number of particles, and the area of a layer is its volume over the block height, as a sphere's
+is.
+
 The particle count is fixed at construction from the packing fraction and the cold dimensions of host and particle,
 so it does not change as the host or the particles expand. The host's area is its outline less the particles inside
 it: the host *is* the matrix, and the matrix plus its particles fill the host outline.
@@ -37,7 +42,8 @@ class ParticleLayer(ShapedComponent):
     od, id : float
         Outer and inner diameters of the layer, in cm (``id`` is zero for a kernel).
     mult : float
-        Particles per centimeter of block height, summed over every copy of the host in the block.
+        Particles per centimeter of block height, summed over every copy of the host in the block; or, when the host
+        is three-dimensional, the number of particles.
     """
 
     is3D = False
@@ -81,10 +87,24 @@ class ParticleLayer(ShapedComponent):
         """Area (cm^2): particles per cm of block height times the volume of one shell."""
         od = self.getDimension("od", cold=cold, Tc=Tc)
         iD = self.getDimension("id", cold=cold, Tc=Tc)
+        area = self.getDimension("mult") * sphereVolume(od, iD)
+        return area / self._blockHeight() if self.is3D else area
+
+    def getComponentVolume(self, cold=False):
+        """Volume (cm^3) of every particle's shell of this layer (for a layer in a three-dimensional host)."""
+        od = self.getDimension("od", cold=cold)
+        iD = self.getDimension("id", cold=cold)
         return self.getDimension("mult") * sphereVolume(od, iD)
+
+    def _blockHeight(self):
+        from armi.reactor.blocks import Block  # avoid circular import
+
+        return self.getAncestor(lambda c: isinstance(c, Block)).getHeight()
 
     def getParticleCount(self, height=None):
         """Number of particles in the block (or in ``height`` cm of it)."""
+        if self.is3D:
+            return self.getDimension("mult")
         if height is None:
             height = self.parent.getHeight() if self.parent is not None else 1.0
         return self.getDimension("mult") * height
@@ -94,8 +114,9 @@ def attachParticleLayers(host, layers, packingFraction):
     """
     Disperse particles made of ``layers`` in ``host`` at ``packingFraction``.
 
-    Sets each layer's ``mult`` (particles per cm of block height) from the packing fraction and the *cold* volumes of
-    host and particle, links the layers to the host, and makes the host's area its outline less its particles.
+    Sets each layer's ``mult`` (particles per cm of block height, or particles if the host is three-dimensional) from
+    the packing fraction and the *cold* volumes of host and particle, links the layers to the host, and makes the
+    host's area its outline less its particles.
 
     Parameters
     ----------
@@ -110,11 +131,15 @@ def attachParticleLayers(host, layers, packingFraction):
     if not 0.0 < packingFraction < 0.75:
         raise ValueError(f"Packing fraction of particles in {host} must be in (0, 0.75), not {packingFraction}")
     particleVolume = sphereVolume(layers[-1].getDimension("od", cold=True))
-    hostArea = host.getComponentArea(cold=True)  # all copies of the host, per cm of height
-    perCm = packingFraction * hostArea / particleVolume
+    if host.is3D:
+        hostVolume = host.getComponentVolume(cold=True)  # all copies of the host
+    else:
+        hostVolume = host.getComponentArea(cold=True)  # all copies of the host, per cm of height
+    count = packingFraction * hostVolume / particleVolume
     for layer in layers:
-        layer.setDimension("mult", perCm)
+        layer.is3D = host.is3D
+        layer.setDimension("mult", count)
         layer.host = host
     host.particleLayers = list(layers)
     host.p.packingFraction = packingFraction
-    return perCm
+    return count

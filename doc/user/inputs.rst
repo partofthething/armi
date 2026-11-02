@@ -954,6 +954,34 @@ fill the outline.
 A code that can draw particles (OpenMC, through the ``armi-openmc`` plugin) finds them from the host's
 ``particleLayers``; one that cannot simply sees the host and its layers as homogeneous components.
 
+Pebbles
+"""""""
+A host can also be a ``Sphere``, such as the fuel zone of a pebble. Its volume does not depend on the block height
+either, so its particles are counted whole: ``mult`` is the number of particles.
+
+A block whose largest component is a ``Sphere`` is a
+:py:class:`~armi.reactor.blocks.sphericalBlock.SphericalBlock`, a pebble's unit cell for lattice physics: concentric
+spheres for the fuel zone, the fuel-free shell, and the pebble's share of the bed around it (moderator pebbles,
+coolant, voids) smeared by volume. Each sphere's area is its volume over the block height, so the block height is only
+a bookkeeping length and every volume and number density is that of the spheres. A transport code closes the cell with
+a white boundary on its outer sphere::
+
+    blocks:
+        pebble cell: &block_pebble
+            flags: fuel
+            fuel zone:
+                shape: Sphere
+                material: Graphite
+                Tinput: 20.0
+                Thot: 20.0
+                id: 0.0
+                od: 5.0
+                mult: 1
+                particles: coated particle
+                packingFraction: 0.0576441
+            graphite shell: {shape: Sphere, material: Graphite, Tinput: 20.0, Thot: 20.0, id: 5.0, od: 6.0, mult: 1}
+            bed: {shape: Sphere, material: Graphite, Tinput: 20.0, Thot: 20.0, id: 6.0, od: 7.5918, mult: 1}
+
 
 .. _naming-flags:
 

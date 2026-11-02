@@ -25,4 +25,5 @@ ARMI encourages you to build your own subclass of an ARMI Block type, to simplif
 from armi.reactor.blocks.block import PIN_COMPONENTS, Block
 from armi.reactor.blocks.cartesianBlock import CartesianBlock
 from armi.reactor.blocks.hexBlock import HexBlock
+from armi.reactor.blocks.sphericalBlock import SphericalBlock
 from armi.reactor.blocks.thRZBlock import ThRZBlock

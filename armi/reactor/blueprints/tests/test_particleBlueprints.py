@@ -258,3 +258,114 @@ class TestParticleFuelInputErrors(unittest.TestCase):
         host = _block().getComponentByName("fuel compact")
         with self.assertRaises(ValueError):
             particles.attachParticleLayers(host, host.particleLayers, 0.8)
+
+
+# A LEUPRO-1 pebble (IAEA-TECDOC-1249) as a spherical unit cell: 9,393.6 particles in a 5 cm fuel zone, a 0.5 cm
+# graphite shell, and the pebble's share of the bed out to 3.7959 cm.
+PEBBLE_BLUEPRINT = inspect.cleandoc(
+    r"""
+    nuclide flags:
+        U235: {burn: false, xs: true}
+        U238: {burn: false, xs: true}
+        O: {burn: false, xs: true, expandTo: [O16]}
+        C: {burn: false, xs: true}
+    custom isotopics:
+        UO2:
+            input format: number densities
+            U235: 4.11729e-3
+            U238: 2.01906e-2
+            O16: 4.86157e-2
+        carbon:
+            input format: number densities
+            C: 8.64563e-2
+        bed:
+            input format: number densities
+            C: 4.08644e-2
+    particles:
+        coated particle:
+            kernel:
+                material: Custom
+                isotopics: UO2
+                od: 0.0502
+                flags: fuel depletable
+            coatings:
+                material: Custom
+                isotopics: carbon
+                od: 0.09154
+    blocks:
+        pebble cell: &block_pebble
+            fuel zone:
+                shape: Sphere
+                material: Custom
+                isotopics: carbon
+                Tinput: 20.0
+                Thot: 20.0
+                id: 0.0
+                od: 5.0
+                mult: 1
+                particles: coated particle
+                packingFraction: PACKING
+            shell:
+                shape: Sphere
+                material: Custom
+                isotopics: carbon
+                Tinput: 20.0
+                Thot: 20.0
+                id: 5.0
+                od: 6.0
+                mult: 1
+            bed:
+                shape: Sphere
+                material: Custom
+                isotopics: bed
+                Tinput: 20.0
+                Thot: 20.0
+                id: 6.0
+                od: 7.5918
+                mult: 1
+    assemblies:
+        pebble:
+            specifier: P
+            blocks: [*block_pebble]
+            height: [10.0]
+            axial mesh points: [1]
+            xs types: [A]
+    """
+)
+PEBBLE_PARTICLES = 9393.6
+
+
+class TestPebbleCell(unittest.TestCase):
+    def setUp(self):
+        packing = PEBBLE_PARTICLES * sphereVolume(0.09154) / sphereVolume(5.0)
+        bp = blueprints.Blueprints.load(PEBBLE_BLUEPRINT.replace("PACKING", repr(packing)))
+        self.b = bp.constructAssem(settings.Settings(), "pebble")[0]
+        self.zone = self.b.getComponentByName("fuel zone")
+        self.kernel = self.b.getComponentByName("fuel zone kernel")
+
+    def test_aSphereMakesASphericalBlock(self):
+        from armi.reactor.blocks import SphericalBlock
+
+        self.assertIsInstance(self.b, SphericalBlock)
+        self.assertAlmostEqual(self.b.getPitch(), 7.5918)
+
+    def test_particlesInASphereAreCounted(self):
+        self.assertTrue(self.kernel.is3D)
+        self.assertAlmostEqual(self.kernel.getParticleCount(), PEBBLE_PARTICLES)
+        self.assertAlmostEqual(self.kernel.getVolume(), PEBBLE_PARTICLES * sphereVolume(0.0502))
+
+    def test_volumesAreTheSpheres(self):
+        particles = sum(c.getVolume() for c in self.zone.particleLayers)
+        self.assertAlmostEqual(self.zone.getVolume() + particles, sphereVolume(5.0))
+        self.assertAlmostEqual(sum(c.getVolume() for c in self.b), sphereVolume(7.5918))
+        self.assertAlmostEqual(self.b.getVolume(), sphereVolume(7.5918))
+
+    def test_volumesDoNotDependOnTheBlockHeight(self):
+        mass = self.b.getMass("U235")
+        self.b.setHeight(2.0 * self.b.getHeight())
+        self.assertAlmostEqual(self.b.getMass("U235"), mass)
+        self.assertAlmostEqual(self.kernel.getParticleCount(), PEBBLE_PARTICLES)
+
+    def test_homogenizedNumberDensitiesHoldTheKernels(self):
+        expected = 4.11729e-3 * PEBBLE_PARTICLES * sphereVolume(0.0502) / sphereVolume(7.5918)
+        self.assertAlmostEqual(self.b.getNumberDensity("U235") / expected, 1.0)

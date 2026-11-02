@@ -53,24 +53,26 @@ class ReactorPlugin(plugins.ArmiPlugin):
     def defineBlockTypes():
         from armi.reactor import blocks
         from armi.reactor.components.basicShapes import Hexagon, Rectangle
-        from armi.reactor.components.volumetricShapes import RadialSegment
+        from armi.reactor.components.volumetricShapes import RadialSegment, Sphere
 
         return [
             (Rectangle, blocks.CartesianBlock),
             (RadialSegment, blocks.ThRZBlock),
             (Hexagon, blocks.HexBlock),
+            (Sphere, blocks.SphericalBlock),
         ]
 
     @staticmethod
     @plugins.HOOKIMPL
     def defineAssemblyTypes():
-        from armi.reactor.assemblies import CartesianAssembly, HexAssembly, ThRZAssembly
-        from armi.reactor.blocks import CartesianBlock, HexBlock, ThRZBlock
+        from armi.reactor.assemblies import CartesianAssembly, HexAssembly, SphericalAssembly, ThRZAssembly
+        from armi.reactor.blocks import CartesianBlock, HexBlock, SphericalBlock, ThRZBlock
 
         return [
             (HexBlock, HexAssembly),
             (CartesianBlock, CartesianAssembly),
             (ThRZBlock, ThRZAssembly),
+            (SphericalBlock, SphericalAssembly),
         ]
 
     @staticmethod

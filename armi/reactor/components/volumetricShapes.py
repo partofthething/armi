@@ -60,6 +60,10 @@ class Sphere(ShapedComponent):
         """Abstract bounding circle method that should be overwritten by each shape subclass."""
         return self.getDimension("od")
 
+    def getPitchData(self):
+        """The diameter: the pitch of a spherical block whose outermost sphere this is."""
+        return self.getDimension("od")
+
     def getComponentArea(self, cold=False, Tc=None):
         """Compute an average area over the height."""
         from armi.reactor.blocks import Block  # avoid circular import
