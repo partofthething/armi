@@ -16,20 +16,15 @@ A :py:class:`SuiteRunner` turns each case into a job:
 Backends implement one primitive, :py:meth:`SuiteRunner.runCommand`: run a command in a directory, wherever the backend
 runs things, and leave the directory holding what it wrote. A case job is just the worker command run in the case
 directory. :py:class:`LocalRunner` runs commands as subprocesses; :py:class:`SshRunner` copies the directory to a
-remote host with rsync, runs the command there and copies it back. A PBS or Slurm backend would write a job script
-that runs the command in the directory, submit it, wait for it and (if the batch system does not share the file
-system) copy the directory back, e.g.::
-
-    class PbsRunner(SuiteRunner):
-        def runCommand(self, directory, argv, timeout=None, stdin=None, stdout=None):
-            script = self.writeScript(directory, argv, timeout, stdin, stdout)  # cd, environment, walltime
-            jobId = subprocess.check_output(["qsub", script], text=True).strip()
-            return self.waitFor(jobId)  # poll qstat, return the exit status
+remote host with rsync, runs the command there and copies it back; :py:class:`SlurmRunner` submits each command as a
+batch job on a cluster that shares the file system, and many at once as a job array. Another batch system (PBS, say)
+follows the Slurm runner: write a script that runs the command in the directory, submit it and wait for it.
 
 Because the primitive knows nothing about cases, the same runners serve work in the middle of a run:
-:py:meth:`SuiteRunner.runCommands` runs many external code inputs (one directory each) in parallel on whichever
-backend it is given. Work that is pure Python on shared reactor state is a different shape and stays with
-:py:mod:`armi.mpiActions` (broadcast the state, scatter actions, gather results).
+:py:meth:`SuiteRunner.runCommands` runs many external code inputs (one directory each, optionally ordered) in parallel
+on whichever backend it is given, and :py:func:`armi.cases.branches.runBranches` can hand perturbed copies of the
+live reactor to a runner as snapshots. Collective operations within one calculation (scatter blocks, gather
+results) stay with :py:mod:`armi.mpiActions`.
 
 Typical use::
 
@@ -42,13 +37,14 @@ import concurrent.futures
 import contextlib
 import hashlib
 import json
+import math
 import os
 import shlex
 import subprocess
 import sys
-import time
+import tempfile
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Dict, List, Optional, Sequence
+from typing import TYPE_CHECKING, Callable, Dict, List, Optional, Sequence
 
 from armi import runLog
 from armi.cases import tasks
@@ -56,6 +52,13 @@ from armi.utils import caseWorker as worker
 
 #: What :py:meth:`SuiteRunner.runCommand` returns for a command killed at its timeout.
 TIMED_OUT = -9
+
+#: What :py:meth:`SuiteRunner.runCommands` returns for a command not run because one it runs after failed.
+SKIPPED = -2
+
+#: What :py:class:`SlurmRunner` returns for a job that ended without recording an exit code (cancelled, say, or
+#: killed at the batch system's time limit).
+LOST = -1
 
 if TYPE_CHECKING:
     from armi.cases.case import Case
@@ -128,40 +131,37 @@ class SuiteRunner:
         """Run the suite and return each case's result, by title."""
         jobs = self.plan(suite)
         app = _appSpec()
-        statuses: Dict[str, str] = {}
-        pending = []
-        for job in jobs:
-            if job.isDone() and not self.rerun:
-                statuses[job.title] = "cached"
-            else:
-                pending.append(job)
-        runLog.important(
-            f"{type(self).__name__}: {len(pending)} of {len(jobs)} cases to run, {len(jobs) - len(pending)} cached"
-        )
-        self.prepare([j for j in jobs if j in pending])
+        pending = [job for job in jobs if self.rerun or not job.isDone()]
+        statuses = {job.title: "cached" for job in jobs if job not in pending}
+        runLog.important(f"{type(self).__name__}: {len(pending)} of {len(jobs)} cases to run, {len(statuses)} cached")
+        self.prepare(pending)
 
-        running = {}
-        with concurrent.futures.ThreadPoolExecutor(max_workers=self.maxWorkers) as pool:
-            while pending or running:
-                for job in list(pending):
-                    depStatuses = [statuses.get(d.title) for d in job.dependencies]
-                    if any(s in ("failed", "timeout", "skipped") for s in depStatuses):
-                        statuses[job.title] = "skipped"
-                        pending.remove(job)
-                        runLog.warning(f"Skipping {job.title}: a case it depends on did not succeed")
-                    elif all(s in ("ok", "cached") for s in depStatuses) and len(running) < self.maxWorkers:
-                        with open(os.path.join(job.directory, worker.JOB_FILE), "w") as f:
-                            json.dump(job.spec(app, self.timeout), f, indent=1)
-                        running[pool.submit(self._executeTimed, job)] = job
-                        pending.remove(job)
-                if not running:
-                    continue
-                done, _ = concurrent.futures.wait(running, return_when=concurrent.futures.FIRST_COMPLETED)
-                for future in done:
-                    job = running.pop(future)
-                    statuses[job.title] = self._status(job, future)
+        position = {id(job): i for i, job in enumerate(pending)}
+        waitsOn = [[position[id(d)] for d in job.dependencies if id(d) in position] for job in pending]
+        outcomes = runGraph(
+            len(pending), waitsOn, lambda i: self._runJob(pending[i], app), lambda s: s == "ok", self.maxWorkers
+        )
+        for job, status in zip(pending, outcomes):
+            if status is None:
+                runLog.warning(f"Skipped {job.title}: a case it depends on did not succeed")
+            statuses[job.title] = status or "skipped"
 
         return {job.title: self._finalResult(job, statuses[job.title]) for job in jobs}
+
+    def _runJob(self, job: Job, app: Optional[str]) -> str:
+        """Write the job file, run the job and return its status."""
+        with open(os.path.join(job.directory, worker.JOB_FILE), "w") as f:
+            json.dump(job.spec(app, self.timeout), f, indent=1)
+        try:
+            self.execute(job)
+        except Exception as error:
+            runLog.error(f"{job.title}: the runner failed: {error}")
+            return "failed"
+        result = job.result()
+        status = result["status"] if result and result["hash"] == job.hash else "failed"
+        wall = result.get("wallSeconds") if result else None
+        runLog.important(f"{job.title}: {status}" + (f" in {wall:.1f} s" if wall is not None else ""))
+        return status
 
     @staticmethod
     def _finalResult(job, status) -> dict:
@@ -234,33 +234,23 @@ class SuiteRunner:
 
     def runCommands(self, commands: Sequence[dict]) -> List[int]:
         """
-        Run many independent commands, ``maxWorkers`` at a time, and return their exit codes in order.
+        Run many commands, ``maxWorkers`` at a time, and return their exit codes in order.
 
         Each command is a dict of :py:meth:`runCommand` arguments. This serves the middle of a run as well as a
         suite: an interface that needs a hundred external code runs (code inputs, say) writes each into its own
         directory and hands them here, and they run locally, on another machine or on a batch system depending only
         on the runner it was given.
+
+        A command may also list, under ``"after"``, the positions of commands it must follow (a branch calculation
+        after the reference it restarts from, say). It starts once they have all exited with 0, and is not run at all
+        (:py:data:`SKIPPED`) if any of them did not.
         """
         commands = [{"timeout": self.timeout, **c} for c in commands]
-        with concurrent.futures.ThreadPoolExecutor(max_workers=self.maxWorkers) as pool:
-            return list(pool.map(lambda c: self.runCommand(**c), commands))
-
-    def _executeTimed(self, job):
-        start = time.time()
-        self.execute(job)
-        return time.time() - start
-
-    def _status(self, job, future) -> str:
-        try:
-            future.result()
-        except Exception as error:
-            runLog.error(f"{job.title}: the runner failed: {error}")
-            return "failed"
-        result = job.result()
-        status = result["status"] if result and result["hash"] == job.hash else "failed"
-        wall = result.get("wallSeconds") if result else None
-        runLog.important(f"{job.title}: {status}" + (f" in {wall:.1f} s" if wall is not None else ""))
-        return status
+        waitsOn = [list(c.pop("after", ())) for c in commands]
+        codes = runGraph(
+            len(commands), waitsOn, lambda i: self.runCommand(**commands[i]), lambda code: code == 0, self.maxWorkers
+        )
+        return [SKIPPED if code is None else code for code in codes]
 
 
 class LocalRunner(SuiteRunner):
@@ -272,14 +262,22 @@ class LocalRunner(SuiteRunner):
 
     Parameters
     ----------
+    maxWorkers : int, optional
+        Commands running at once. Defaults to as many as fit on this machine's cores at ``threadsPerJob`` each.
     env : dict, optional
-        Extra environment variables for every command, e.g. ``{"OMP_NUM_THREADS": "1"}``.
+        Extra environment variables for every command.
+    threadsPerJob : int, optional
+        Threads each command may use, passed to the codes it runs as ``OMP_NUM_THREADS``. Workers times threads should
+        not exceed the cores, or the codes compete for them.
     """
 
-    def __init__(self, maxWorkers: int = os.cpu_count() or 1, timeout=None, rerun=False, env=None):
-        super().__init__(maxWorkers, timeout, rerun)
+    def __init__(self, maxWorkers: Optional[int] = None, timeout=None, rerun=False, env=None, threadsPerJob=None):
+        cores = os.cpu_count() or 1
+        super().__init__(maxWorkers or max(1, cores // (threadsPerJob or 1)), timeout, rerun)
         self.python = sys.executable
-        self.env = env or {}
+        self.env = dict(env or {})
+        if threadsPerJob:
+            self.env.setdefault("OMP_NUM_THREADS", str(threadsPerJob))
 
     def runCommand(self, directory, argv, timeout=None, stdin=None, stdout=None) -> int:
         env = {**os.environ, **self.env, "PYTHONPATH": os.pathsep.join(p for p in sys.path if p)}
@@ -389,6 +387,214 @@ class SshRunner(SuiteRunner):
     @staticmethod
     def _rsync(source, destination):
         subprocess.run(["rsync", "-a", source, destination], check=True, stdin=subprocess.DEVNULL)
+
+
+class SlurmRunner(SuiteRunner):
+    """
+    Run jobs and commands as Slurm batch jobs, on a cluster whose compute nodes share this file system.
+
+    Each command becomes a script in its directory (:py:attr:`SCRIPT_FILE`), submitted with ``sbatch --wait``, which
+    returns when the job ends; up to ``maxWorkers`` are in the queue at once. :py:meth:`runCommands` submits all its
+    commands as one job array instead, throttled to ``maxWorkers`` running at once, which suits a hundred branch
+    calculations in the middle of a run far better than a hundred separate submissions. Each script records its
+    command's exit code in its directory, so every array element reports its own.
+
+    Nothing is copied: the directories must be on a file system the compute nodes see at the same path (as cluster
+    home and project directories usually are).
+
+    Parameters
+    ----------
+    python : str, optional
+        The interpreter on the compute nodes. Defaults to this one, which a shared file system usually makes
+        available there.
+    setup : str, optional
+        Bash commands run before each command, e.g. ``"module load openmpi && source ~/venv/bin/activate"``.
+    pythonPath : list of str, optional
+        Directories to put on ``PYTHONPATH`` for each command. Defaults to this ``sys.path``, as for
+        :py:class:`LocalRunner`.
+    cpusPerJob : int
+        ``--cpus-per-task`` for each job, also passed to its codes as ``OMP_NUM_THREADS``.
+    walltime : float, optional
+        Seconds to request per job (``--time``). Defaults to a little over the command's timeout, or the
+        cluster's default if there is none.
+    sbatchArgs : list of str, optional
+        More ``sbatch`` options, e.g. ``["--partition=short", "--account=myproject", "--mem=8G"]``.
+    useArrays : bool
+        Whether :py:meth:`runCommands` submits job arrays.
+    """
+
+    SCRIPT_FILE = "slurm-job.sh"
+    EXIT_FILE = "slurm-job.exit"
+
+    def __init__(
+        self,
+        maxWorkers: int = 100,
+        timeout=None,
+        rerun=False,
+        python: Optional[str] = None,
+        setup: Optional[str] = None,
+        pythonPath: Optional[List[str]] = None,
+        cpusPerJob: int = 1,
+        walltime: Optional[float] = None,
+        sbatchArgs: Sequence[str] = (),
+        useArrays: bool = True,
+    ):
+        super().__init__(maxWorkers, timeout, rerun)
+        self.python = python or sys.executable
+        self.setup = setup
+        self.pythonPath = [p for p in sys.path if p] if pythonPath is None else list(pythonPath)
+        self.cpusPerJob = cpusPerJob
+        self.walltime = walltime
+        self.sbatchArgs = list(sbatchArgs)
+        self.useArrays = useArrays
+
+    def writeScript(self, directory, argv, timeout=None, stdin=None, stdout=None) -> str:
+        """Write the script that runs ``argv`` in ``directory`` and records its exit code there; return its path."""
+        directory = os.path.abspath(directory)
+        command = shlex.join(argv)
+        if timeout:
+            command = f"timeout -k {worker.GRACE_SECONDS} {timeout} {command}"
+        if stdin:
+            command += f" < {shlex.quote(stdin)}"
+        command += f" > {shlex.quote(stdout)} 2>&1" if stdout else ""
+        lines = ["#!/bin/bash", f"cd {shlex.quote(directory)} || exit 1"]
+        if self.setup:
+            lines.append(self.setup)
+        lines.append(f"export OMP_NUM_THREADS={self.cpusPerJob}")
+        if self.pythonPath:
+            lines.append(
+                "export PYTHONPATH=" + shlex.quote(os.pathsep.join(self.pythonPath)) + '"${PYTHONPATH:+:$PYTHONPATH}"'
+            )
+        lines += [command, "code=$?", f"echo $code > {self.EXIT_FILE}", "exit $code"]
+        exitFile = os.path.join(directory, self.EXIT_FILE)
+        if os.path.exists(exitFile):
+            os.remove(exitFile)
+        path = os.path.join(directory, self.SCRIPT_FILE)
+        with open(path, "w") as f:
+            f.write("\n".join(lines) + "\n")
+        os.chmod(path, 0o755)
+        return path
+
+    def runCommand(self, directory, argv, timeout=None, stdin=None, stdout=None) -> int:
+        directory = os.path.abspath(directory)
+        script = self.writeScript(directory, argv, timeout, stdin, stdout)
+        name = os.path.basename(directory)
+        self._sbatch(script, [f"--job-name={name}", f"--output={os.path.join(directory, 'slurm-%j.out')}"], timeout)
+        return self._exitCode(directory)
+
+    def runCommands(self, commands: Sequence[dict]) -> List[int]:
+        """Run the commands as one job array, unless they are ordered (``"after"``) or arrays are off."""
+        if len(commands) < 2 or not self.useArrays or any(c.get("after") for c in commands):
+            return super().runCommands(commands)
+        commands = [{"timeout": self.timeout, **c} for c in commands]
+        directories = [os.path.abspath(c["directory"]) for c in commands]
+        scripts = [self.writeScript(**c) for c in commands]
+        arrayDir = os.path.commonpath(directories)
+        handle, arrayScript = tempfile.mkstemp(prefix="slurm-array-", suffix=".sh", dir=arrayDir)
+        with os.fdopen(handle, "w") as f:
+            f.write("#!/bin/bash\n")
+            f.write("scripts=(" + " ".join(shlex.quote(s) for s in scripts) + ")\n")
+            f.write('exec bash "${scripts[$SLURM_ARRAY_TASK_ID]}"\n')
+        timeouts = [c["timeout"] for c in commands if c["timeout"]]
+        runLog.important(f"Submitting {len(commands)} commands as a Slurm job array, {self.maxWorkers} at a time")
+        self._sbatch(
+            arrayScript,
+            [
+                f"--array=0-{len(commands) - 1}%{self.maxWorkers}",
+                f"--job-name={os.path.basename(arrayDir)}",
+                f"--output={os.path.join(arrayDir, 'slurm-%A_%a.out')}",
+            ],
+            max(timeouts) if len(timeouts) == len(commands) else None,
+        )
+        return [self._exitCode(d) for d in directories]
+
+    def _sbatch(self, script: str, extra: List[str], timeout: Optional[float]) -> int:
+        """Submit ``script`` and wait for it (or, for an array, all of it) to end."""
+        args = ["sbatch", "--wait", "--parsable", f"--cpus-per-task={self.cpusPerJob}"]
+        walltime = self.walltime or (timeout + 2 * worker.GRACE_SECONDS + 60 if timeout else None)
+        if walltime:
+            args.append(f"--time={math.ceil(walltime / 60)}")
+        args += self.sbatchArgs + extra + [script]
+        return subprocess.run(args, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL).returncode
+
+    def _exitCode(self, directory: str) -> int:
+        try:
+            with open(os.path.join(directory, self.EXIT_FILE)) as f:
+                code = int(f.read().strip())
+        except (OSError, ValueError):
+            return LOST
+        return TIMED_OUT if code == 124 else code
+
+
+def runGraph(
+    count: int,
+    waitsOn: Sequence[Sequence[int]],
+    execute: Callable[[int], object],
+    succeeded: Callable[[object], bool],
+    maxWorkers: int,
+) -> list:
+    """
+    Run ``execute(i)`` for ``i`` in ``range(count)``, ``maxWorkers`` at a time, each once those it waits on succeeded.
+
+    ``waitsOn[i]`` lists the items ``i`` waits on, and ``succeeded`` judges what ``execute`` returned. An item is not
+    run if something it waits on did not succeed (or was itself not run). Returns what ``execute`` returned for each
+    item, in order, with ``None`` for those not run.
+    """
+    outcomes: list = [None] * count
+    finished = [False] * count
+    ok = [False] * count
+    pending = list(range(count))
+    running = {}
+    with concurrent.futures.ThreadPoolExecutor(max_workers=max(1, maxWorkers)) as pool:
+        while pending or running:
+            progressed = False
+            for i in list(pending):
+                if any(finished[d] and not ok[d] for d in waitsOn[i]):
+                    finished[i] = True
+                elif all(ok[d] for d in waitsOn[i]) and len(running) < maxWorkers:
+                    running[pool.submit(execute, i)] = i
+                else:
+                    continue
+                pending.remove(i)
+                progressed = True
+            if not running:
+                if pending and not progressed:
+                    raise RuntimeError(f"Items {pending} wait on each other in a cycle")
+                continue
+            done, _ = concurrent.futures.wait(running, return_when=concurrent.futures.FIRST_COMPLETED)
+            for future in done:
+                i = running.pop(future)
+                outcomes[i] = future.result()
+                finished[i] = True
+                ok[i] = succeeded(outcomes[i])
+    return outcomes
+
+
+def resultRow(title: str, result: Optional[dict], independentVariables: Optional[dict] = None) -> dict:
+    """
+    A table row for one result: its title, status and wall time, independent variables, then scalar results.
+
+    Non-scalar results (lists, nested dicts) stay in the result file.
+    """
+    result = result or {}
+    row = {"case": title, "status": result.get("status", "not run"), "wallSeconds": result.get("wallSeconds")}
+    row.update(independentVariables or result.get("independentVariables", {}))
+    row.update(
+        {k: v for k, v in result.get("results", {}).items() if isinstance(v, (str, int, float, bool, type(None)))}
+    )
+    return row
+
+
+def writeTable(rows: Sequence[dict], path: str) -> str:
+    """Write rows as CSV, with a column for every key any row has."""
+    import csv
+
+    columns = list(dict.fromkeys(k for row in rows for k in row))
+    with open(path, "w", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=columns)
+        writer.writeheader()
+        writer.writerows(rows)
+    return path
 
 
 def linkProducts(source: str, destination: str, patterns: Sequence[str]) -> List[str]:

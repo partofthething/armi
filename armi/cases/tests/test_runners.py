@@ -13,7 +13,7 @@ from armi.cases.inputModifiers.inputModifiers import (
     FunctionModifier,
     SettingsModifier,
 )
-from armi.cases.runners import TIMED_OUT, LocalRunner, SshRunner, linkProducts
+from armi.cases.runners import LOST, SKIPPED, TIMED_OUT, LocalRunner, SlurmRunner, SshRunner, linkProducts
 from armi.cases.suiteBuilder import SuiteBuilder
 from armi.cases.sweeps import Sweep
 from armi.utils import caseWorker as worker
@@ -206,6 +206,93 @@ class TestRunCommands(unittest.TestCase):
             self.assertEqual(codes, [0, 0, TIMED_OUT])
             with open(os.path.join("b", "deck.out")) as f:
                 self.assertEqual(f.read(), "deck b\n")
+
+    def test_orderedCommands(self):
+        with TemporaryDirectoryChanger():
+            for name in "abcd":
+                os.makedirs(name)
+            runner = LocalRunner(maxWorkers=4)
+            codes = runner.runCommands(
+                [
+                    {"directory": "a", "argv": ["sh", "-c", "sleep 0.5; echo ref > ref.out"]},
+                    {"directory": "b", "argv": ["false"]},
+                    {"directory": "c", "argv": ["true"], "after": [1]},
+                    {"directory": "d", "argv": ["cp", "../a/ref.out", "."], "after": [0]},
+                ]
+            )
+            self.assertEqual(codes, [0, 1, SKIPPED, 0])
+            self.assertTrue(os.path.exists(os.path.join("d", "ref.out")))
+            with self.assertRaises(RuntimeError):
+                runner.runCommands([{"directory": "a", "argv": ["true"], "after": [0]}])
+
+    def test_threadsPerJob(self):
+        runner = LocalRunner(threadsPerJob=4)
+        self.assertEqual(runner.env["OMP_NUM_THREADS"], "4")
+        self.assertEqual(runner.maxWorkers, max(1, (os.cpu_count() or 1) // 4))
+
+
+def fakeSbatch(submitted):
+    """Stand in for ``sbatch --wait``: run the script (each array element in turn) with bash."""
+
+    def sbatch(self, script, extra, timeout):
+        submitted.append((script, extra, timeout))
+        array = [e for e in extra if e.startswith("--array=")]
+        indices = range(int(array[0].split("=")[1].split("-")[1].split("%")[0]) + 1) if array else [None]
+        for index in indices:
+            env = {**os.environ, **({"SLURM_ARRAY_TASK_ID": str(index)} if index is not None else {})}
+            subprocess.run(["bash", script], env=env)
+        return 0
+
+    return sbatch
+
+
+class TestSlurmRunner(unittest.TestCase):
+    def test_singleJobsAndArrays(self):
+        with TemporaryDirectoryChanger():
+            for name in "abc":
+                os.makedirs(os.path.join("run", name))
+                with open(os.path.join("run", name, "deck.in"), "w") as f:
+                    f.write(f"deck {name}\n")
+            runner = SlurmRunner(maxWorkers=2, setup="export GREETING=hi", cpusPerJob=3, pythonPath=["/somewhere"])
+            submitted = []
+            with mock.patch.object(SlurmRunner, "_sbatch", fakeSbatch(submitted)):
+                code = runner.runCommand(
+                    "run/a", ["sh", "-c", "cat; echo $GREETING $OMP_NUM_THREADS"], 60, "deck.in", "o"
+                )
+                self.assertEqual(code, 0)
+                with open(os.path.join("run", "a", "o")) as f:
+                    self.assertEqual(f.read(), "deck a\nhi 3\n")
+                with open(os.path.join("run", "a", SlurmRunner.SCRIPT_FILE)) as f:
+                    script = f.read()
+                self.assertIn("timeout -k 10 60 sh -c", script)
+                self.assertIn("export PYTHONPATH=/somewhere", script)
+
+                codes = runner.runCommands(
+                    [
+                        {"directory": "run/a", "argv": ["cat"], "stdin": "deck.in", "stdout": "deck.out"},
+                        {"directory": "run/b", "argv": ["sh", "-c", "exit 4"]},
+                        {"directory": "run/c", "argv": ["sleep", "5"], "timeout": 0.2},
+                    ]
+                )
+            self.assertEqual(codes, [0, 4, TIMED_OUT])
+            arrayScript, extra, _timeout = submitted[-1]
+            self.assertEqual(os.path.dirname(arrayScript), os.path.abspath("run"))
+            self.assertIn("--array=0-2%2", extra)
+            with open(os.path.join("run", "a", "deck.out")) as f:
+                self.assertEqual(f.read(), "deck a\n")
+
+            # a job that never recorded an exit code (cancelled, say) is lost
+            with mock.patch.object(SlurmRunner, "_sbatch", lambda self, script, extra, timeout: 0):
+                self.assertEqual(runner.runCommand("run/b", ["true"]), LOST)
+
+    def test_sbatchArguments(self):
+        runner = SlurmRunner(cpusPerJob=2, sbatchArgs=["--partition=short"])
+        with mock.patch("subprocess.run", return_value=subprocess.CompletedProcess([], 0)) as run:
+            runner._sbatch("/x/job.sh", ["--job-name=x"], timeout=600)
+        args = run.call_args.args[0]
+        self.assertEqual(args[:4], ["sbatch", "--wait", "--parsable", "--cpus-per-task=2"])
+        self.assertEqual(args[4], "--time=12")  # 600 s plus grace, in minutes
+        self.assertEqual(args[-3:], ["--partition=short", "--job-name=x", "/x/job.sh"])
 
 
 class TestSshRunner(unittest.TestCase):

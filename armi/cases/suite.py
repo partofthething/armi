@@ -244,37 +244,16 @@ class CaseSuite:
 
         Non-scalar results (lists, nested dicts) stay in each case's result file.
         """
-        rows = []
+        from armi.cases.runners import resultRow
+
         results = self.results()
-        for case in self:
-            result = results.get(case.title, {})
-            row = {
-                "case": case.title,
-                "status": result.get("status", "not run"),
-                "wallSeconds": result.get("wallSeconds"),
-            }
-            row.update(case.independentVariables or result.get("independentVariables", {}))
-            row.update(
-                {
-                    k: v
-                    for k, v in result.get("results", {}).items()
-                    if isinstance(v, (str, int, float, bool, type(None)))
-                }
-            )
-            rows.append(row)
-        return rows
+        return [resultRow(case.title, results.get(case.title), case.independentVariables) for case in self]
 
     def writeResultsTable(self, path: str) -> str:
         """Write :py:meth:`resultsTable` as CSV, with a column for every key any row has."""
-        import csv
+        from armi.cases.runners import writeTable
 
-        rows = self.resultsTable()
-        columns = list(dict.fromkeys(k for row in rows for k in row))
-        with open(path, "w", newline="") as f:
-            writer = csv.DictWriter(f, fieldnames=columns)
-            writer.writeheader()
-            writer.writerows(rows)
-        return path
+        return writeTable(self.resultsTable(), path)
 
     def toDataFrame(self):
         """:py:meth:`resultsTable` as a pandas DataFrame (pandas must be installed)."""

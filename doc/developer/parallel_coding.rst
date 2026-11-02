@@ -264,3 +264,33 @@ that the reactor state is synchronized across all nodes, and then use the reacto
     if the mutable object has a reference to a large object, such as a composite or cross section
     library, it can be very computationally expensive to pass all this data to the primary node. See
     also: :py:mod:`armi.reactor.parameters`
+
+Branch calculations on any parallel backend
+===========================================
+Many parallel jobs in the middle of a run are *branches*: perturb the current state (a fuel temperature, a rod
+position, the boron), run one calculation, report a few numbers. :py:func:`armi.cases.branches.runBranches` does
+this without any MPI code. Each branch is a point of a :py:class:`~armi.cases.sweeps.Sweep` of
+:py:class:`~armi.cases.branches.StateModifier` objects, and its task is a function ``task(r, cs) -> dict`` run in
+the branch's own directory::
+
+    from armi.cases.branches import ForkExecutor, FunctionStateModifier, runBranches
+    from armi.cases.sweeps import Sweep
+
+    sweep = Sweep.axis(FunctionStateModifier(setFuelTemperature, fuelTemp=t) for t in (600, 900, 1200))
+    results = runBranches(self.r, self.cs, sweep, "mypackage.tasks:keff", ForkExecutor(maxWorkers=32))
+    results.writeTable("fuelTemperature.csv")
+
+The executor decides where the branches run, and the rest of the code does not change:
+
+* :py:class:`~armi.cases.branches.SerialExecutor`: one after another, each on a copy of the state.
+* :py:class:`~armi.cases.branches.ForkExecutor`: forked processes on this machine, sharing the state
+  copy-on-write, so nothing is serialized. This is the simplest way to use every core of a large machine.
+* :py:class:`~armi.cases.branches.MpiExecutor`: the MPI ranks of the run, after distributing the state once.
+* Any :py:class:`~armi.cases.runners.SuiteRunner`: the state is written to a snapshot once and each branch runs as a
+  job, in a subprocess (``LocalRunner``), on another machine (``SshRunner``) or as one Slurm job array on a cluster
+  (``SlurmRunner``), while the run waits for the results.
+
+Branches never change the reactor the run goes on with; their results come back as data, so the same code works on
+every backend. External code runs that need no reactor at all (one input deck per directory) can go straight to
+:py:meth:`SuiteRunner.runCommands <armi.cases.runners.SuiteRunner.runCommands>`, which also takes ordering
+(``"after"``) between them.

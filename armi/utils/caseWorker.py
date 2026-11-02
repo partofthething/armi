@@ -8,6 +8,9 @@ directory, so a runner only has to get the directory to the machine and back.
 
 The worker supervises the task in a child process with its own process group. On a timeout the whole group is
 killed, including any codes the task started, and the result records ``"timeout"``.
+
+A branch job (``"kind": "branch"``, written by :py:class:`~armi.cases.branches.SnapshotExecutor`) loads a snapshot of
+a reactor from the middle of a run instead of a case, applies the branch's modifiers and runs its task.
 """
 
 import json
@@ -119,6 +122,12 @@ def runTask(directory: str) -> int:
                 moduleName, _, className = job["app"].partition(":")
                 app = getattr(importlib.import_module(moduleName), className)()
             armi.configure(app)
+        if job.get("kind") == "branch":
+            from armi.cases import branches
+
+            # the branch writes its own result, ok or failed
+            return 0 if branches.runSnapshotBranch(directory, job)["status"] == "ok" else 1
+
         from armi import settings
         from armi.cases import case as armicase
         from armi.cases import tasks
