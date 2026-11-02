@@ -208,7 +208,13 @@ class XSCollection:
 
         Example: When producing macroscopic cross sections in MC2-3 the code internally merges the elastic and
         inelastic scattering matrices into a single elastic scattering matrix.
+
+        A library may instead carry only the total scattering matrix (DRAGON's ISOTXS does, in its ``totalScatter``
+        block). With no component matrices at all, that matrix is the answer.
         """
+        if all(m is None for m in (self.elasticScatter, self.inelasticScatter, self.n2nScatter)):
+            if self.totalScatter is not None:
+                return self.totalScatter
         scatters = []
         totalScatterComponents = {
             "elastic": self.elasticScatter,
@@ -473,9 +479,16 @@ class MacroscopicCrossSectionCreator:
         if not self.buildScatterMatrix:
             return
 
+        self._totalOnlyScatter = sparse.csr_matrix((self.ng, self.ng))
         for nuclide in self.microLibrary.getNuclides(self.xsSuffix):
             microCollection = getattr(nuclide, libType)
             nDens = self.densities.get(nuclide.name, 0.0)
+            components = (microCollection.elasticScatter, microCollection.inelasticScatter, microCollection.n2nScatter)
+            if all(m is None for m in components) and microCollection.totalScatter is not None:
+                # Only a total scattering matrix (a DRAGON ISOTXS): it joins the macroscopic total directly, since
+                # there is no telling its elastic part from the rest.
+                self._totalOnlyScatter = self._totalOnlyScatter + microCollection.totalScatter * nDens
+                continue
             if microCollection.elasticScatter is not None:
                 self.macros.elasticScatter += microCollection.elasticScatter * nDens
             if microCollection.inelasticScatter is not None:
@@ -497,6 +510,9 @@ class MacroscopicCrossSectionCreator:
 
     def _buildTotalScatterMatrix(self):
         self.macros.totalScatter = self.macros.getTotalScatterMatrix()
+        totalOnly = getattr(self, "_totalOnlyScatter", None)
+        if totalOnly is not None and totalOnly.nnz:
+            self.macros.totalScatter = self.macros.totalScatter + totalOnly
 
     def _computeRemovalXS(self):
         """

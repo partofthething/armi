@@ -18,6 +18,8 @@ import copy
 import os
 import unittest
 
+import numpy as np
+
 from armi import settings
 from armi.nuclearDataIO import isotxs, xsCollections
 from armi.reactor.blocks import HexBlock
@@ -73,6 +75,31 @@ class TestXsCollections(unittest.TestCase):
         micros.inelasticScatter = None
         totalScatter = micros.getTotalScatterMatrix()
         self.assertAlmostEqual(totalScatter[0, 0], micros.elasticScatter[0, 0])
+
+    def test_totalScatteringMatrixOnly(self):
+        """A library with only a total scattering block (DRAGON's ISOTXS) gives that block as the total."""
+        micros = copy.deepcopy(self.microLib.nuclides[0].micros)
+        total = micros.getTotalScatterMatrix()
+        micros.totalScatter = total
+        micros.elasticScatter = micros.inelasticScatter = micros.n2nScatter = None
+        self.assertAlmostEqual(micros.getTotalScatterMatrix()[0, 0], total[0, 0])
+
+    def test_macrosFromTotalScatterOnly(self):
+        """Macroscopic scattering includes nuclides whose library carries only a total scattering block."""
+        self.mc.createMacrosFromMicros(self.microLib, self.block)
+        expected = self.mc.macros.totalScatter.toarray()
+        removal = self.mc.macros.removal.copy()
+
+        lib = copy.deepcopy(self.microLib)
+        for nuc in lib.getNuclides("AA"):
+            nuc.micros.totalScatter = nuc.micros.getTotalScatterMatrix()
+            nuc.micros.elasticScatter = nuc.micros.inelasticScatter = nuc.micros.n2nScatter = None
+        mc = xsCollections.MacroscopicCrossSectionCreator(minimumNuclideDensity=1e-13)
+        mc.createMacrosFromMicros(lib, self.block)
+        self.assertGreater(abs(expected).sum(), 0.0)
+        self.assertTrue(np.allclose(mc.macros.totalScatter.toarray(), expected))
+        # Removal counts out-scattering from the total; n2n is only subtracted from absorption, so it is unchanged.
+        self.assertTrue(np.allclose(mc.macros.removal, removal))
 
     def test_plotNucXs(self):
         """Testing this plotting method here because we need a XS library to run the test."""
