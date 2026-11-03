@@ -175,7 +175,7 @@ blocks:
             Tinput: 25.0
             Thot: 450.0
             axialPitch: 30.0
-            helixDiameter: 0.88888
+            helixDiameter: 0.8888
             id: 0.0
             od: 0.0808
             mult: 271

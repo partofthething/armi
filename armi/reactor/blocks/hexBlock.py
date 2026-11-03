@@ -362,12 +362,10 @@ class HexBlock(Block):
                 "Gap between pins and duct is {0:.4f} cm in {1}. Make more room.".format(pinToDuctGap, self)
             )
         elif pinToDuctGap is None:
-            # only produce a warning if pin or clad are found, but not all of pin, clad and duct. We may need to tune
-            # this logic a bit
+            # Only warn about clad pins that are missing a wire or duct. Wire wrapped directly around an unclad rod
+            # (e.g. a solid reflector rod) is a valid design that this gap check simply does not cover.
             ductComp = next(iter(ductComps), None)
-            if (cladComp is not None or wireComp is not None) and any(
-                [c is None for c in (wireComp, cladComp, ductComp)]
-            ):
+            if cladComp is not None and (wireComp is None or ductComp is None):
                 runLog.warning("Some component was missing in {} so pin-to-duct gap not calculated".format(self))
 
     def getPinToDuctGap(self, cold=False):

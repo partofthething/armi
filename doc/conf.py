@@ -296,6 +296,7 @@ napoleon_use_rtype = True
 nb_execution_mode = "force"
 nb_execution_timeout = 600
 nb_execution_raise_on_error = True
+nb_merge_streams = True  # one output block per cell instead of one per log line
 nb_kernel_rgx_aliases = {".*": "python3"}
 
 ogp_site_url = "https://partofthething.github.io/armi/"
