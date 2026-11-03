@@ -165,11 +165,16 @@ class SuiteRunner:
 
     @staticmethod
     def _finalResult(job, status) -> dict:
-        """The job's result file if it belongs to these inputs, else just its status."""
+        """
+        The job's result file if it belongs to these inputs, else just its status.
+
+        Either way ``"outcome"`` says what happened this time: ``"cached"`` for a case whose earlier result stood,
+        otherwise the status it ran to (or ``"skipped"``).
+        """
         result = job.result()
         if result and result["hash"] == job.hash:
-            return result
-        return {"title": job.title, "hash": job.hash, "status": status}
+            return dict(result, outcome=status)
+        return {"title": job.title, "hash": job.hash, "status": status, "outcome": status}
 
     def plan(self, suite) -> List[Job]:
         """Jobs for every enabled case, in dependency order, with their hashes."""
@@ -209,6 +214,11 @@ class SuiteRunner:
 
     def prepare(self, jobs: Sequence[Job]):
         """Hook before any job runs, e.g. to check a remote host or copy shared files."""
+
+    def requestStop(self, directory: str):
+        """Ask the case job running in ``directory`` to stop; its result then records ``"stopped"``."""
+        with open(os.path.join(directory, worker.STOP_FILE), "w") as f:
+            f.write("stop requested\n")
 
     def execute(self, job: Job):
         """Run the worker for ``job``, which leaves its result in ``job.directory``."""
@@ -323,6 +333,9 @@ class SshRunner(SuiteRunner):
     localRoot : str, optional
         Local directory mirrored to ``remoteRoot``. For a suite it defaults to the deepest directory holding every
         case; for bare commands, to each directory's parent.
+    syncEvery : float, optional
+        Seconds between copies of the directory back here while its command runs, so its progress (logs, a database
+        written as it goes) can be followed locally. By default it is copied back only when the command ends.
     """
 
     def __init__(
@@ -336,6 +349,7 @@ class SshRunner(SuiteRunner):
         maxWorkers: int = 1,
         timeout=None,
         rerun=False,
+        syncEvery: Optional[float] = None,
     ):
         super().__init__(maxWorkers, timeout, rerun)
         self.host = host
@@ -344,6 +358,7 @@ class SshRunner(SuiteRunner):
         self.setup = setup
         self.pythonPath = pythonPath or []
         self.localRoot = localRoot
+        self.syncEvery = syncEvery
 
     def plan(self, suite):
         jobs = super().plan(suite)
@@ -375,9 +390,28 @@ class SshRunner(SuiteRunner):
         self._ssh(f"mkdir -p {shlex.quote(remote)}")
         self._rsync(directory + "/", f"{self.host}:{remote}/")
         # the remote login shell may not be bash (fish, say), so run the steps through bash explicitly
-        returnCode = self._ssh("bash -c " + shlex.quote(" && ".join(steps)), check=False)
+        process = self._sshStart("bash -c " + shlex.quote(" && ".join(steps)))
+        while True:
+            try:
+                returnCode = process.wait(timeout=self.syncEvery)
+                break
+            except subprocess.TimeoutExpired:
+                # a copy taken mid-write is replaced by the next one, so a failure here is not worth stopping for
+                subprocess.run(
+                    ["rsync", "-a", f"{self.host}:{remote}/", directory + "/"],
+                    stdin=subprocess.DEVNULL,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                )
         self._rsync(f"{self.host}:{remote}/", directory + "/")
         return TIMED_OUT if timeout and returnCode == 124 else returnCode
+
+    def requestStop(self, directory: str):
+        remote = os.path.join(self.remoteDirectory(directory), worker.STOP_FILE)
+        self._ssh(f"touch {shlex.quote(remote)}")
+
+    def _sshStart(self, command) -> subprocess.Popen:
+        return subprocess.Popen(["ssh", "-o", "BatchMode=yes", self.host, command], stdin=subprocess.DEVNULL)
 
     def _ssh(self, command, check=True) -> int:
         return subprocess.run(

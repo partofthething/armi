@@ -23,7 +23,8 @@ number densities. Blocks are further divided into components.
 import collections
 import copy
 import math
-from typing import ClassVar, Optional, Tuple, Type
+import operator
+from typing import Callable, ClassVar, Optional, Tuple, Type
 
 import numpy as np
 
@@ -311,7 +312,70 @@ class Block(composites.Composite):
             self.spatialGrid = systemSpatialGrid
 
     def assignPinIndices(self):
-        pass
+        """Assign pin indices for pin components on the block.
+
+        Works on any grid whose sites are indexed by ``(i, j)``: hexagonal and Cartesian pin lattices alike.
+        """
+        if self.spatialGrid is None:
+            return
+        locations = self.getPinLocations()
+        if not locations:
+            return
+        # Clear out any previous values. If your block is built with one ordering
+        # and then sorted, things that used to have pin indices may now have invalid
+        # pin indices. Wipe them out just to be safe
+        for c in self:
+            c.p.pinIndices = None
+        ijGetter = operator.attrgetter("i", "j")
+        allIJ: tuple[tuple[int, int]] = tuple(map(ijGetter, locations))
+        allIJToIndex: dict[tuple[int, int], int] = {ij: index for index, ij in enumerate(allIJ)}
+        # Flags for components that we want to set this parameter
+        # Usually things are linked to one of these "important" flags, like
+        # a cladding component having linked dimensions to a fuel component
+        primaryFlags = (Flags.FUEL, Flags.CONTROL, Flags.SHIELD)
+        withPinIndices: list[components.Component] = []
+        for c in self.iterChildrenWithFlags(primaryFlags):
+            if self._setPinIndices(c, ijGetter, allIJToIndex):
+                withPinIndices.append(c)
+        # Iterate over every other thing on the grid: it either shares a lattice site with something that has pin
+        # indices, or declares pin indices itself, or sits on lattice sites of its own -- a coolant channel or a
+        # poison rod in a prismatic element -- and is not a pin at all.
+        for c in self:
+            if c.p.pinIndices is not None:
+                continue
+            # Does anything with pin indices share this lattice site?
+            if any(other.spatialLocator == c.spatialLocator for other in withPinIndices):
+                continue
+            if self._setPinIndices(c, ijGetter, allIJToIndex, offPinSitesAllowed=True):
+                withPinIndices.append(c)
+
+    @staticmethod
+    def _setPinIndices(
+        c: components.Component,
+        ijGetter: Callable[[grids.IndexLocation], tuple[int, int]],
+        allIJToIndex: dict[tuple[int, int], int],
+        offPinSitesAllowed: bool = False,
+    ):
+        localLocations = c.spatialLocator
+        if isinstance(localLocations, grids.MultiIndexLocation):
+            localIJ = list(map(ijGetter, localLocations))
+        # CoordinateLocations do not live on the grid, by definition
+        elif isinstance(localLocations, grids.CoordinateLocation):
+            return False
+        elif isinstance(localLocations, grids.IndexLocation):
+            localIJ = [ijGetter(localLocations)]
+        else:
+            return False
+        if offPinSitesAllowed and not all(ij in allIJToIndex for ij in localIJ):
+            # On sites of its own, not the pins': it has no pin indices.
+            return False
+        localIndices = []
+        for ij in localIJ:
+            if ij not in allIJToIndex:
+                raise ValueError(f"Pin location ({ij[0]}, {ij[1]}) is not found on the block's pin grid")
+            localIndices.append(allIJToIndex[ij])
+        c.p.pinIndices = localIndices
+        return True
 
     def getMgFlux(self, adjoint=False, average=False, gamma=False):
         """

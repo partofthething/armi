@@ -4,6 +4,7 @@ import json
 import os
 import pathlib
 import subprocess
+import threading
 import time
 import unittest
 from unittest import mock
@@ -132,6 +133,7 @@ class TestLocalRunner(unittest.TestCase):
             suite = builder.buildSuite(namingFunc=nameByIndex, task=f"{__name__}:reportPower")
             results = suite.run(LocalRunner(maxWorkers=3, timeout=120))
             self.assertEqual([r["status"] for r in results.values()], ["ok"] * 3)
+            self.assertEqual([r["outcome"] for r in results.values()], ["ok"] * 3)
             self.assertEqual(results["toy0"]["results"]["power"], 1.0e6)
             table = suite.resultsTable()
             self.assertEqual([row["power"] for row in table], [1.0e6, 2.0e6, 3.0e6])
@@ -142,7 +144,9 @@ class TestLocalRunner(unittest.TestCase):
 
             # nothing changed: everything is cached and the results stay put
             stamp = os.path.getmtime(os.path.join(list(suite)[0].directory, worker.RESULT_FILE))
-            suite.run(LocalRunner(maxWorkers=3))
+            again = suite.run(LocalRunner(maxWorkers=3))
+            self.assertEqual([r["outcome"] for r in again.values()], ["cached"] * 3)
+            self.assertEqual([r["status"] for r in again.values()], ["ok"] * 3)
             self.assertEqual(stamp, os.path.getmtime(os.path.join(list(suite)[0].directory, worker.RESULT_FILE)))
 
             # change one design: only that case reruns
@@ -183,6 +187,33 @@ class TestLocalRunner(unittest.TestCase):
             results = suite.run(LocalRunner(maxWorkers=1, timeout=8))
             self.assertEqual(results[case.title]["status"], "timeout")
             with open(os.path.join(case.directory, "grandchild.pid")) as f:
+                pid = int(f.read())
+            time.sleep(0.5)
+            self.assertFalse(
+                os.path.exists(f"/proc/{pid}") and "sleep" in pathlib.Path(f"/proc/{pid}/cmdline").read_text()
+            )
+
+    def test_stopRequestEndsTheWholeTask(self):
+        with TemporaryDirectoryChanger():
+            builder = toyBuilder()
+            builder.addModifierSet(())
+            suite = builder.buildSuite(namingFunc=nameByIndex, task=f"{__name__}:sleepy")
+            (case,) = list(suite)
+            runner = LocalRunner(maxWorkers=1, timeout=60)
+            pidFile = os.path.join(case.directory, "grandchild.pid")
+
+            def stopOnceStarted():
+                while not os.path.exists(pidFile):
+                    time.sleep(0.1)
+                runner.requestStop(case.directory)
+
+            stopper = threading.Thread(target=stopOnceStarted, daemon=True)
+            stopper.start()
+            start = time.time()
+            results = suite.run(runner)
+            self.assertEqual(results[case.title]["status"], "stopped")
+            self.assertLess(time.time() - start, 40)
+            with open(pidFile) as f:
                 pid = int(f.read())
             time.sleep(0.5)
             self.assertFalse(
@@ -303,8 +334,10 @@ class TestSshRunner(unittest.TestCase):
         runner = SshRunner("me@host", "/remote/root", python="/venv/bin/python", setup="source env.sh")
         runner.localRoot = "/local/root"
         sent = []
+        finished = mock.Mock(wait=mock.Mock(return_value=0))
         with (
             mock.patch.object(SshRunner, "_ssh", side_effect=lambda cmd, check=True: sent.append(cmd) or 0),
+            mock.patch.object(SshRunner, "_sshStart", side_effect=lambda cmd: sent.append(cmd) or finished),
             mock.patch.object(SshRunner, "_rsync", side_effect=lambda a, b: sent.append(("rsync", a, b))),
         ):
             code = runner.runCommand("/local/root/run/c1", ["solver"], timeout=60, stdin="case.inp", stdout="case.out")
@@ -316,3 +349,26 @@ class TestSshRunner(unittest.TestCase):
             "bash -c 'cd /remote/root/run/c1 && source env.sh && timeout -k 10 60 solver < case.inp > case.out 2>&1'",
         )
         self.assertEqual(sent[3], ("rsync", "me@host:/remote/root/run/c1/", "/local/root/run/c1/"))
+
+
+class TestSshRunnerFollowing(unittest.TestCase):
+    def test_copiesBackWhileItRuns(self):
+        runner = SshRunner("me@host", "/remote/root", syncEvery=5)
+        runner.localRoot = "/local/root"
+        process = mock.Mock(wait=mock.Mock(side_effect=[subprocess.TimeoutExpired("ssh", 5)] * 2 + [0]))
+        with (
+            mock.patch.object(SshRunner, "_ssh", return_value=0),
+            mock.patch.object(SshRunner, "_sshStart", return_value=process),
+            mock.patch.object(SshRunner, "_rsync"),
+            mock.patch("subprocess.run") as copies,
+        ):
+            self.assertEqual(runner.runCommand("/local/root/c1", ["solver"]), 0)
+        self.assertEqual(copies.call_count, 2)
+        self.assertEqual(copies.call_args.args[0], ["rsync", "-a", "me@host:/remote/root/c1/", "/local/root/c1/"])
+
+    def test_stopIsAFileOnTheHost(self):
+        runner = SshRunner("me@host", "/remote/root")
+        runner.localRoot = "/local/root"
+        with mock.patch.object(SshRunner, "_ssh", return_value=0) as ssh:
+            runner.requestStop("/local/root/c1")
+        ssh.assert_called_once_with(f"touch /remote/root/c1/{worker.STOP_FILE}")

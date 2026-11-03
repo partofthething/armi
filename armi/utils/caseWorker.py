@@ -7,7 +7,9 @@ loads the case from its settings, runs its task and writes :py:data:`RESULT_FILE
 directory, so a runner only has to get the directory to the machine and back.
 
 The worker supervises the task in a child process with its own process group. On a timeout the whole group is
-killed, including any codes the task started, and the result records ``"timeout"``.
+killed, including any codes the task started, and the result records ``"timeout"``. A :py:data:`STOP_FILE` appearing
+in the case directory does the same and records ``"stopped"``: that is how a runner stops a job wherever it runs,
+since all it needs to do is put a file in the directory.
 
 A branch job (``"kind": "branch"``, written by :py:class:`~armi.cases.branches.SnapshotExecutor`) loads a snapshot of
 a reactor from the middle of a run instead of a case, applies the branch's modifiers and runs its task.
@@ -24,6 +26,10 @@ import traceback
 JOB_FILE = "suite-job.json"
 RESULT_FILE = "suite-result.json"
 LOG_FILE = "suite-worker.log"
+STOP_FILE = "suite-stop"
+
+#: Seconds between looks for a stop request.
+POLL_SECONDS = 2
 
 #: Seconds between asking a timed-out task to stop and killing it.
 GRACE_SECONDS = 10
@@ -65,9 +71,12 @@ def supervise(directory: str) -> int:
     directory = os.path.abspath(directory)
     job = readJob(directory)
     resultPath = os.path.join(directory, RESULT_FILE)
-    if os.path.exists(resultPath):
-        os.remove(resultPath)
+    stopPath = os.path.join(directory, STOP_FILE)
+    for stale in (resultPath, stopPath):
+        if os.path.exists(stale):
+            os.remove(stale)
     start = time.time()
+    timeout = job.get("timeout")
     with open(os.path.join(directory, LOG_FILE), "w") as log:
         child = subprocess.Popen(
             [sys.executable, "-m", "armi.utils.caseWorker", "--child", directory],
@@ -76,11 +85,20 @@ def supervise(directory: str) -> int:
             stderr=subprocess.STDOUT,
             start_new_session=True,
         )
-        try:
-            child.wait(timeout=job.get("timeout"))
-        except subprocess.TimeoutExpired:
+        while True:
+            try:
+                child.wait(timeout=POLL_SECONDS)
+                break
+            except subprocess.TimeoutExpired:
+                pass
+            if os.path.exists(stopPath):
+                status = "stopped"
+            elif timeout and time.time() - start > timeout:
+                status = "timeout"
+            else:
+                continue
             killGroup(child)
-            writeResult(directory, job, "timeout", wallSeconds=round(time.time() - start, 1))
+            writeResult(directory, job, status, wallSeconds=round(time.time() - start, 1))
             return 1
     result = readJson(resultPath)
     if result is None:

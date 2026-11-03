@@ -3156,6 +3156,33 @@ class TestCartesianBlock(unittest.TestCase):
     def test_getPitchSquare(self):
         self.assertEqual(self.cartesianBlock.getPitch(), (self.PITCH, self.PITCH))
 
+    def test_pinIndicesAndPinPowers(self):
+        """A square pin lattice gets pin indices, and its pin component carries one power density per pin."""
+        block = blocks.CartesianBlock("pins", height=10.0)
+        block.spatialGrid = CartesianGrid.fromRectangle(1.26, 1.26)
+        sites = [(i, j) for i in (-1, 0, 1) for j in (-1, 0, 1) if (i, j) != (0, 0)]
+        fuel = components.Circle("fuel", "UZr", Tinput=25.0, Thot=25.0, od=0.8, mult=len(sites))
+        fuel.spatialLocator = grids.MultiIndexLocation(block.spatialGrid)
+        for i, j in sites:
+            fuel.spatialLocator.append(block.spatialGrid[i, j, 0])
+        tube = components.Circle("guide tube", "HT9", Tinput=25.0, Thot=25.0, od=1.2, id=1.1, mult=1)
+        tube.spatialLocator = block.spatialGrid[0, 0, 0]
+        block.add(fuel)
+        block.add(tube)
+        block.assignPinIndices()
+
+        # The pins are the most numerous lattice sites; the guide tube in the middle is not one of them.
+        self.assertEqual(sorted(fuel.p.pinIndices), list(range(len(sites))))
+        self.assertIsNone(tube.p.pinIndices)
+        locations = block.getPinLocations()
+        for index, location in zip(fuel.p.pinIndices, fuel.spatialLocator):
+            self.assertEqual((locations[index].i, locations[index].j), (location.i, location.j))
+
+        # One power density per pin, in the order of the component's own lattice sites.
+        fuel.p.pdens = np.linspace(90.0, 110.0, len(sites))
+        self.assertEqual(fuel.p.pdens.shape, (len(sites),))
+        self.assertAlmostEqual(float(fuel.p.pdens.mean()), 100.0)
+
     def test_getPitchHomogeneousBlock(self):
         """
         Demonstrate how to communicate pitch on a hex block with unshaped components.

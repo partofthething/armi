@@ -122,6 +122,49 @@ def getComponentParameterDefinitions():
             default=None,
         )
 
+        # Physics that resolves a component instance by instance -- each pin of a pin array, each
+        # kernel of a particle fuel -- puts one value per instance in these, in the order of the
+        # component's spatial locator, so a component that is one instance has arrays of length 1.
+        # Averages are the arrays' means, since the instances of a component are alike.
+        pb.defParam(
+            "pdens",
+            setter=isNumpyArray("pdens"),
+            units=f"{units.WATTS}/{units.CM}^3",
+            description=(
+                "Volumetric power density of each instance this component stands for (each pin of a pin array, "
+                "say), in the order of its spatial locator."
+            ),
+            location=ParamLocation.AVERAGE,
+            categories=[parameters.Category.neutronics, parameters.Category.pinQuantities],
+            default=None,
+        )
+
+        pb.defParam(
+            "flux",
+            setter=isNumpyArray("flux"),
+            units=f"n/{units.CM}^2/{units.SECONDS}",
+            description=(
+                "Total neutron flux of each instance this component stands for, in the order of its spatial locator."
+            ),
+            location=ParamLocation.AVERAGE,
+            categories=[parameters.Category.neutronics, parameters.Category.pinQuantities],
+            default=None,
+        )
+
+        pb.defParam(
+            "mgFluxDensity",
+            setter=isNumpyArray("mgFluxDensity"),
+            units=f"n/{units.CM}^2/{units.SECONDS}",
+            description=(
+                "Multigroup neutron flux of each instance this component stands for, shaped (instances, groups), "
+                "in the order of its spatial locator. A flux density, unlike a block's volume-integrated mgFlux; the "
+                "groups are the solver's, few-group for a nodal or reconstructed solution."
+            ),
+            location=ParamLocation.AVERAGE,
+            categories=[parameters.Category.neutronics, parameters.Category.pinQuantities],
+            default=None,
+        )
+
         pb.defParam(
             "buRate",
             units=f"{units.PERCENT_FIMA}/{units.DAYS}",

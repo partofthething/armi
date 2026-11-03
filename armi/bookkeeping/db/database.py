@@ -658,10 +658,13 @@ class Database:
         runLog.extra("Copying DB to shared working directory.")
         self.h5db.flush()
 
-        # Close the h5 file so it can be copied
+        # Close the h5 file so it can be copied. The copy is renamed into place, so anything reading the shared
+        # copy while the run goes on (a results viewer, say) sees one complete database or the next, never half of one.
         self.h5db.close()
         self.h5db = None
-        safeCopy(self._fullPath, self._fileName)
+        partial = f"{self._fileName}.partial"
+        safeCopy(self._fullPath, partial)
+        os.replace(partial, self._fileName)
 
         # Reload the file in append mode and continue on our merry way
         self.h5db = h5py.File(self._fullPath, "r+")
