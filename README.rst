@@ -82,16 +82,16 @@ The ARMI tests are meant to be run using `pytest <https://docs.pytest.org/en/8.0
     $ pip install -e ".[test]"
     $ pytest -n 4 armi
 
-To see what an ARMI model looks like, open one of the test reactors in the `input editor`_, a browser-based
-editor for ARMI inputs that comes with it::
+To see what an ARMI model looks like, open one of the test reactors in the `ARMI UI`_, which comes with it and
+runs in your browser. It shows and edits a case's inputs, runs the case, and shows the results::
 
     $ uv run armi gui armi/testing/reactors/anl-afci-177/anl-afci-177.yaml
 
 .. figure:: https://raw.githubusercontent.com/partofthething/armi/main/doc/.static/inputEditor-core.png
-   :alt: The core map of a hexagonal test reactor in ARMI's input editor
+   :alt: The core map of a hexagonal test reactor in the ARMI UI
 
-   The core map of the ANL-AFCI-177 test reactor in the input editor. It also draws pin lattices, block cross
-   sections and assembly stacks, and edits settings.
+   The core map of the ANL-AFCI-177 test reactor in the ARMI UI. It also draws pin lattices, block cross sections
+   and assembly stacks, edits settings, and shows a run's results and fuel cycle cost.
 
 To build the HTML documentation locally, install the ``docs`` extra (plus `Graphviz <https://graphviz.org/>`_ from your
 system package manager), inject placeholder test results, and run Sphinx from the ``doc`` folder::
@@ -378,5 +378,5 @@ that have MIT or BSD licenses.
 .. _tutorials: https://partofthething.github.io/armi/tutorials/index.html
 .. _User Manual: https://partofthething.github.io/armi/user/index.html
 .. _release notes: https://partofthething.github.io/armi/release/index.html
-.. _input editor: https://partofthething.github.io/armi/user/input_editor.html
-.. _results viewer: https://partofthething.github.io/armi/user/input_editor.html#results
+.. _ARMI UI: https://partofthething.github.io/armi/user/ui.html
+.. _results viewer: https://partofthething.github.io/armi/user/ui.html#results

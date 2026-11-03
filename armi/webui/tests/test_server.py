@@ -153,7 +153,7 @@ class TestServer(unittest.TestCase):
     def test_servesThePage(self):
         status, raw = self.request("GET", "/")
         self.assertEqual(status, 200)
-        self.assertIn(b"ARMI Input Editor", raw)
+        self.assertIn(b"<title>ARMI</title>", raw)
 
     def test_servesModulesAsJavascript(self):
         connection = http.client.HTTPConnection("127.0.0.1", self.server.port, timeout=10)

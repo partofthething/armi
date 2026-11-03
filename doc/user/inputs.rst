@@ -62,9 +62,9 @@ Many settings are provided by the ARMI Framework, and others are defined by vari
 
 .. _armi-gui:
 
-The input editor
-----------------
-You do not have to write these files by hand. ARMI's browser-based :doc:`input editor <input_editor>` opens a case
+The ARMI UI
+-----------
+You do not have to write these files by hand. The browser-based :doc:`ARMI UI <ui>` opens a case
 and lets you paint the core map, edit pin lattices, draw block cross sections to scale, stack assemblies and change
 settings, then writes the same YAML back out::
 
@@ -72,9 +72,9 @@ settings, then writes the same YAML back out::
 
 .. figure:: /.static/inputEditor-block.png
    :width: 100%
-   :alt: The block view of the input editor
+   :alt: The block view of the ARMI UI
 
-   A block drawn from its component definitions as you edit them. See :doc:`input_editor` for a tour of every view.
+   A block drawn from its component definitions as you edit them. See :doc:`ui` for a tour of every view, and for looking at a run's results.
 
 Note that one settings input file is required for each ARMI case, though many ARMI cases can refer to the same
 Blueprints, Core Map, and Fuel Management inputs.
@@ -705,7 +705,7 @@ The ARMI data model is represented schematically below, and the blueprints are d
 :ref:`custom isotopics <custom-isotopics>`:
     Special setting: defines user-specified isotopic compositions.
 
-The core map input files can be edited graphically with the :py:mod:`input editor <armi.webui>`
+The core map input files can be edited graphically in the :doc:`ARMI UI <ui>`
 (``python -m armi gui``).
 
 

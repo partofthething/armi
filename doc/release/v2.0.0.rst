@@ -3,14 +3,15 @@ Release 2.0.0 of this fork (unreleased)
 *******************************************
 
 The first release of this fork, branched from upstream ARMI 0.6.4 and numbered 2.0 to mark the fork, which is
-independent of TerraPower, LLC. It adds a browser-based input editor in place of the wxPython one, fuel cycle
+independent of TerraPower, LLC. It adds a browser-based UI for inputs and results in place of the wxPython input editor, fuel cycle
 economics, replaces the blueprint YAML layer, fixes a set of long-standing reactor model bugs and makes common
 operations much faster.
 
-Browser-based input editor
-==========================
+The ARMI UI, in the browser
+===========================
 
-ARMI now ships a browser-based editor for its inputs, and every application gets it as the ``gui`` entry point::
+ARMI now ships a user interface that runs in the browser: it shows and edits a case's inputs, runs the case, and shows
+its results. Every application gets it as the ``gui`` entry point::
 
     $ python -m armi gui my-case.yaml
 
@@ -38,35 +39,35 @@ which follows as you type, and the PDF downloaded at any of them. The figures be
 
 .. figure:: /.static/inputEditor-core.png
    :width: 100%
-   :alt: Core map view of the input editor
+   :alt: Core map view of the ARMI UI
 
    **Core map.** Paint assemblies onto hexagonal or Cartesian grids from the palette, fill rings, expand a
    one-third core to full, and keep a running count of each assembly type.
 
 .. figure:: /.static/inputEditor-lattice.png
    :width: 100%
-   :alt: Pin lattice view of the input editor
+   :alt: Pin lattice view of the ARMI UI
 
    **Pin lattices.** Edit lattice maps position by position, with each lattice ID traced to the components that claim
    it and the blocks that use the lattice.
 
 .. figure:: /.static/inputEditor-block.png
    :width: 100%
-   :alt: Block view of the input editor
+   :alt: Block view of the ARMI UI
 
    **Blocks.** A true-scale cross section drawn from the component definitions, with the area of every component and its
    share of the block, so a dimension or pitch error shows up before a run does.
 
 .. figure:: /.static/inputEditor-assembly.png
    :width: 100%
-   :alt: Assembly view of the input editor
+   :alt: Assembly view of the ARMI UI
 
    **Assemblies.** The axial stack as an elevation and a table of heights, cross section types, mesh and material
    modifications; drag to reorder, insert above or below.
 
 .. figure:: /.static/inputEditor-settings.png
    :width: 100%
-   :alt: Settings view of the input editor
+   :alt: Settings view of the ARMI UI
 
    **Settings.** Every setting from every plugin, with its description, searchable and filtered to what differs from
    the default; saving writes only those, so settings files stay short. Plugins can give their own settings a proper
@@ -74,7 +75,7 @@ which follows as you type, and the PDF downloaded at any of them. The figures be
 
 .. figure:: /.static/inputEditor-results.png
    :width: 100%
-   :alt: Results view of the editor
+   :alt: Results view of the ARMI UI
 
    **Results.** A parameter over a whole core and a whole history, with sliders for time and height, sections, and a
    chart that follows one assembly through its shuffles. (Synthetic values, from ``armi.webui.syntheticResults``.)
@@ -88,7 +89,7 @@ which follows as you type, and the PDF downloaded at any of them. The figures be
 
 .. figure:: /.static/inputEditor-fuelcost.png
    :width: 100%
-   :alt: Fuel cycle cost view of the editor
+   :alt: Fuel cycle cost view of the ARMI UI
 
    **Fuel cycle cost.** The economics report for a run, worked out from its database, with every price editable.
    (Synthetic values.)

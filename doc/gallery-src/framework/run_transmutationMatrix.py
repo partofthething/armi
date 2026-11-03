@@ -127,3 +127,8 @@ def plotAll(xlim, ylim):
     ax.set_ylabel("Protons (Z)")
     ax.set_title("Transmutations and Decays (with branching)")
     plt.show()
+
+
+# One plot zoomed in on the actinides, another on the light nuclides.
+plotAll(xlim=(139.5, 154.5), ylim=(89.5, 98.5))
+plotAll(xlim=(0.5, 6.5), ylim=(0.5, 5.5))

@@ -156,9 +156,9 @@ Optional Setup
 ==============
 This subsection provides setup for optional items.
 
-GUI input
----------
-The :py:mod:`browser-based input editor <armi.webui>` ships with ARMI and needs nothing else installed: the server
+The ARMI UI
+-----------
+The browser-based :doc:`ARMI UI </user/ui>` (:py:mod:`armi.webui`), for inputs and results, ships with ARMI and needs nothing else installed: the server
 is standard library and the front end is plain JavaScript with no build step. Open a case in it with::
 
     (armi-venv) $ python -m armi gui my-case.yaml

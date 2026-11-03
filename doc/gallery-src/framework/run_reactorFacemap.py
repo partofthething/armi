@@ -16,6 +16,12 @@ Plot a reactor facemap
 ======================
 
 Load a test reactor from the test suite and plot a dummy power distribution from it. You can plot any block parameter.
+
+.. tip::
+    To explore maps like this one interactively, open a run's database in the :doc:`ARMI UI </user/ui>`
+    (``python -m armi gui my-case.h5``). It colours the core by any parameter, steps through every time node with a
+    slider, cuts sections through the core, and zooms down to individual pins. See :ref:`the results view
+    <results-view>` and the :ref:`gallery's UI examples <armi-ui-gallery>`.
 """
 
 from armi import configure

@@ -22,7 +22,7 @@ This page says what each included plugin does and how to turn on the parts that 
      - The database, history tracking, reports, memory profiling and snapshots (:py:mod:`armi.bookkeeping`), and the
        ``extract-inputs``, ``inject-inputs`` and ``vis-file`` entry points that work with databases.
    * - Entry points
-     - The command line verbs: ``run`` and ``run-suite``, ``gui`` (the :doc:`input editor <input_editor>`), ``clone``,
+     - The command line verbs: ``run`` and ``run-suite``, ``gui`` (the :doc:`ARMI UI <ui>`), ``clone``,
        ``compare``, ``migrate-inputs``, ``modify``, ``report`` and ``clean-temps`` (:py:mod:`armi.cli`).
    * - Fuel handler
      - Fuel management (:py:mod:`armi.physics.fuelCycle`): moves, discharges and loads fuel between cycles with

@@ -1,5 +1,5 @@
 """
-A browser-based editor for ARMI inputs, and a viewer for the results of running them.
+The ARMI UI: shows and edits a case's inputs, runs it, and shows its results, in a browser.
 
 This serves a small single-page app from a local HTTP server so that blueprints and settings can be
 edited visually: core maps, pin lattices, block cross sections, assembly axial stacks, nuclide flags

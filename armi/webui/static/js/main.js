@@ -162,7 +162,7 @@ function renderView() {
 
 function syncChrome() {
   const session = store.session || {};
-  el.appName.textContent = session.app ? `${session.app} inputs` : "ARMI inputs";
+  el.appName.textContent = session.app || "ARMI";
   el.bpName.textContent = baseName(session.blueprints?.path) || "nothing open";
   el.csName.textContent = baseName(session.settings?.path) || "nothing open";
   el.bpName.title = session.blueprints?.path || "";

@@ -1,4 +1,4 @@
-"""Entry point for the browser-based input editor."""
+"""Entry point for the ARMI UI, which runs in a browser."""
 
 from armi.cli import entryPoint
 
