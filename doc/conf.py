@@ -24,6 +24,7 @@ All configuration values have a default; values that are commented out serve to 
 
 # ruff: noqa: E402
 import datetime
+import importlib.util
 import inspect
 import os
 import pathlib
@@ -259,7 +260,8 @@ extensions = [
     "sphinxcontrib.apidoc",
     "sphinxcontrib.jquery",  # the sphinx-needs tables use jQuery
     "sphinxcontrib.plantuml",
-    "sphinx_test_reports",
+    # sphinx-test-reports 2.0 moved its module under sphinxcontrib; take whichever is installed.
+    "sphinxcontrib.test_reports" if importlib.util.find_spec("sphinxcontrib.test_reports") else "sphinx_test_reports",
     "sphinxext.opengraph",
 ]
 
