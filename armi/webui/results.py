@@ -41,7 +41,7 @@ import numpy as np
 from armi import runLog
 
 # Datasets in a block group that are not parameters a person would want to colour a core by.
-_SKIP_PARAMS = {"serialNum", "flags", "type", "xsType", "envGroup", "orientation"}
+_SKIP_PARAMS = {"serialNum", "flags", "type", "xsType", "envGroup", "orientation", "pinIndices"}
 
 # Component types whose shape the viewer knows how to draw, and the dimensions that say how.
 _SHAPE_DIMS = {
@@ -89,6 +89,56 @@ def jaggedOwners(dataset):
     if not len(offsets):
         return np.zeros(0, dtype=np.int64)
     return objects[np.searchsorted(offsets, np.arange(len(dataset)), side="right") - 1]
+
+
+def perObject(dataset):
+    """Each object's values of an array parameter, or None for an object without any.
+
+    Reads a jagged dataset whose objects each hold a flat array, or a 2-D one, one row per object;
+    returns None for any other kind.
+    """
+    attrs = _resolveAttrs(dataset)
+    data = dataset[()]
+    if attrs.get("jagged", False):
+        offsets = np.asarray(attrs.get("offsets", []), dtype=np.int64)
+        shapes = np.asarray(attrs.get("shapes", []), dtype=np.int64)
+        if shapes.ndim != 2 or shapes.shape[1] != 1:
+            return None
+        nones = np.asarray(attrs.get("noneLocations", []), dtype=np.int64).ravel()
+        owners = np.delete(np.arange(len(offsets) + len(nones)), nones)
+        values = [None] * (len(offsets) + len(nones))
+        for owner, start, size in zip(owners, offsets, shapes[:, 0]):
+            values[owner] = np.asarray(data[start : start + size], dtype=np.float64)
+        return values
+    if data.ndim != 2 or dataset.dtype.kind not in "fiu":
+        return None
+    values = [np.asarray(row, dtype=np.float64) for row in data]
+    if attrs.get("nones", False):
+        values = [None if np.all(np.abs(row) > 1e300) else row for row in values]
+    return values
+
+
+#: Component parameters whose arrays are not one value per instance, even when the lengths happen to match.
+_NOT_PER_INSTANCE = {"numberDensities", "nuclides", "detailedNDens", "pinNDens", "pinIndices"}
+
+
+def isPerInstance(name, group) -> bool:
+    """
+    Whether a component dataset holds one value per instance, like ``pdens``.
+
+    A component stands for ``mult`` alike instances (the pins of a pin array, the kernels of a
+    particle fuel); a per-instance parameter gives each component exactly that many values. That is
+    the test, rather than the name, so it holds whatever the instances are.
+    """
+    dataset = group[name]
+    if name in _NOT_PER_INSTANCE or dataset.dtype.kind not in "fiu":
+        return False
+    values = perObject(dataset)
+    if values is None:
+        return False
+    mult = group["mult"][()] if "mult" in group else np.ones(len(values))
+    sized = [(v, m) for v, m in zip(values, mult) if v is not None]
+    return bool(sized) and all(len(v) == int(round(float(m))) for v, m in sized)
 
 
 def decodeFlags(data, flagOrder):
@@ -216,6 +266,7 @@ class ResultsDatabase:
 
     def __init__(self, path):
         self.path = pathlib.Path(path).resolve()
+        self._stamp = self._stat()
         try:
             self.h5 = h5py.File(self.path, "r")
         except OSError as ee:
@@ -235,6 +286,18 @@ class ResultsDatabase:
         self._warmer = None
         self._closed = False
         self._coreGrid = False  # not looked for yet
+
+    def _stat(self):
+        try:
+            stat = self.path.stat()
+        except OSError:
+            return None
+        return (stat.st_ino, stat.st_mtime_ns, stat.st_size)
+
+    def changedOnDisk(self) -> bool:
+        """Whether the file has been replaced or rewritten since it was opened, as a running case's database is."""
+        now = self._stat()
+        return now is not None and now != self._stamp
 
     def close(self):
         with self._lock:
@@ -368,7 +431,35 @@ class ResultsDatabase:
             "topologies": {topoId: topo.toJson() for topoId, topo in topologies.items()},
             "geometry": self.coreGeometry(),
             "parameters": self.parameters(),
+            "core": self.coreHistory(),
         }
+
+    def coreHistory(self):
+        """Every scalar core and reactor parameter at every node, such as keff, as one list per parameter.
+
+        These are a single number per node, so the whole history is small enough to send with the
+        summary. A parameter missing at a node is None there.
+        """
+        with self._lock:
+            found = {}
+            for t, step in enumerate(self.steps):
+                group = self._group(step["key"])
+                for level in ("core", "reactor"):
+                    typeName = next((name for name in group if name == level.capitalize()), None)
+                    if typeName is None:
+                        continue
+                    for name, dataset in group[typeName].items():
+                        if name in _SKIP_PARAMS or not isinstance(dataset, h5py.Dataset):
+                            continue
+                        if dataset.dtype.kind not in "fiu" or dataset.shape != (1,) or dataset.attrs.get("nones"):
+                            continue
+                        if name not in found:
+                            found[name] = {"name": name, "level": level, "values": [None] * len(self.steps)}
+                        value = float(dataset[0])
+                        found[name]["values"][t] = value if np.isfinite(value) and abs(value) < 1e300 else None
+            for level in ("core", "reactor"):
+                _annotate(level, {name: entry for name, entry in found.items() if entry["level"] == level})
+            return sorted(found.values(), key=lambda entry: entry["name"].lower())
 
     # -- grids ------------------------------------------------------------------------------------
 
@@ -476,6 +567,9 @@ class ResultsDatabase:
                             if level == "component" and name == "numberDensities" and "nuclides" in group[typeName]:
                                 nuclides.update(_decode(np.unique(group[typeName]["nuclides"][()])))
                                 continue
+                            if level == "component" and isPerInstance(name, group[typeName]):
+                                found[name] = {"name": name, "shape": [], "perInstance": True}
+                                continue
                             entry = _describe(name, dataset)
                             if entry:
                                 found[name] = entry
@@ -495,9 +589,15 @@ class ResultsDatabase:
             dataset = group[typeName][param]
             if dataset.dtype.kind not in "fiub":
                 continue
-            data = dataset[()]
             attrs = dataset.attrs
-            if attrs.get("jagged", False):
+            perInstance = isPerInstance(param, group[typeName])
+            if perInstance:
+                # One number per object: the mean of its instances.
+                data = np.array([np.nan if v is None or not len(v) else float(np.mean(v)) for v in perObject(dataset)])
+                index = reduce = None
+            else:
+                data = dataset[()]
+            if attrs.get("jagged", False) and not perInstance:
                 continue
             if data.ndim > 1:
                 data = data.reshape(data.shape[0], -1)
@@ -558,6 +658,36 @@ class ResultsDatabase:
             else:
                 values = self._gather(group, typeNames, indexInData, param)
             return values.astype("<f4").tobytes()
+
+    def instanceValues(self, key, param) -> bytes:
+        """
+        Every instance's value of a per-instance component parameter (like ``pdens``) at one node.
+
+        Laid out for the browser as little-endian: the component count ``n`` (int32), where each
+        component's instances start (``n + 1`` int32, components in the frame's order), then the
+        values (float32), each component's in the order of its positions.
+        """
+        with self._lock:
+            topo = self.topologyOf(key)
+            group = self._group(key)
+            typeNames = topo.componentTypes
+            indexInData = topo.indexInData[topo.componentRows]
+            perComponent = [None] * len(typeNames)
+            for typeName in np.unique(typeNames):
+                if typeName not in group or param not in group[typeName]:
+                    continue
+                values = perObject(group[typeName][param])
+                if values is None:
+                    continue
+                for comp in np.flatnonzero(typeNames == typeName):
+                    index = int(indexInData[comp])
+                    if index < len(values):
+                        perComponent[comp] = values[index]
+            counts = [0 if v is None else len(v) for v in perComponent]
+            offsets = np.concatenate([[0], np.cumsum(counts)]).astype("<i4")
+            present = [v for v in perComponent if v is not None]
+            values = np.concatenate(present).astype("<f4") if present else np.zeros(0, dtype="<f4")
+            return np.int32(len(perComponent)).astype("<i4").tobytes() + offsets.tobytes() + values.tobytes()
 
     def componentHistory(self, param, nuclide, componentName, blocks, aggregate="max"):
         """One component's value at every node, for the history chart.
@@ -739,6 +869,8 @@ class ResultsDatabase:
                     cells = location[start : start + count, :2]
                     xy = np.outer(cells[:, 0], geometry["iStep"]) + np.outer(cells[:, 1], geometry["jStep"])
                     shape["at"] = np.round(xy, 4).ravel().tolist()
+                    # The lattice indices of each site, which is how ARMI addresses a pin.
+                    shape["ij"] = np.rint(cells).astype(int).ravel().tolist()
                     if geometry["shape"] == "hex":
                         shape["pitch"] = geometry["pitch"]
                 shapesById.append(shape)
@@ -856,9 +988,15 @@ def _describe(name, dataset):
 def _annotate(level, found):
     """Add units and descriptions from ARMI's own parameter definitions, where it has them."""
     try:
-        from armi.reactor import assemblies, blocks, components
+        from armi.reactor import assemblies, blocks, components, cores, reactors
 
-        owner = {"block": blocks.Block, "assembly": assemblies.Assembly, "component": components.Component}[level]
+        owner = {
+            "block": blocks.Block,
+            "assembly": assemblies.Assembly,
+            "component": components.Component,
+            "core": cores.Core,
+            "reactor": reactors.Reactor,
+        }[level]
         pDefs = owner.pDefs
     except Exception:
         return

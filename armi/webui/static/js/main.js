@@ -4,7 +4,7 @@ import { api } from "./api.js";
 import { h, fill } from "./dom.js";
 import { icon } from "./icons.js";
 import { pickPath } from "./picker.js";
-import { runPanel } from "./run.js";
+import { chooseTarget, lastTarget, runPanel } from "./run.js";
 import { store } from "./store.js";
 import { dialog, field, selectInput, toast } from "./ui.js";
 
@@ -16,7 +16,7 @@ import { componentsView } from "./views/components.js";
 import { nuclidesView } from "./views/nuclides.js";
 import { settingsView } from "./views/settings.js";
 import { yamlView } from "./views/yaml.js";
-import { openResults, resultsView } from "./views/results.js";
+import { openResults, reloadResults, resultsView } from "./views/results.js";
 import { fuelCostView } from "./views/fuelcost.js";
 
 const VIEWS = [
@@ -333,32 +333,73 @@ async function openSettings() {
 // -- running ----------------------------------------------------------------------------------
 
 /**
- * Run the case. A run reads the files on disk, so unsaved edits are saved first: the blueprints
- * the way the Save button would, the settings the way the settings page would.
+ * Run the case, asking where unless `ask` is false (then it goes where the last one went). A run
+ * reads the files on disk, so unsaved edits are saved first: the blueprints the way the Save button
+ * would, the settings the way the settings page would.
  */
-async function runCase() {
+async function runCase({ ask = true } = {}) {
   if (!store.session?.settings?.open) {
     toast("Open a case settings file to run it", { kind: "error" });
     return;
   }
+  const choice = ask ? await chooseTarget() : lastTarget();
+  if (!choice) return;
   if (store.dirty) {
     await saveBlueprints();
     if (store.dirty) return;
   }
   try {
-    const state = await api.state();
-    if (state.settings?.dirty) await api.saveSettings(state.settings.path, "short");
-    await runPanel.start();
-    toast(`Running ${baseName(state.settings?.path)}`, { kind: "ok" });
+    let state = await api.state();
+    let dirty = state.settings?.dirty;
+    if (choice.followResults) {
+      // Following the results needs the database copied out of the run's scratch space after
+      // every time node, which is a setting of the case.
+      const settings = await api.settings();
+      if (settingValue(settings, "syncDbAfterWrite") !== true) {
+        await api.putSettings({ syncDbAfterWrite: true });
+        dirty = true;
+        toast("Turned on syncDbAfterWrite", { detail: "So the results can be looked at while the case runs." });
+      }
+    }
+    if (dirty) await api.saveSettings(state.settings.path, "short");
+    const status = await runPanel.start(choice);
+    toast(`Submitted ${status.title} to run on ${status.where}`, { kind: "ok" });
   } catch (error) {
     toast("The run did not start", { kind: "error", detail: error.message });
   }
 }
 
+/** One setting's value out of the settings page's description of them all. */
+function settingValue(described, name) {
+  return (described?.settings || []).find((entry) => entry.name === name)?.value;
+}
+
+/** Open the run's database for viewing, or read it again if it is the one on show. */
+async function showRunResults(status, { go = false } = {}) {
+  try {
+    if (store.session?.results?.path === status.database) {
+      await reloadResults();
+    } else {
+      const payload = await api.openResults(status.database);
+      store.session = payload.state || (await api.state());
+      store.emit("session");
+      if (current === "results") renderView();
+      if (!go) {
+        toast(`Results from ${status.title} are in`, { kind: "ok", detail: "Open the Results view to look at them." });
+      }
+    }
+    if (go) setView("results");
+  } catch (error) {
+    if (go) toast("Could not open the run's results", { kind: "error", detail: error.message });
+  }
+}
+
 runPanel.onState((state) => {
   el.run.dataset.state = state || "";
-  el.run.textContent = state === "running" ? "Running" : "Run";
+  el.run.textContent = state === "running" ? "Running" : "Run…";
 });
+runPanel.onProgress((status) => showRunResults(status));
+runPanel.onResults((status) => showRunResults(status, { go: true }));
 
 // -- keyboard ---------------------------------------------------------------------------------
 
@@ -374,7 +415,7 @@ function onKeyDown(event) {
   }
   if (accel && event.key === "Enter") {
     event.preventDefault();
-    runCase();
+    runCase({ ask: event.shiftKey });
     return;
   }
   if (accel && event.key.toLowerCase() === "z") {

@@ -30,6 +30,7 @@ export class Results {
     this.steps = summary.steps;
     this.geometry = summary.geometry;
     this.parameters = summary.parameters;
+    this.core = summary.core || []; // scalar core and reactor parameters, each with a value per node
 
     this.topologies = {};
     for (const [id, topo] of Object.entries(summary.topologies)) {
@@ -230,6 +231,37 @@ export class Results {
     return this._series.get(key);
   }
 
+  /**
+   * A block series boiled down to one value per assembly at every node, in assembly order: its
+   * blocks' largest (`max`), smallest (`min`), total (`sum`) or height-weighted average (`mean`).
+   */
+  assemblyFromBlocks(blockSeries, mode) {
+    const out = new Float32Array(this.assemblyOffset[this.steps.length]).fill(NaN);
+    this.steps.forEach((step, t) => {
+      const topo = this.topologies[step.topology];
+      const blocks = this.blockOffset[t];
+      for (let a = 0; a < topo.assemblyCount; a += 1) {
+        let acc = mode === "min" ? Infinity : mode === "max" ? -Infinity : 0;
+        let weight = 0;
+        for (let b = topo.blockStart[a]; b < topo.blockStart[a + 1]; b += 1) {
+          const v = blockSeries[blocks + b];
+          if (v !== v) continue;
+          if (mode === "max") acc = Math.max(acc, v);
+          else if (mode === "min") acc = Math.min(acc, v);
+          else if (mode === "mean") {
+            const height = this.ztop[blocks + b] - this.zbottom[blocks + b];
+            acc += v * height;
+            weight += height;
+            continue;
+          } else acc += v;
+          weight += 1;
+        }
+        if (weight) out[this.assemblyOffset[t] + a] = mode === "mean" ? acc / weight : acc;
+      }
+    });
+    return out;
+  }
+
   /** Smallest and largest finite values, and the smallest positive one for a log scale. */
   rangeOf(values, from = 0, to = values.length) {
     let lo = Infinity;
@@ -253,6 +285,30 @@ export class Results {
   historyRange(key, values) {
     if (!this._ranges.has(key)) this._ranges.set(key, this.rangeOf(values));
     return this._ranges.get(key);
+  }
+
+  /** Every instance's value of a per-instance component parameter at node `t`, fetched once. */
+  async instances(t, param) {
+    const key = `${this.steps[t].key}|${param}`;
+    this._instances ??= new Map();
+    if (!this._instances.has(key)) {
+      this._instances.set(key, api.resultsInstances(this.steps[t].key, param).then((values) => {
+        this._instances.set(key, values);
+        if (this._instances.size > 64) this._instances.delete(this._instances.keys().next().value);
+        this._changed("instances");
+        return values;
+      }).catch((error) => {
+        this._instances.delete(key);
+        throw error;
+      }));
+    }
+    return this._instances.get(key);
+  }
+
+  /** What `instances()` fetched, if it is already here, or null. */
+  instancesAt(t, param) {
+    const values = this._instances?.get(`${this.steps[t].key}|${param}`);
+    return values && !(values instanceof Promise) ? values : null;
   }
 
   componentKey(t, param, nuclide) {

@@ -298,6 +298,13 @@ def _cloneTimeSteps(h5, years, nodesPerYear, seed, componentTemperatures=True):
                     reactor[key][...] = value
                 else:
                     reactor.create_dataset(key, data=np.array([value]))
+            # Reactivity runs down through a cycle and comes back with fresh fuel.
+            core = group["Core"]
+            keff = 1.03 - 0.03 * node * dtYears
+            if "keff" in core:
+                core["keff"][...] = keff
+            else:
+                core.create_dataset("keff", data=np.array([keff]))
         runLog.info(f"Wrote cycle {cycle}")
 
 

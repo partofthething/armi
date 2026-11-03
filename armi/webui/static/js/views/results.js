@@ -22,6 +22,9 @@ const PREFERENCES = "armi.results.preferences";
 const DETAIL_AT = 230; // pixels across a block before its insides are drawn
 const PREFETCH = 3;
 const DEFAULT_PARAMS = ["pdens", "power", "percentBu", "flux"];
+// A block parameter shown block by block, or boiled down to one value per assembly.
+const BLOCK_VIEWS = [["", "each block"], ["max", "assembly peak"], ["mean", "assembly average"],
+  ["min", "assembly minimum"], ["sum", "assembly total"]];
 
 let viewer = null;
 
@@ -29,6 +32,11 @@ let viewer = null;
 export function resultsNow() {
   const step = viewer?.results?.steps[viewer.state.t];
   return step && viewer.path === store.session?.results?.path ? step.time ?? null : null;
+}
+
+/** Pick up the time nodes a running case has added to the database on show, if there are any. */
+export async function reloadResults() {
+  if (viewer && viewer.path === store.session?.results?.path) await viewer.reload();
 }
 
 export function resultsView(ctx) {
@@ -88,7 +96,7 @@ function loadPreferences() {
 
 function savePreferences(state) {
   const keep = ["cmap", "reversed", "log", "rangeMode", "showValues", "textPx", "digits", "fullCore", "detail",
-    "aggregate", "follow", "plane", "fps"];
+    "aggregate", "follow", "plane", "fps", "coreParam", "hoverInfo", "blockLegend"];
   try {
     localStorage.setItem(PREFERENCES, JSON.stringify(Object.fromEntries(keep.map((key) => [key, state[key]]))));
   } catch {
@@ -121,6 +129,9 @@ class ResultsViewer {
       selected: null, // {name, k, i, j, z}
       fps: 8,
       levelTab: "block",
+      coreParam: "keff", // the core parameter charted in the inspector
+      hoverInfo: true, // the summary that follows the pointer
+      blockLegend: true, // the list of components and their values drawn inside a zoomed-in block
       search: "",
       ...loadPreferences(),
     };
@@ -161,8 +172,29 @@ class ResultsViewer {
 
   // -- loading ----------------------------------------------------------------------------------
 
-  async _load() {
-    this.ui.message.textContent = "Reading the database…";
+  /**
+   * Read the database again, keeping the parameter, cut and zoom. A run still going adds a time node
+   * at a time; a viewer sitting on the last node moves on to the new one.
+   */
+  async reload() {
+    await this._loading;
+    if (this._reloading) return this._reloading;
+    const atEnd = !this.results || this.state.t >= this.results.steps.length - 1;
+    const previous = this.results;
+    this._reloading = (async () => {
+      if (atEnd) this.state.t = Number.MAX_SAFE_INTEGER;
+      await this._load(true);
+      previous?.close();
+    })();
+    try {
+      await this._reloading;
+    } finally {
+      this._reloading = null;
+    }
+  }
+
+  async _load(reloading = false) {
+    if (!reloading) this.ui.message.textContent = "Reading the database…";
     try {
       this.results = await Results.load();
     } catch (error) {
@@ -188,8 +220,10 @@ class ResultsViewer {
     await results.ensurePositions(state.t);
     this.ui.message.textContent = "";
     await this._loadParam();
-    if (!this._sliceChosen) state.slice.xy = this._peakSlice();
-    this.canvas.fit();
+    if (!reloading) {
+      if (!this._sliceChosen) state.slice.xy = this._peakSlice();
+      this.canvas.fit();
+    }
     results.prefetchPositions(state.t);
   }
 
@@ -251,6 +285,10 @@ class ResultsViewer {
             this.render();
           }
         });
+      } else if (param.fromBlocks) {
+        const blocks = await results.series("block", param.name, param.index, param.reduce);
+        this.series = results.assemblyFromBlocks(blocks, param.fromBlocks);
+        this.seriesKey = `assembly<${param.fromBlocks}|${param.name}|${param.index ?? ""}|${param.reduce ?? ""}`;
       } else {
         this.series = await results.series(param.level, param.name, param.index, param.reduce);
         this.seriesKey = `${param.level}|${param.name}|${param.index ?? ""}|${param.reduce ?? ""}`;
@@ -383,6 +421,17 @@ class ResultsViewer {
       state.showValues = on;
       this._changed();
     } });
+    const hover = checkbox({ label: "Hover info", checked: state.hoverInfo, onChange: (on) => {
+      state.hoverInfo = on;
+      savePreferences(state);
+      this._positionTooltip();
+    } });
+    hover.title = "Show what is under the pointer (T)";
+    const legend = checkbox({ label: "Block legend", checked: state.blockLegend, onChange: (on) => {
+      state.blockLegend = on;
+      this._changed();
+    } });
+    legend.title = "List each component and its value inside a block when zoomed in (L)";
     const text = h("label.results-text", { title: "Size of the printed values" },
       h("span", "Aa"),
       h("input", { type: "range", min: 6, max: 28, step: 1, value: state.textPx,
@@ -400,14 +449,26 @@ class ResultsViewer {
         } })
       : null;
 
-    const detail = h("select.input.results-select", { title: "Draw block insides when zoomed in",
+    const detail = h("select.input.results-select", {
+      title: "Draw block insides: once zoomed in, never, or always (a component parameter's pins at any zoom)",
       onchange: (event) => { state.detail = event.target.value; this._changed(); } },
-    h("option", { value: "auto", selected: state.detail === "auto" }, "Pins: zoom"),
-    h("option", { value: "off", selected: state.detail === "off" }, "Pins: off"));
+    ...[["auto", "Pins: zoom"], ["always", "Pins: always"], ["off", "Pins: off"]].map(([key, label]) =>
+      h("option", { value: key, selected: state.detail === key }, label)));
 
     const param = state.param;
     const extra = [];
     const entry = param && this._paramEntry(param);
+    if (param && (param.level === "block" || param.fromBlocks)) {
+      extra.push(h("select.input.results-select", { title: "Show each block, or each assembly from its blocks",
+        onchange: (event) => {
+          const mode = event.target.value;
+          this.setParam(mode
+            ? { ...param, level: "assembly", fromBlocks: mode }
+            : { ...param, level: "block", fromBlocks: null });
+        } },
+      ...BLOCK_VIEWS.map(([key, label]) =>
+        h("option", { value: key, selected: (param.fromBlocks || "") === key }, label))));
+    }
     if (param?.level === "component") {
       extra.push(h("select.input.results-select", { title: "How a block's components combine when zoomed out",
         onchange: (event) => { state.aggregate = event.target.value; this._changed(); } },
@@ -439,6 +500,8 @@ class ResultsViewer {
       ...fixedInputs,
       h("span.results-bar__sep"),
       values,
+      hover,
+      legend,
       text,
       digits,
       h("span.results-bar__sep"),
@@ -466,7 +529,7 @@ class ResultsViewer {
 
   _paramEntry(param) {
     if (!this.results || !param) return null;
-    const list = this.results.parameters[param.level] || [];
+    const list = this.results.parameters[param.fromBlocks ? "block" : param.level] || [];
     return list.find((entry) => entry.name === param.name) || null;
   }
 
@@ -498,7 +561,7 @@ class ResultsViewer {
         h("button.item", {
           type: "button", title: title || "",
           "aria-selected": String(!!current && current.level === param.level && current.name === param.name &&
-            (current.nuclide || null) === (param.nuclide || null)),
+            (current.nuclide || null) === (param.nuclide || null) && !current.fromBlocks === !param.fromBlocks),
           onclick: () => this.setParam(param),
         }, h("span.item__name", label), meta ? h("span.item__meta", meta) : null);
 
@@ -516,6 +579,19 @@ class ResultsViewer {
       } else if (densities.length) {
         rows.push(h("div.results-params__group", "Number densities"));
         for (const entry of densities) rows.push(item(entry.name.replace(/^n/, ""), "1/bn-cm", { level: tab, name: entry.name }));
+      }
+      if (tab === "assembly") {
+        // Any block parameter, boiled down to one value per assembly.
+        const mode = current?.fromBlocks || "max";
+        const label = BLOCK_VIEWS.find(([key]) => key === mode)[1];
+        const fromBlocks = (results.parameters.block || []).filter((entry) => entry.group !== "Number densities" &&
+          match(entry.name));
+        if (fromBlocks.length) rows.push(h("div.results-params__group", `From blocks (${label})`));
+        for (const entry of fromBlocks) {
+          rows.push(item(entry.name, entry.units && entry.units !== "None" ? entry.units : "",
+            { level: "assembly", name: entry.name, fromBlocks: mode },
+            `${label} of each assembly's blocks${entry.description ? `: ${entry.description}` : ""}`));
+        }
       }
       fill(list, rows.length ? rows : h("div.empty", "Nothing matches."));
     };
@@ -541,6 +617,13 @@ class ResultsViewer {
     ui.chart.addEventListener("click", (event) => this._chartClick(event));
     ui.chart.addEventListener("mousemove", (event) => this._chartHover(event));
     ui.followBox = h("div.results-follow");
+    ui.coreChart = h("canvas.results-chart", { width: 300, height: 150 });
+    ui.coreNote = h("div.field__hint");
+    ui.coreChart.addEventListener("click", (event) => {
+      const t = nearestStep(this._coreGeometry, ui.coreChart, event);
+      if (t !== null) this.setTime(t);
+    });
+    ui.coreTable = h("div.results-blockparams");
     ui.blockTable = h("div.results-blockparams");
     ui.blockFilter = h("input.searchbox", { type: "search", placeholder: "Filter", oninput: () => this._renderBlockTable() });
     fill(
@@ -552,6 +635,7 @@ class ResultsViewer {
         h("section.group", ui.paramHead),
         h("section.group", h("h3.group__title", "Selected", ui.followBox), ui.selection),
         h("section.group", h("h3.group__title", "Over time"), ui.chart, ui.chartNote),
+        h("section.group", h("h3.group__title", "Core at this node"), ui.coreChart, ui.coreNote, ui.coreTable),
         h("section.group", h("h3.group__title", "Block at this node"), ui.blockFilter, ui.blockTable),
       ),
     );
@@ -568,7 +652,9 @@ class ResultsViewer {
       ui.paramHead,
       h("div.results-param__name", param?.nuclide ? `${param.nuclide} number density` : param?.name || "—",
         param?.index != null ? `[${param.index}]` : param?.reduce ? ` (${param.reduce})` : ""),
-      h("div.results-param__meta", `${param?.level || ""} parameter`, entry?.units && entry.units !== "None" ? ` · ${entry.units}` : ""),
+      h("div.results-param__meta", param?.fromBlocks
+        ? `block parameter, ${BLOCK_VIEWS.find(([key]) => key === param.fromBlocks)[1]}`
+        : `${param?.level || ""} parameter`, entry?.units && entry.units !== "None" ? ` · ${entry.units}` : ""),
       entry?.description ? h("div.results-param__desc", entry.description) : null,
     );
 
@@ -604,7 +690,51 @@ class ResultsViewer {
       fill(ui.selection, h("dl.results-kv", ...rows.flatMap(([key, value]) => [h("dt", key), h("dd.mono", value)])));
     }
     this._renderChart();
+    this._renderCore();
     this._requestBlockTable();
+  }
+
+  /** The core's own parameters (keff, power, ...) at this node, and the chosen one over time. */
+  _renderCore() {
+    const results = this.results;
+    const ui = this.ui;
+    const entries = results.core;
+    if (!entries.length) {
+      fill(ui.coreTable, h("div.field__hint", "This database has no core parameters."));
+      ui.coreChart.hidden = true;
+      return;
+    }
+    const t = this.state.t;
+    const chosen = entries.find((entry) => entry.name === this.state.coreParam) ||
+      entries.find((entry) => entry.name === "keff") || entries[0];
+    const units = (entry) => (entry.units && entry.units !== "None" ? entry.units : "");
+    ui.coreChart.hidden = false;
+    const values = Float64Array.from(chosen.values, (v) => (v == null ? NaN : v));
+    this._coreGeometry = drawHistory(ui.coreChart, this._chartWidth(), results, values, t);
+    ui.coreNote.textContent = this._coreGeometry
+      ? `${chosen.name}${units(chosen) ? ` (${units(chosen)})` : ""} over time. Click a row to chart it.`
+      : `${chosen.name} has no values.`;
+    fill(
+      ui.coreTable,
+      h("table.table",
+        h("tbody", ...entries.map((entry) => {
+          const value = entry.values[t];
+          return h("tr", {
+            class: entry === chosen ? "is-current" : "",
+            title: entry.description || "",
+            onclick: () => {
+              this.state.coreParam = entry.name;
+              savePreferences(this.state);
+              this._renderCore();
+            },
+          }, h("td", entry.name), h("td.num.mono", value == null ? "—" : formatValue(value, 6),
+            units(entry) ? h("span.results-unit", ` ${units(entry)}`) : null));
+        }))),
+    );
+  }
+
+  _chartWidth() {
+    return Math.max(200, (this.ui.inspector.clientWidth || 320) - 26);
   }
 
   _requestBlockTable() {
@@ -710,21 +840,11 @@ class ResultsViewer {
   }
 
   _renderChart() {
-    const canvas = this.ui.chart;
-    const width = Math.max(200, (this.ui.inspector.clientWidth || 320) - 26);
-    const height = 150;
-    const ratio = window.devicePixelRatio || 1;
-    canvas.width = width * ratio;
-    canvas.height = height * ratio;
-    canvas.style.width = `${width}px`;
-    canvas.style.height = `${height}px`;
-    const context = canvas.getContext("2d");
-    context.setTransform(ratio, 0, 0, ratio, 0, 0);
-    context.clearRect(0, 0, width, height);
-
     const values = this._history();
     this._chartValues = values;
     const note = this.ui.chartNote;
+    this._chartGeometry = null;
+    clearChart(this.ui.chart, this._chartWidth());
     if (!this.state.selected) {
       note.textContent = "Select a block to see it over time.";
       return;
@@ -733,76 +853,10 @@ class ResultsViewer {
       note.textContent = "Loading…";
       return;
     }
-    const results = this.results;
-    const times = results.steps.map((step, t) => (step.time ?? t));
-    let lo = Infinity;
-    let hi = -Infinity;
-    for (const v of values) {
-      if (Number.isNaN(v)) continue;
-      lo = Math.min(lo, v);
-      hi = Math.max(hi, v);
-    }
-    if (!Number.isFinite(lo)) {
+    this._chartGeometry = drawHistory(this.ui.chart, this._chartWidth(), this.results, values, this.state.t);
+    if (!this._chartGeometry) {
       note.textContent = "No values for this selection.";
       return;
-    }
-    if (hi === lo) {
-      hi += Math.abs(hi) * 0.05 || 1;
-      lo -= Math.abs(lo) * 0.05 || 1;
-    }
-    const pad = { left: 52, right: 8, top: 8, bottom: 20 };
-    const t0 = times[0];
-    const t1 = times[times.length - 1] === t0 ? t0 + 1 : times[times.length - 1];
-    const px = (time) => pad.left + ((time - t0) / (t1 - t0)) * (width - pad.left - pad.right);
-    const py = (v) => pad.top + (1 - (v - lo) / (hi - lo)) * (height - pad.top - pad.bottom);
-    this._chartGeometry = { px, times, pad, width };
-
-    context.font = `10px ${getComputedStyle(document.body).getPropertyValue("--mono") || "monospace"}`;
-    context.fillStyle = "#8d97a5";
-    context.strokeStyle = "#2b333f";
-    context.lineWidth = 1;
-    context.textAlign = "right";
-    context.textBaseline = "middle";
-    for (const v of [lo, (lo + hi) / 2, hi]) {
-      context.beginPath();
-      context.moveTo(pad.left, py(v));
-      context.lineTo(width - pad.right, py(v));
-      context.stroke();
-      context.fillText(formatValue(v, 3), pad.left - 5, py(v));
-    }
-    context.textAlign = "center";
-    context.textBaseline = "top";
-    const unit = results.steps[0].time != null ? " yr" : "";
-    context.fillText(`${formatValue(t0, 3)}${unit}`, pad.left + 10, height - pad.bottom + 5);
-    context.fillText(`${formatValue(t1, 3)}${unit}`, width - pad.right - 14, height - pad.bottom + 5);
-
-    context.strokeStyle = "#2a78d6";
-    context.lineWidth = 1.5;
-    context.beginPath();
-    let pen = false;
-    values.forEach((v, t) => {
-      if (Number.isNaN(v)) {
-        pen = false;
-        return;
-      }
-      if (pen) context.lineTo(px(times[t]), py(v));
-      else context.moveTo(px(times[t]), py(v));
-      pen = true;
-    });
-    context.stroke();
-
-    const now = this.state.t;
-    context.strokeStyle = "#ffb454";
-    context.lineWidth = 1;
-    context.beginPath();
-    context.moveTo(px(times[now]), pad.top);
-    context.lineTo(px(times[now]), height - pad.bottom);
-    context.stroke();
-    if (!Number.isNaN(values[now])) {
-      context.fillStyle = "#ffb454";
-      context.beginPath();
-      context.arc(px(times[now]), py(values[now]), 3, 0, 2 * Math.PI);
-      context.fill();
     }
     note.textContent = this.state.follow === "assembly"
       ? `Following ${this.state.selected.name} wherever it is moved. Click to jump in time.`
@@ -810,15 +864,7 @@ class ResultsViewer {
   }
 
   _chartStep(event) {
-    const geometry = this._chartGeometry;
-    if (!geometry) return null;
-    const rect = this.ui.chart.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    let best = 0;
-    geometry.times.forEach((time, t) => {
-      if (Math.abs(geometry.px(time) - x) < Math.abs(geometry.px(geometry.times[best]) - x)) best = t;
-    });
-    return best;
+    return nearestStep(this._chartGeometry, this.ui.chart, event);
   }
 
   _chartClick(event) {
@@ -899,9 +945,23 @@ class ResultsViewer {
     const geometry = this.results?.geometry;
     if (geometry && view && this.state.plane === "xy" && this.state.detail !== "off") {
       const pitch = geometry.shape === "hex" ? geometry.pitch : Math.min(...geometry.pitch);
-      if (view.ppc * pitch >= DETAIL_AT) this._ensureDesigns();
+      if (view.ppc * pitch >= this._detailAt()) this._ensureDesigns();
     }
     this._positionTooltip();
+  }
+
+  /** Every instance's value at node `t` when the parameter on show has one per instance, fetching it if need be. */
+  _instancesFor(t) {
+    const param = this.state.param;
+    if (param?.level !== "component" || !this._paramEntry(param)?.perInstance) return null;
+    const values = this.results.instancesAt(t, param.name);
+    if (!values) this.results.instances(t, param.name).catch(() => {});
+    return values;
+  }
+
+  /** Pixels across a block before its insides are drawn: always, for a component parameter on "Pins: always". */
+  _detailAt() {
+    return this.state.detail === "always" && this.state.param?.level === "component" ? 0 : DETAIL_AT;
   }
 
   _ensureDesigns() {
@@ -918,6 +978,16 @@ class ResultsViewer {
     else if (event.key === "Home") this.setTime(0);
     else if (event.key === "End") this.setTime(this.results.steps.length - 1);
     else if (event.key === " ") this._togglePlay();
+    else if (event.key === "l" || event.key === "L") {
+      this.state.blockLegend = !this.state.blockLegend;
+      this._buildToolbar();
+      this._changed();
+    } else if (event.key === "t" || event.key === "T") {
+      this.state.hoverInfo = !this.state.hoverInfo;
+      savePreferences(this.state);
+      this._buildToolbar();
+      this._positionTooltip();
+    }
     else if (event.key === "ArrowUp" || event.key === "ArrowDown") {
       const stops = this._stops();
       const plane = this.state.plane;
@@ -939,7 +1009,7 @@ class ResultsViewer {
   _positionTooltip() {
     const tip = this.ui.tooltip;
     const hit = this.hovered;
-    if (!hit || !this.results) {
+    if (!hit || !this.results || !this.state.hoverInfo) {
       tip.hidden = true;
       return;
     }
@@ -955,7 +1025,7 @@ class ResultsViewer {
     if (frame) {
       const i = hit.copyI ?? frame.i[hit.a];
       const j = hit.copyJ ?? frame.j[hit.a];
-      lines.push(h("div", `(${i}, ${j})${results.geometry.shape === "hex" ? ` ring ${hexRing(i, j)}` : ""}${hit.copy ? " (symmetric copy)" : ""}`));
+      lines.push(h("div", `assembly (${i}, ${j})${results.geometry.shape === "hex" ? ` ring ${hexRing(i, j)}` : ""}${hit.copy ? " (symmetric copy)" : ""}`));
     }
     if (hit.b >= 0) {
       const base = results.blockOffset[t];
@@ -963,10 +1033,18 @@ class ResultsViewer {
     }
     lines.push(h("div.results-tooltip__value", `${formatValue(hit.value, 5)}${units}`));
     if (hit.component != null) {
-      const component = this._componentInfo(hit.b, hit.component);
+      const component = this._componentInfo(hit.b, hit.component, hit.pin);
       if (component) {
         lines.push(h("div.results-tooltip__comp", `${component.name} (${component.type}${component.material ? `, ${component.material}` : ""})`));
-        if (component.value !== undefined) lines.push(h("div.results-tooltip__value", `${formatValue(component.value, 5)}${units}`));
+        if (component.pin) {
+          const { number, count, i, j, x, y } = component.pin;
+          const site = i != null ? ` · lattice (${i}, ${j})` : "";
+          lines.push(h("div", `${component.name} ${number} of ${count}${site} · ${formatValue(x, 3)}, ${formatValue(y, 3)} cm`));
+        }
+        if (component.value !== undefined) {
+          const which = component.perInstance ? "this one" : component.pin ? "component" : "";
+          lines.push(h("div.results-tooltip__value", `${formatValue(component.value, 5)}${units}${which ? `  (${which})` : ""}`));
+        }
       }
     }
     fill(tip, ...lines);
@@ -978,7 +1056,8 @@ class ResultsViewer {
     tip.style.top = `${Math.max(top, 4)}px`;
   }
 
-  _componentInfo(b, index) {
+  /** A component of block `b` as drawn, with the parameter's value; for pin `pin`, that pin's site and value. */
+  _componentInfo(b, index, pin = null) {
     const results = this.results;
     const t = this.state.t;
     const designs = results.designsReady(results.steps[t].topology);
@@ -986,10 +1065,29 @@ class ResultsViewer {
     const shape = designs.designs[designs.blockDesign[b]]?.shapes[index];
     if (!shape) return null;
     const out = { ...shape };
+    const component = designs.compStart[b] + index;
+    const count = shape.at ? shape.at.length / 2 : 1;
+    if (pin != null && shape.at && count > 1) {
+      out.pin = {
+        number: pin + 1,
+        count,
+        i: shape.ij?.[2 * pin],
+        j: shape.ij?.[2 * pin + 1],
+        x: shape.at[2 * pin],
+        y: shape.at[2 * pin + 1],
+      };
+    }
     const param = this.state.param;
     if (param?.level === "component") {
-      const values = results.componentsAt(t, param.name, param.nuclide);
-      if (values) out.value = values[designs.compStart[b] + index];
+      const instances = this._instancesFor(t);
+      const from = instances?.offsets[component];
+      if (out.pin && instances && instances.offsets[component + 1] - from === count) {
+        out.value = instances.values[from + pin];
+        out.perInstance = true;
+      } else {
+        const values = results.componentsAt(t, param.name, param.nuclide);
+        if (values) out.value = values[component];
+      }
     }
     return out;
   }
@@ -1200,9 +1298,10 @@ class ResultsViewer {
       geometry,
       table,
       showValues: state.showValues,
+      blockLegend: state.blockLegend,
       textPx: state.textPx,
       digits: state.digits,
-      detailAt: DETAIL_AT,
+      detailAt: this._detailAt(),
       cells: [],
     };
 
@@ -1225,9 +1324,9 @@ class ResultsViewer {
           const componentValues = param?.level === "component"
             ? results.componentsAt(t, param.name, param.nuclide) || this._lastComponentValues
             : null;
-          scene.detail = { ...designs, componentValues };
+          scene.detail = { ...designs, componentValues, instances: this._instancesFor(t) };
           scene.componentIndex = index;
-        } else if (this.canvas.views.xy && this.canvas.views.xy.ppc * geometry.pitchSize >= DETAIL_AT) {
+        } else if (this.canvas.views.xy && this.canvas.views.xy.ppc * geometry.pitchSize >= scene.detailAt) {
           this._ensureDesigns();
         }
       }
@@ -1308,6 +1407,116 @@ function boundsOf(placements, reach) {
 /** ARMI's ring number for a hex index: the centre is ring 1. */
 function hexRing(i, j) {
   return Math.max(Math.abs(i), Math.abs(j), Math.abs(i + j)) + 1;
+}
+
+function clearChart(canvas, width, height = 150) {
+  const ratio = window.devicePixelRatio || 1;
+  canvas.width = width * ratio;
+  canvas.height = height * ratio;
+  canvas.style.width = `${width}px`;
+  canvas.style.height = `${height}px`;
+  const context = canvas.getContext("2d");
+  context.setTransform(ratio, 0, 0, ratio, 0, 0);
+  context.clearRect(0, 0, width, height);
+  return context;
+}
+
+/**
+ * One value per node against time, with the node on show marked. Returns what a click needs to find
+ * its node, or null when there is nothing to draw.
+ */
+function drawHistory(canvas, width, results, values, now, height = 150) {
+  const context = clearChart(canvas, width, height);
+  const times = results.steps.map((step, t) => (step.time ?? t));
+  let lo = Infinity;
+  let hi = -Infinity;
+  for (const v of values) {
+    if (Number.isNaN(v)) continue;
+    lo = Math.min(lo, v);
+    hi = Math.max(hi, v);
+  }
+  if (!Number.isFinite(lo)) return null;
+  if (hi === lo) {
+    hi += Math.abs(hi) * 0.05 || 1;
+    lo -= Math.abs(lo) * 0.05 || 1;
+  }
+  // Enough figures that the three labels differ, e.g. keff that moves in the fifth digit.
+  const spread = Math.max(Math.abs(lo), Math.abs(hi)) / (hi - lo);
+  const digits = Math.min(8, Math.max(3, 2 + Math.ceil(Math.log10(spread))));
+  const ticks = [lo, (lo + hi) / 2, hi].map((v) => [v, formatValue(v, digits)]);
+  context.font = `10px ${getComputedStyle(document.body).getPropertyValue("--mono") || "monospace"}`;
+  const labelWidth = Math.max(...ticks.map(([, text]) => context.measureText(text).width));
+  const pad = { left: Math.max(52, labelWidth + 10), right: 8, top: 8, bottom: 20 };
+  const t0 = times[0];
+  const t1 = times[times.length - 1] === t0 ? t0 + 1 : times[times.length - 1];
+  const px = (time) => pad.left + ((time - t0) / (t1 - t0)) * (width - pad.left - pad.right);
+  const py = (v) => pad.top + (1 - (v - lo) / (hi - lo)) * (height - pad.top - pad.bottom);
+
+  context.fillStyle = "#8d97a5";
+  context.strokeStyle = "#2b333f";
+  context.lineWidth = 1;
+  context.textAlign = "right";
+  context.textBaseline = "middle";
+  for (const [v, text] of ticks) {
+    context.beginPath();
+    context.moveTo(pad.left, py(v));
+    context.lineTo(width - pad.right, py(v));
+    context.stroke();
+    context.fillText(text, pad.left - 5, py(v));
+  }
+  context.textAlign = "center";
+  context.textBaseline = "top";
+  const unit = results.steps[0].time != null ? " yr" : "";
+  context.fillText(`${formatValue(t0, 3)}${unit}`, pad.left + 10, height - pad.bottom + 5);
+  context.fillText(`${formatValue(t1, 3)}${unit}`, width - pad.right - 14, height - pad.bottom + 5);
+
+  context.strokeStyle = "#2a78d6";
+  context.lineWidth = 1.5;
+  context.beginPath();
+  let pen = false;
+  values.forEach((v, t) => {
+    if (Number.isNaN(v)) {
+      pen = false;
+      return;
+    }
+    if (pen) context.lineTo(px(times[t]), py(v));
+    else context.moveTo(px(times[t]), py(v));
+    pen = true;
+  });
+  context.stroke();
+  // A lone node draws no line; give it a dot.
+  context.fillStyle = "#2a78d6";
+  values.forEach((v, t) => {
+    if (Number.isNaN(v) || values.length > 40) return;
+    context.beginPath();
+    context.arc(px(times[t]), py(v), 2, 0, 2 * Math.PI);
+    context.fill();
+  });
+
+  context.strokeStyle = "#ffb454";
+  context.lineWidth = 1;
+  context.beginPath();
+  context.moveTo(px(times[now]), pad.top);
+  context.lineTo(px(times[now]), height - pad.bottom);
+  context.stroke();
+  if (!Number.isNaN(values[now])) {
+    context.fillStyle = "#ffb454";
+    context.beginPath();
+    context.arc(px(times[now]), py(values[now]), 3, 0, 2 * Math.PI);
+    context.fill();
+  }
+  return { px, times };
+}
+
+/** The node nearest a click or hover on a chart drawn by drawHistory, or null. */
+function nearestStep(geometry, canvas, event) {
+  if (!geometry) return null;
+  const x = event.clientX - canvas.getBoundingClientRect().left;
+  let best = 0;
+  geometry.times.forEach((time, t) => {
+    if (Math.abs(geometry.px(time) - x) < Math.abs(geometry.px(geometry.times[best]) - x)) best = t;
+  });
+  return best;
 }
 
 function stepLabel(step) {

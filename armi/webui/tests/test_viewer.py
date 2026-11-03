@@ -72,6 +72,17 @@ class TestResultsDatabase(_WithDatabase):
         self.assertIn("nU235", names)
         self.assertNotIn("flags", names)
         self.assertIn("U235", summary["parameters"]["componentNuclides"])
+        core = {entry["name"]: entry for entry in summary["core"]}
+        self.assertEqual(core["keff"]["level"], "core")
+        self.assertEqual(len(core["keff"]["values"]), 4)
+        self.assertEqual(core["time"]["level"], "reactor")
+        self.assertNotIn("serialNum", core)
+
+    def test_coreHistoryMatchesArmi(self):
+        keff = next(entry for entry in self.db.coreHistory() if entry["name"] == "keff")
+        for key, value in zip(self.db.stepKeys(), keff["values"]):
+            self.assertAlmostEqual(value, self.loaded(key).core.p.keff)
+        self.assertGreater(keff["values"][0], keff["values"][1])
 
     def test_shufflingChangesTheFrameButNotTheTopology(self):
         frames = [self.db.positionsOf(key)[0] for key in self.db.stepKeys()]
@@ -245,6 +256,27 @@ class TestHelpers(unittest.TestCase):
                 dataset.attrs["offsets"] = np.array([0, 2])
                 dataset.attrs["noneLocations"] = np.array([1])
                 np.testing.assert_array_equal(results.jaggedOwners(dataset), [0, 0, 2, 2, 2])
+
+    def test_perInstanceValuesOfAJaggedParameter(self):
+        """One value per instance, stored ragged: each component's values, None for one without any."""
+        with tempfile.TemporaryDirectory() as scratch:
+            with h5py.File(os.path.join(scratch, "instances.h5"), "w") as h5:
+                group = h5.create_group("Circle")
+                group.create_dataset("mult", data=np.array([3.0, 1.0, 2.0]))
+                dataset = group.create_dataset("pdens", data=np.array([1.0, 2.0, 3.0, 10.0, 20.0]))
+                dataset.attrs["jagged"] = True
+                dataset.attrs["offsets"] = np.array([0, 3])
+                dataset.attrs["shapes"] = np.array([[3], [2]])
+                dataset.attrs["noneLocations"] = np.array([1])
+                values = results.perObject(dataset)
+                self.assertEqual(len(values), 3)
+                np.testing.assert_array_equal(values[0], [1.0, 2.0, 3.0])
+                self.assertIsNone(values[1])
+                np.testing.assert_array_equal(values[2], [10.0, 20.0])
+                self.assertTrue(results.isPerInstance("pdens", group))
+                # The same values with lengths that are not the multiplicities are something else.
+                group["mult"][...] = [3.0, 1.0, 5.0]
+                self.assertFalse(results.isPerInstance("pdens", group))
 
     def test_decodeFlags(self):
         packed = np.array([[0b101, 0], [0b010, 1]], dtype=np.uint8)

@@ -15,7 +15,7 @@ import traceback
 
 from armi import materials, runLog
 from armi.settings.fwSettings.globalSettings import CONF_LOADING_FILE, CONF_MATERIAL_NAMESPACE_ORDER
-from armi.webui import catalog, preview, results, runs, settingsdoc
+from armi.webui import catalog, preview, results, settingsdoc, submit
 from armi.webui.document import BlueprintsDocument, DocumentError
 
 
@@ -153,6 +153,7 @@ class Session:
                 "open": self.results is not None,
             },
             "run": self.run.state if self.run else None,
+            "targets": list(submit.TARGETS),
             "cwd": str(self.rootDir),
         }
 
@@ -372,6 +373,12 @@ class Session:
     def _needResults(self):
         if self.results is None:
             raise results.ResultsError("No results database is open.")
+        if self.results.changedOnDisk():
+            # A run still going rewrites its database after every time node; pick up the nodes it has added.
+            try:
+                self._setResults(results.ResultsDatabase(self.results.path))
+            except results.ResultsError as ee:
+                runLog.warning(f"Still showing the earlier copy of {self.results.path.name}: {ee}")
         return self.results
 
     def resultsSummary(self):
@@ -420,6 +427,16 @@ class Session:
                 raise results.ResultsError("Say which node to read.")
             param, nuclide = query.get("param") or "", query.get("nuclide") or None
             return 200, b"".join(database.componentValues(key, param, nuclide=nuclide) for key in keys)
+        except results.ResultsError as ee:
+            return 400, {"error": str(ee)}
+
+    def resultsInstances(self, query):
+        """Every instance's value of a per-instance component parameter at one node (``step``)."""
+        try:
+            step = query.get("step") or ""
+            if not step:
+                raise results.ResultsError("Say which node to read.")
+            return 200, self._needResults().instanceValues(step, query.get("param") or "")
         except results.ResultsError as ee:
             return 400, {"error": str(ee)}
 
@@ -503,18 +520,23 @@ class Session:
     # -- running the case -------------------------------------------------------------------------
 
     def startRun(self, body):
-        """Run the open case as it is saved on disk."""
+        """Submit the open case, as it is saved on disk, to run where ``body["target"]`` says.
+
+        With ``body["followResults"]`` the case writes its database to its folder after every time node, so the
+        results can be looked at while it goes on.
+        """
         if self.run is not None and self.run.running:
             return 409, {"error": "A run is already going. Stop it first."}
         if self.settings is None or self.settings.path is None:
             return 400, {"error": "Open or save a case settings file to run it."}
         if self.dirty or self.settingsDirty:
             return 409, {"error": "Save your changes first: a run uses the files as they are on disk."}
+        target = body.get("target") or {"kind": "local"}
         try:
-            self.run = runs.CaseRun(self.settings.path)
-        except OSError as ee:
-            return 500, {"error": f"Could not start the run: {ee}"}
-        runLog.important(f"Started `{' '.join(self.run.command)}` in {self.run.workdir}")
+            self.run = submit.Submission(self.settings.path, target, rerun=bool(body.get("rerun")))
+        except (OSError, ValueError) as ee:
+            return 400, {"error": f"Could not submit the run: {ee}"}
+        runLog.important(f"Submitted {self.run.title} to {submit.describe(target)} from {self.run.directory}")
         return 200, self.run.read(0)
 
     def runStatus(self, query):
@@ -530,7 +552,10 @@ class Session:
     def stopRun(self, body):
         if self.run is None or not self.run.running:
             return 409, {"error": "Nothing is running."}
-        self.run.stop()
+        try:
+            self.run.stop()
+        except RuntimeError as ee:
+            return 502, {"error": str(ee)}
         return 200, self.run.read(None)
 
     # -- file picker ------------------------------------------------------------------------------

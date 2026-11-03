@@ -267,6 +267,7 @@ class _Handler(http.server.BaseHTTPRequestHandler):
             ("GET", "/api/results/positions"): lambda: session.resultsPositions(query),
             ("GET", "/api/results/series"): lambda: session.resultsSeries(query),
             ("GET", "/api/results/components"): lambda: session.resultsComponents(query),
+            ("GET", "/api/results/instances"): lambda: session.resultsInstances(query),
             ("POST", "/api/results/componentHistory"): lambda: session.resultsComponentHistory(body),
             ("GET", "/api/results/componentRange"): lambda: session.resultsComponentRange(query),
             ("POST", "/api/fuelcost"): lambda: session.fuelCost(body),

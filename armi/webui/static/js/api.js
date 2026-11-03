@@ -37,8 +37,8 @@ async function call(method, path, body) {
   return payload;
 }
 
-/** A GET whose answer is raw float32, as the results endpoints send. */
-async function callFloats(path) {
+/** A GET whose answer is raw bytes, as the results endpoints send. */
+async function callBuffer(path) {
   const response = await fetch(path, { headers: { "X-ARMI-Token": TOKEN } });
   if (!response.ok) {
     let payload = null;
@@ -49,7 +49,12 @@ async function callFloats(path) {
     }
     throw new ApiError(payload?.error || `GET ${path} failed (${response.status})`, response.status, payload);
   }
-  return new Float32Array(await response.arrayBuffer());
+  return response.arrayBuffer();
+}
+
+/** A GET whose answer is raw float32. */
+async function callFloats(path) {
+  return new Float32Array(await callBuffer(path));
 }
 
 const query = (params) => {
@@ -83,7 +88,7 @@ export const api = {
   putSettings: (values) => call("PUT", "/api/settings", { values }),
   saveSettings: (path, style) => call("POST", "/api/settings/save", { path, style }),
 
-  startRun: () => call("POST", "/api/run", {}),
+  startRun: (submission) => call("POST", "/api/run", submission),
   runStatus: (offset) => call("GET", offset === null || offset === undefined ? "/api/run" : `/api/run?offset=${offset}`),
   stopRun: () => call("POST", "/api/run/stop", {}),
 
@@ -94,6 +99,12 @@ export const api = {
     callFloats(`/api/results/series?${query({ level, param, index, reduce })}`),
   resultsComponentsMany: (steps, param, nuclide) =>
     callFloats(`/api/results/components?${query({ steps: steps.join(","), param, nuclide })}`),
+  /** Every instance's value of a per-instance component parameter: where each component's start, and the values. */
+  resultsInstances: async (step, param) => {
+    const buffer = await callBuffer(`/api/results/instances?${query({ step, param })}`);
+    const count = new Int32Array(buffer, 0, 1)[0];
+    return { offsets: new Int32Array(buffer, 4, count + 1), values: new Float32Array(buffer, 4 * (count + 2)) };
+  },
   resultsComponents: (step, param, nuclide) =>
     callFloats(`/api/results/components?${query({ step, param, nuclide })}`),
   resultsComponentHistory: async (param, nuclide, component, blocks, aggregate) => {

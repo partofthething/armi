@@ -132,14 +132,33 @@ defaults, which keeps a settings file short enough to read.
 
 Running the case
 ----------------
-**Run** (or Ctrl+Enter) runs the open case, exactly as ``python -m <app> run case.yaml`` would from a terminal:
-the application the UI was started with runs it, so ``python -m myapp gui`` runs it with ``myapp``'s plugins.
-A run reads the files on disk, so any unsaved blueprints or settings are saved first. It runs in its own process in
-the settings file's folder, where its outputs land, and its screen output goes to ``<case>.gui-run.log`` beside them.
+**Run…** (or Ctrl+Shift+Enter) asks where to run the open case and submits it there:
 
-A console docked under the workspace follows the log as it grows, with how long the run has taken and a Stop button
-that ends the run and anything it started. Hide the console and the run carries on; shift-click Run to bring it
-back, which also works after reloading the page. One run at a time.
+* **This machine**, in the settings file's folder;
+* **Another machine over SSH**: the case folder is copied into a folder there, run with the Python and set-up
+  commands you give, and copied back every 20 seconds while it runs and once more at the end;
+* **A Slurm cluster** whose compute nodes see this file system, with the CPUs, wall time and ``sbatch`` options you
+  give.
+
+Ctrl+Enter runs it again wherever the last one went, without asking. The form remembers its answers in the browser.
+
+A run is a :py:class:`~armi.cases.suite.CaseSuite` of one case, handed to the matching
+:py:mod:`~armi.cases.runners` backend, so it behaves like any case in a suite: the application the UI was started with
+runs it (``python -m myapp gui`` runs it with ``myapp``'s plugins); its job, worker log (``suite-worker.log``) and
+result live in the case folder; and a case whose inputs have not changed since it last succeeded is reported as up to
+date rather than run again, unless you tick *Run again*. A run reads the files on disk, so any unsaved blueprints or
+settings are saved first.
+
+A console docked under the workspace follows the run: how many of the case's time nodes are in, the latest thing ARMI
+reported as important, the log as it grows, how long it has taken, and a Stop button. Stopping leaves a
+``suite-stop`` file in the case folder, wherever it runs, and the worker ends the run and everything it started within
+a few seconds. Hide the console and the run carries on; shift-click Run to bring it back, which also works after
+reloading the page. One run at a time.
+
+With *Show results while it runs* ticked, the case's ``syncDbAfterWrite`` setting is turned on, so the database is
+copied out of the run's scratch space after every time node (the copy is renamed into place, so it is never seen half
+written). The first time node to arrive opens the database, the console's *Results* button goes to it, and the
+Results view picks up each new node as it lands, staying on the latest one if that is where it was.
 
 
 .. _results-view:
@@ -178,11 +197,27 @@ unfolded to the full core with *Full core*.
 Scroll to zoom and drag to pan; double-click fits the core again. Zoom in far enough and blocks open up into their
 pins, ducts and coolant, drawn from the component dimensions and pin positions stored in the database. With a
 component parameter chosen, each component is coloured by its own value, and once the pins are large enough each one
-carries its value. Zoomed out, a component parameter shows each block's largest (or mean, or smallest) component value.
+carries its value. Zoomed out, a component parameter shows each block's largest (or mean, or smallest) component value,
+unless *Pins: always* is chosen, which colours every pin by its own value at any zoom.
+
+A component parameter with a value per pin, such as ``pinPdens`` from a pin power reconstruction,
+colours and labels each pin with its own value. Hovering shows what is under the pointer: the
+assembly and block, and for a pin its number in its component, its lattice indices ``(i, j)``, its
+position in the block and its own value. *Hover info* in the toolbar, or the ``T`` key, turns that
+summary off when it is in the way, and *Block legend* (the ``L`` key) the list of components and
+their values drawn inside each block when zoomed in.
+
+A block parameter can also be shown one value per assembly: its blocks' peak, height-weighted average, minimum or
+total, chosen in the toolbar or from the *From blocks* list on the *Assembly* tab. Peak power density per assembly, or
+total power, are a click away.
 
 Click a block to select it. The inspector then charts its value over the whole history, and lists every parameter
 of that block at the current time node; click one to show it. The chart can follow the assembly wherever fuel
 management moves it, or stay at a core position and show whatever passes through.
+
+Below that, *Core at this node* lists the scalar core and reactor parameters at the time node on show, such as keff,
+power and time, and charts one of them over the whole history; click a row to chart it, and click the chart to jump to
+a time node.
 
 .. figure:: /.static/inputEditor-results-section.png
    :width: 100%

@@ -483,7 +483,37 @@ textarea.input { resize: vertical; min-height: 60px; font-family: var(--mono); f
   color: var(--text-dim);
 }
 .runpanel__state[data-state="running"]  { color: var(--amber); border-color: var(--amber-dim); }
-.runpanel__state[data-state="finished"] { color: var(--good);  border-color: var(--good); }
+.runpanel__state[data-state="finished"],
+.runpanel__state[data-state="cached"]   { color: var(--good);  border-color: var(--good); }
+.runpanel__where { color: var(--text-faint); font-family: var(--mono); white-space: nowrap; }
+.runpanel__progress { display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; }
+.runpanel__bar {
+  position: relative;
+  width: 120px;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--line-soft);
+  overflow: hidden;
+}
+.runpanel__bar-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 0;
+  background: var(--amber);
+  transition: width 0.4s ease;
+}
+.runpanel__nodes { font-family: var(--mono); color: var(--text-dim); }
+.runpanel__latest {
+  min-width: 0;
+  flex: 0 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-dim);
+}
+.runpanel__head .runpanel__spacer { flex: 1 0 8px; }
+.submit { min-width: min(520px, 80vw); }
+.submit__checks { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
 .runpanel__state[data-state="failed"],
 .runpanel__state[data-state="stopped"]  { color: var(--alarm); border-color: var(--alarm-dim); }
 .runpanel__log {
@@ -762,6 +792,7 @@ textarea.input { resize: vertical; min-height: 60px; font-family: var(--mono); f
 .results-blockparams { max-height: 340px; overflow-y: auto; margin-top: 6px; }
 .results-blockparams tr { cursor: pointer; }
 .results-blockparams tr.is-current td { color: var(--amber); }
+.results-unit { color: var(--text-faint); }
 
 /* ----------------------------------------------------------- fuel cost -- */
 /* The economics report as a page: the PDF's paper, palette and order, so the two read as one. */

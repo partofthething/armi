@@ -10,6 +10,7 @@
 
 import { formatValue } from "./colormaps.js";
 
+const OUTLINE_PINS_AT = 120; // pixels across a block before its pins are outlined as well as filled
 const MISSING = "#c9ced5";
 const OUTLINE = "rgba(20, 24, 30, 0.38)";
 const SHEET = "#f5f6f7";
@@ -205,8 +206,11 @@ export class CoreCanvas {
       if (!best) return null;
       const hit = { ...best.cell };
       if (scene.detail && this._detailOn()) {
-        const component = componentAt(scene.detail, best.cell, best.dx, best.dy, scene.geometry);
-        if (component !== null) hit.component = component;
+        const found = componentAt(scene.detail, best.cell, best.dx, best.dy, scene.geometry);
+        if (found !== null) {
+          hit.component = found.index;
+          if (found.pin != null) hit.pin = found.pin;
+        }
       }
       return hit;
     }
@@ -353,7 +357,9 @@ export class CoreCanvas {
     const thin = Math.min(0.8, Math.max(0.25, ppc * 0.02));
     context.lineWidth = thin;
 
+    const instances = detail.instances;
     for (const shape of design.drawOrder) {
+      if (values && instances && this._drawInstances(context, shape, instances, start, sx, sy, ppc)) continue;
       const path = new Path2D();
       if (shape.type === "DerivedShape") {
         polygonPath(path, corners, sx, sy, 1.02);
@@ -389,7 +395,8 @@ export class CoreCanvas {
         context.fillStyle = k >= 0 ? scene.table.css[k] : MISSING;
         context.fill(path, "evenodd");
       }
-      if (shape.type !== "DerivedShape") {
+      // Zoomed far out, outlines would be all there is to see; the colours say it alone.
+      if (shape.type !== "DerivedShape" && (!values || ppc * scene.geometry.pitchSize >= OUTLINE_PINS_AT)) {
         context.strokeStyle = values ? "rgba(20,24,30,0.35)" : "rgba(20,24,30,0.55)";
         context.stroke(path);
       }
@@ -397,10 +404,50 @@ export class CoreCanvas {
     context.restore();
 
     if (values && scene.showValues) {
-      if (!this._labelPins(context, design, values, start, sx, sy, ppc)) {
+      // The legend lists each component's one value, which says nothing about pins with values of
+      // their own and covers them; those wait until the pins are big enough to carry their numbers.
+      if (!this._labelPins(context, design, values, start, sx, sy, ppc) && !detail.instances && scene.blockLegend) {
         this._legendInside(context, design, values, start, sx, sy, ppc);
       }
     }
+  }
+
+  /**
+   * Each instance of a component (each pin of a pin array) in its own colour, for a parameter with
+   * a value per instance.
+   *
+   * @returns {boolean} whether the shape was drawn here
+   */
+  _drawInstances(context, shape, pins, start, sx, sy, ppc) {
+    const at = shape.at;
+    if (shape.type !== "Circle" || !at) return false;
+    const component = start + shape.index;
+    const from = pins.offsets[component];
+    const count = pins.offsets[component + 1] - from;
+    if (!count || count !== at.length / 2) return false;
+    const scene = this.scene;
+    const outer = (shape.od / 2) * ppc;
+    const inner = ((shape.id || 0) / 2) * ppc;
+    const outline = ppc * scene.geometry.pitchSize >= OUTLINE_PINS_AT;
+    for (let p = 0; p < count; p += 1) {
+      const px = sx + at[2 * p] * ppc;
+      const py = sy - at[2 * p + 1] * ppc;
+      const path = new Path2D();
+      path.moveTo(px + outer, py);
+      path.arc(px, py, outer, 0, 2 * Math.PI);
+      if (inner > 0.3) {
+        path.moveTo(px + inner, py);
+        path.arc(px, py, inner, 0, 2 * Math.PI);
+      }
+      const k = scene.componentIndex(pins.values[from + p]);
+      context.fillStyle = k >= 0 ? scene.table.css[k] : MISSING;
+      context.fill(path, "evenodd");
+      if (outline) {
+        context.strokeStyle = "rgba(20,24,30,0.35)";
+        context.stroke(path);
+      }
+    }
+    return true;
   }
 
   /**
@@ -426,17 +473,24 @@ export class CoreCanvas {
       const band = outer - inner;
       const solid = inner < 0.5;
       if (!solid && band < px * 1.15) continue;
-      const k = scene.componentIndex(values[start + shape.index]);
-      const text = formatValue(values[start + shape.index], scene.digits);
-      const textWidth = context.measureText(text).width;
-      if (solid ? textWidth > outer * 1.8 : textWidth > Math.sqrt(Math.max(outer * outer - inner * inner, 0)) * 1.8) continue;
       const at = shape.at;
       const count = at ? at.length / 2 : 1;
-      context.fillStyle = k >= 0 ? scene.table.ink[k] : "#3a414b";
+      // A parameter with a value per pin labels each pin with its own; otherwise every pin of the
+      // component carries the component's value.
+      const pins = scene.detail.instances;
+      const component = start + shape.index;
+      const from = pins ? pins.offsets[component] : 0;
+      const perPin = pins && at && pins.offsets[component + 1] - from === count;
+      const room = solid ? outer * 1.8 : Math.sqrt(Math.max(outer * outer - inner * inner, 0)) * 1.8;
       for (let p = 0; p < count; p += 1) {
         const x = sx + (at ? at[2 * p] * ppc : 0);
         const y = sy - (at ? at[2 * p + 1] * ppc : 0);
         if (x < -outer || y < -outer || x > width + outer || y > height + outer) continue;
+        const value = perPin ? pins.values[from + p] : values[component];
+        const text = formatValue(value, scene.digits);
+        if (context.measureText(text).width > room) continue;
+        const k = scene.componentIndex(value);
+        context.fillStyle = k >= 0 ? scene.table.ink[k] : "#3a414b";
         context.fillText(text, x, solid ? y : y - (outer + inner) / 2);
       }
     }
@@ -644,16 +698,20 @@ function componentAt(detail, cell, dx, dy, geometry) {
       const at = shape.at;
       const count = at ? at.length / 2 : 1;
       let best = Infinity;
+      let nearest = 0;
       for (let p = 0; p < count; p += 1) {
         const ex = dx - (at ? at[2 * p] : 0);
         const ey = dy - (at ? at[2 * p + 1] : 0);
-        best = Math.min(best, ex * ex + ey * ey);
+        if (ex * ex + ey * ey < best) {
+          best = ex * ex + ey * ey;
+          nearest = p;
+        }
       }
       const r = Math.sqrt(best);
-      if (r <= shape.od / 2 && r >= (shape.id || 0) / 2) return shape.index;
+      if (r <= shape.od / 2 && r >= (shape.id || 0) / 2) return { index: shape.index, pin: at ? nearest : null };
     } else if (shape.type === "Hexagon") {
       const reach = hexReach(dx, dy, geometry.cornerAngle);
-      if (reach <= shape.op / 2 && reach >= (shape.ip || 0) / 2) return shape.index;
+      if (reach <= shape.op / 2 && reach >= (shape.ip || 0) / 2) return { index: shape.index, pin: null };
     } else if (shape.type === "Square" || shape.type === "Rectangle") {
       const l = (shape.lengthOuter || shape.widthOuter) / 2;
       const w = shape.widthOuter / 2;
@@ -661,9 +719,9 @@ function componentAt(detail, cell, dx, dy, geometry) {
       const wi = (shape.widthInner || 0) / 2;
       const inside = Math.abs(dx) <= l && Math.abs(dy) <= w;
       const inHole = Math.abs(dx) < li && Math.abs(dy) < wi;
-      if (inside && !inHole) return shape.index;
+      if (inside && !inHole) return { index: shape.index, pin: null };
     } else if (shape.type === "DerivedShape") {
-      return shape.index;
+      return { index: shape.index, pin: null };
     }
   }
   return null;
