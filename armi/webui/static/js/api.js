@@ -102,6 +102,20 @@ export const api = {
   },
   resultsComponentRange: (param, nuclide) =>
     call("GET", `/api/results/componentRange?${query({ param, nuclide })}`),
+  fuelCost: (overrides) => call("POST", "/api/fuelcost", { overrides }),
+  fuelCostPdf: async (overrides) => {
+    const response = await fetch("/api/fuelcost/pdf", {
+      method: "POST",
+      headers: { "X-ARMI-Token": TOKEN, "Content-Type": "application/json" },
+      body: JSON.stringify({ overrides }),
+    });
+    if (!response.ok) {
+      const payload = await response.json().catch(() => null);
+      throw new ApiError(payload?.error || `The PDF failed (${response.status})`, response.status, payload);
+    }
+    return response.blob();
+  },
+  resultsNames: (topology) => call("GET", `/api/results/names?${query({ topology })}`),
   resultsDesigns: (topology) => call("GET", `/api/results/designs?${query({ topology })}`),
   resultsBlock: (step, block) => call("GET", `/api/results/block?${query({ step, block })}`),
 };

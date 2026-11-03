@@ -379,6 +379,21 @@ export class Results {
     return entry && !(entry instanceof Promise) ? entry : null;
   }
 
+  /** A block's name at a node, or "…" until the names of that node's topology have arrived. */
+  blockName(t, b) {
+    const id = this.steps[t].topology;
+    const names = this._names?.get(id);
+    if (names && !(names instanceof Promise)) return names.blockNames[b] ?? "—";
+    this._names ??= new Map();
+    if (!names) {
+      this._names.set(id, api.resultsNames(id).then((payload) => {
+        this._names.set(id, payload);
+        this._changed("names");
+      }, () => this._names.delete(id)));
+    }
+    return "…";
+  }
+
   // -- finding things ---------------------------------------------------------------------------
 
   /** The block of assembly `a` that spans height `z` at node `t`, as a canonical block index. */

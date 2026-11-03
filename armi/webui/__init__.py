@@ -29,6 +29,8 @@ The pieces
     How a plugin says its own settings should be edited.
 :py:mod:`armi.webui.results`
     Reads a results database straight from HDF5, fast enough to scrub through decades of it.
+:py:mod:`armi.webui.fuelcycle`
+    Weighs a run's fuel from its database and costs it with the economics plugin.
 :py:mod:`armi.webui.syntheticResults`
     Writes a made-up database of any size, for trying the results view on a big case.
 :py:mod:`armi.webui.server`

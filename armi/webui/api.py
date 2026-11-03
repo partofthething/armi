@@ -18,6 +18,16 @@ from armi.settings.fwSettings.globalSettings import CONF_LOADING_FILE, CONF_MATE
 from armi.webui import catalog, preview, results, runs, settingsdoc
 from armi.webui.document import BlueprintsDocument, DocumentError
 
+
+class Download:
+    """A file to hand the browser as a download rather than as JSON."""
+
+    def __init__(self, body: bytes, contentType: str, filename: str):
+        self.body = body
+        self.contentType = contentType
+        self.filename = filename
+
+
 # Suffixes offered by the file picker.
 BLUEPRINT_SUFFIXES = (".yaml", ".yml")
 RESULTS_SUFFIXES = (".h5", ".hdf5")
@@ -343,6 +353,7 @@ class Session:
         if self.results is not None:
             self.results.close()
         self.results = database
+        self._fuelCycle = None
         database.warm()
 
     def openResults(self, body):
@@ -431,6 +442,12 @@ class Session:
         except results.ResultsError as ee:
             return 400, {"error": str(ee)}
 
+    def resultsNames(self, query):
+        try:
+            return 200, self._needResults().names(query.get("topology") or "")
+        except results.ResultsError as ee:
+            return 400, {"error": str(ee)}
+
     def resultsDesigns(self, query):
         try:
             return 200, self._needResults().designs(query.get("topology") or "")
@@ -442,6 +459,46 @@ class Session:
             return 200, self._needResults().blockDetail(query.get("step") or "", int(query.get("block") or -1))
         except (results.ResultsError, ValueError) as ee:
             return 400, {"error": str(ee)}
+
+    # -- fuel cycle cost --------------------------------------------------------------------------
+
+    def _needFuelCycle(self):
+        from armi.webui.fuelcycle import FuelCycleFromResults
+
+        database = self._needResults()
+        if getattr(self, "_fuelCycle", None) is None or self._fuelCycle.results is not database:
+            self._fuelCycle = FuelCycleFromResults(database)
+        return self._fuelCycle
+
+    def fuelCost(self, body):
+        """The run's fuel cycle cost, at the case's prices or with the ones in ``overrides`` changed."""
+        overrides = body.get("overrides") or {}
+        if not isinstance(overrides, dict):
+            return 400, {"error": "Expected 'overrides' to be an object."}
+        try:
+            return 200, self._needFuelCycle().report(overrides)
+        except results.ResultsError as ee:
+            return 400, {"error": str(ee)}
+        except Exception as ee:
+            runLog.error(traceback.format_exc())
+            return 400, {"error": f"{type(ee).__name__}: {ee}"}
+
+    def fuelCostPdf(self, body):
+        """The same cost as the economics plugin's PDF report."""
+        import tempfile
+
+        try:
+            fuelCycle = self._needFuelCycle()
+            with tempfile.TemporaryDirectory() as scratch:
+                path = pathlib.Path(scratch) / "fuel-cost.pdf"
+                fuelCycle.pdf(path, body.get("overrides") or {})
+                data = path.read_bytes()
+        except results.ResultsError as ee:
+            return 400, {"error": str(ee)}
+        except Exception as ee:
+            runLog.error(traceback.format_exc())
+            return 400, {"error": f"{type(ee).__name__}: {ee}"}
+        return 200, Download(data, "application/pdf", f"{fuelCycle.cs.caseTitle}-fuel-cost.pdf")
 
     # -- running the case -------------------------------------------------------------------------
 

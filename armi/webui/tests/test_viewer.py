@@ -1,6 +1,7 @@
 """Tests for reading results databases quickly, checked against ARMI's own loader."""
 
 import http.client
+import json
 import os
 import shutil
 import tempfile
@@ -15,26 +16,38 @@ if not isConfigured():
     configure()
 
 from armi.bookkeeping.db.database import Database
+from armi.physics.economics import fuelCost
 from armi.webui import results
 from armi.webui.api import Session
+from armi.webui.fuelcycle import FuelCycleFromResults
 from armi.webui.server import TOKEN_HEADER, GuiServer
 from armi.webui.syntheticResults import writeSyntheticDatabase
 
+_SHARED = {}
+
+
+def setUpModule():
+    """One small database for every test here: two cycles of two nodes, third core, fuel reloaded once."""
+    scratch = tempfile.mkdtemp(prefix="armi-webui-results-")
+    path = os.path.join(scratch, "small.h5")
+    writeSyntheticDatabase(path, years=2, nodesPerYear=2, fullCore=False, split=False, componentTemperatures=False)
+    _SHARED.update(scratch=scratch, path=path)
+
+
+def tearDownModule():
+    shutil.rmtree(_SHARED["scratch"], ignore_errors=True)
+
 
 class _WithDatabase(unittest.TestCase):
-    """Build one small database for the whole class: two cycles of two nodes, third core."""
-
     @classmethod
     def setUpClass(cls):
-        cls.scratch = tempfile.mkdtemp(prefix="armi-webui-results-")
-        cls.path = os.path.join(cls.scratch, "small.h5")
-        writeSyntheticDatabase(cls.path, years=2, nodesPerYear=2, fullCore=False, split=False)
+        cls.scratch = _SHARED["scratch"]
+        cls.path = _SHARED["path"]
         cls.db = results.ResultsDatabase(cls.path)
 
     @classmethod
     def tearDownClass(cls):
         cls.db.close()
-        shutil.rmtree(cls.scratch, ignore_errors=True)
 
     def loaded(self, key):
         """The reactor at a node, the slow and authoritative way."""
@@ -65,7 +78,8 @@ class TestResultsDatabase(_WithDatabase):
         self.assertEqual(frames[0], frames[1])
         self.assertEqual(frames[2], frames[3])
         self.assertNotEqual(frames[0], frames[2])
-        self.assertEqual(len({self.db.topologyOf(key).id for key in self.db.stepKeys()}), 1)
+        topologies = [self.db.topologyOf(key) for key in self.db.stepKeys()]
+        self.assertEqual(len({topo.structureKey for topo in topologies}), 1)
 
     def test_positionsMatchArmi(self):
         key = "c01n01"
@@ -162,6 +176,65 @@ class TestResultsDatabase(_WithDatabase):
         with self.assertRaises(results.ResultsError):
             results.ResultsDatabase(bogus)
 
+    def test_freshFuelGetsItsOwnTopology(self):
+        """Fresh fuel loaded in place of discharged fuel changes the names but shares the structure."""
+        before, after = self.db.topologyOf("c00n01"), self.db.topologyOf("c01n00")
+        self.assertNotEqual(before.id, after.id)
+        self.assertEqual(before.structureKey, after.structureKey)
+        self.assertTrue(set(after.assemblyNames) - set(before.assemblyNames))
+        self.assertIs(before.parent, after.parent)
+        names = self.db.names(after.id)
+        self.assertEqual(len(names["blockNames"]), len(after.blockRows))
+
+
+class TestFuelCycleFromResults(_WithDatabase):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.fuelCycle = FuelCycleFromResults(cls.db)
+
+    def assertSameGroups(self, actual, expected):
+        self.assertEqual([(g.form, round(g.assay, 5)) for g in actual], [(g.form, round(g.assay, 5)) for g in expected])
+        for mine, theirs in zip(actual, expected):
+            self.assertAlmostEqual(mine.heavyMetal, theirs.heavyMetal, delta=1e-6 * theirs.heavyMetal)
+            self.assertAlmostEqual(mine.uranium, theirs.uranium, delta=1e-6 * theirs.uranium)
+            self.assertAlmostEqual(mine.u235, theirs.u235, delta=1e-6 * theirs.u235)
+
+    def test_initialCoreWeighsTheSameAsThePlugin(self):
+        with Database(self.path, "r") as db:
+            r = db.load(0, 0)
+        self.assertSameGroups(self.fuelCycle.inventory("c00n00", "auto"), fuelCost.fuelInventory(r.core, "auto"))
+
+    def test_reloadsAreTheFreshAssembliesTheRunLoaded(self):
+        with Database(self.path, "r") as db:
+            first, second = db.load(0, 0), db.load(1, 0)
+        seen = {a.getName() for a in first.core}
+        fresh = [a for a in second.core if a.getName() not in seen and fuelCost.isFresh(a)]
+        self.assertTrue(fresh)
+        lc, _cs = self.fuelCycle.cost()
+        self.assertEqual(lc.source, "run")
+        self.assertEqual(len(lc.reloads), 1)
+        self.assertSameGroups(lc.reloads[0].groups, fuelCost.fuelInventory(second.core, "auto", fresh))
+
+    def test_changingAPriceChangesTheCost(self):
+        base = self.fuelCycle.report()
+        dearer = self.fuelCycle.report({"econSwuCost": 2 * self.fuelCycle.cs["econSwuCost"]})
+        self.assertGreater(dearer["lcoe"], base["lcoe"])
+        swu = next(entry for entry in dearer["inputs"] if entry["name"] == "econSwuCost")
+        self.assertEqual(swu["value"], 2 * swu["caseValue"])
+        self.assertEqual(len(base["loads"]), 2)
+        self.assertTrue(base["keyPoints"])
+
+    def test_onlyEconomicsInputsCanChange(self):
+        with self.assertRaises(results.ResultsError):
+            self.fuelCycle.settingsWith({"power": 1.0})
+
+    def test_pdf(self):
+        path = os.path.join(self.scratch, "cost.pdf")
+        self.fuelCycle.pdf(path)
+        with open(path, "rb") as stream:
+            self.assertEqual(stream.read(4), b"%PDF")
+
 
 class TestHelpers(unittest.TestCase):
     def test_jaggedOwnersSkipEmptyObjects(self):
@@ -204,6 +277,21 @@ class TestResultsOverHttp(_WithDatabase):
         self.assertEqual(contentType, "application/octet-stream")
         total = sum(len(self.db.topologyOf(key).blockRows) for key in self.db.stepKeys())
         self.assertEqual(len(body), 4 * total)
+
+    def test_fuelCostOverHttp(self):
+        connection = http.client.HTTPConnection("127.0.0.1", self.server.port, timeout=60)
+        body = json.dumps({"overrides": {"econDiscountRate": 0.1}})
+        connection.request("POST", "/api/fuelcost", body=body, headers={TOKEN_HEADER: self.server.token})
+        response = connection.getresponse()
+        payload = json.loads(response.read())
+        self.assertEqual(response.status, 200)
+        self.assertAlmostEqual(payload["discountRate"], 0.1)
+
+        connection.request("POST", "/api/fuelcost/pdf", body="{}", headers={TOKEN_HEADER: self.server.token})
+        response = connection.getresponse()
+        self.assertEqual(response.getheader("Content-Type"), "application/pdf")
+        self.assertIn("attachment", response.getheader("Content-Disposition"))
+        self.assertEqual(response.read(4), b"%PDF")
 
     def test_unknownNodeIsAnError(self):
         status, _contentType, _body = self.get("/api/results/components?step=c99n99&param=temperatureInC")

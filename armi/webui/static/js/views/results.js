@@ -25,6 +25,12 @@ const DEFAULT_PARAMS = ["pdens", "power", "percentBu", "flux"];
 
 let viewer = null;
 
+/** Years from first startup at the node on the Results view's time slider, or null if there is none. */
+export function resultsNow() {
+  const step = viewer?.results?.steps[viewer.state.t];
+  return step && viewer.path === store.session?.results?.path ? step.time ?? null : null;
+}
+
 export function resultsView(ctx) {
   const info = store.session?.results;
   if (!info?.open) {
@@ -589,7 +595,7 @@ class ResultsViewer {
       const j = frame?.j[where.a];
       const rows = [
         ["assembly", topo.assemblyNames[where.a]],
-        ["block", where.b >= 0 ? topo.blockNames[where.b] : "—"],
+        ["block", where.b >= 0 ? results.blockName(state.t, where.b) : "—"],
         ["position", i !== undefined ? `(${i}, ${j})${results.geometry.shape === "hex" ? ` ring ${hexRing(i, j)}` : ""}` : "…"],
         ["height", where.b >= 0 ? `${formatValue(results.zbottom[base + where.b], 4)} to ${formatValue(results.ztop[base + where.b], 4)} cm` : "—"],
         ["value", formatValue(this._valueAt(state.t, where.a, where.b), 5)],
@@ -944,7 +950,7 @@ class ResultsViewer {
     const entry = this._paramEntry(this.state.param);
     const units = entry?.units && entry.units !== "None" ? ` ${entry.units}` : "";
     const lines = [
-      h("div.results-tooltip__title", topo.assemblyNames[hit.a], hit.b >= 0 ? `  ${topo.blockNames[hit.b]}` : ""),
+      h("div.results-tooltip__title", topo.assemblyNames[hit.a], hit.b >= 0 ? `  ${results.blockName(t, hit.b)}` : ""),
     ];
     if (frame) {
       const i = hit.copyI ?? frame.i[hit.a];

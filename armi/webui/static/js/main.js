@@ -17,6 +17,7 @@ import { nuclidesView } from "./views/nuclides.js";
 import { settingsView } from "./views/settings.js";
 import { yamlView } from "./views/yaml.js";
 import { openResults, resultsView } from "./views/results.js";
+import { fuelCostView } from "./views/fuelcost.js";
 
 const VIEWS = [
   { id: "core", label: "Core", icon: "core", view: coreView, needsBp: true },
@@ -28,6 +29,7 @@ const VIEWS = [
   { id: "settings", label: "Settings", icon: "settings", view: settingsView, needsBp: false },
   { id: "yaml", label: "File", icon: "yaml", view: yamlView, needsBp: true },
   { id: "results", label: "Results", icon: "results", view: resultsView, needsBp: false },
+  { id: "fuelcost", label: "Fuel $", icon: "fuelcost", view: fuelCostView, needsBp: false },
 ];
 
 const el = {

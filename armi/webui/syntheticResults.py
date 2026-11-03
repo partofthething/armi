@@ -74,7 +74,9 @@ def _splitBlocks(assembly):
     assembly.calculateZCoords()
 
 
-def writeSyntheticDatabase(path, years=60, nodesPerYear=4, fullCore=True, split=True, seed=7):
+def writeSyntheticDatabase(
+    path, years=60, nodesPerYear=4, fullCore=True, split=True, seed=7, componentTemperatures=True
+):
     """Write the database and return its path.
 
     Parameters
@@ -89,6 +91,11 @@ def writeSyntheticDatabase(path, years=60, nodesPerYear=4, fullCore=True, split=
         Unfold the third-core test inputs to a full core.
     split : bool
         Cut blocks finer, to about 20 per assembly.
+    componentTemperatures : bool
+        Give components temperatures that follow the power. ARMI recomputes a component's volume
+        from its temperature when it loads a reactor, and this does not change the stored volumes
+        to match, so with this on a reactor loaded from the file weighs slightly differently from
+        the numbers in it. Turn it off when comparing against ``Database.load``.
     seed : int
         For the shuffling, so the same arguments make the same file.
     """
@@ -107,6 +114,9 @@ def writeSyntheticDatabase(path, years=60, nodesPerYear=4, fullCore=True, split=
     r.p.cycle, r.p.timeNode, r.p.time = 0, 0, 0.0
     r.p.cycleLength = 365.25
 
+    # The stored settings describe the history actually written, so anything reading them (cycle
+    # lengths, what reloads there were) sees the same plant the numbers do.
+    cs = cs.modified(newSettings={"nCycles": years, "cycleLength": 365.25, "burnSteps": max(nodesPerYear - 1, 1)})
     db = Database(str(path), "w")
     with db:
         db.writeInputsToDB(cs)
@@ -114,7 +124,7 @@ def writeSyntheticDatabase(path, years=60, nodesPerYear=4, fullCore=True, split=
     runLog.important(f"Wrote the first node in {time.time() - started:.1f} s; cloning the rest.")
 
     with h5py.File(path, "r+") as h5:
-        _cloneTimeSteps(h5, years, nodesPerYear, seed)
+        _cloneTimeSteps(h5, years, nodesPerYear, seed, componentTemperatures)
     runLog.important(f"Wrote {path} ({path.stat().st_size / 1e6:.0f} MB) in {time.time() - started:.1f} s.")
     return path
 
@@ -205,7 +215,7 @@ class _Model:
             info["block"] = np.array([blockIndexOfRow.get(int(row), -1) for row in info["blockRow"]])
 
 
-def _cloneTimeSteps(h5, years, nodesPerYear, seed):
+def _cloneTimeSteps(h5, years, nodesPerYear, seed, componentTemperatures=True):
     rng = np.random.default_rng(seed)
     first = h5["c00n00"]
     model = _Model(first)
@@ -216,10 +226,18 @@ def _cloneTimeSteps(h5, years, nodesPerYear, seed):
     burnup = np.zeros(len(model.blockRows))
     residence = np.zeros(len(model.blockRows))
     dtYears = 1.0 / nodesPerYear
+    names = first["layout/name"][()].copy()
+    assemNum = first["HexAssembly/assemNum"][()].copy() if "assemNum" in first["HexAssembly"] else None
+    nextNumber = int(assemNum.max()) + 1 if assemNum is not None and len(assemNum) else 10000
 
     for cycle in range(years):
         if cycle:
-            placement = _shuffle(model, placement, burnup, residence, rng)
+            placement, discharged = _shuffle(model, placement, burnup, residence, rng)
+            # Fresh fuel is a new assembly, as it is when fuel management loads it: a new name and
+            # number for it and its blocks, which is how anything reading the history tells it apart
+            # from the fuel it replaced.
+            for assembly in discharged:
+                nextNumber = _rename(model, names, assemNum, assembly, nextNumber)
         for node in range(nodesPerYear):
             name = f"c{cycle:02d}n{node:02d}"
             if name != "c00n00":
@@ -238,6 +256,9 @@ def _cloneTimeSteps(h5, years, nodesPerYear, seed):
             inCore = blockAssembly >= 0
             location[model.locRow[model.blockRows[inCore]], :2] = ij[blockAssembly[inCore]]
             group["layout/location"][...] = location
+            group["layout/name"][...] = names
+            if assemNum is not None:
+                group["HexAssembly/assemNum"][...] = assemNum
 
             radial = np.zeros(len(model.blockRows))
             radial[inCore] = np.hypot(*xy[blockAssembly[inCore]].T) / (model.radius * 1.08)
@@ -268,7 +289,7 @@ def _cloneTimeSteps(h5, years, nodesPerYear, seed):
                     group["HexBlock"][key][...] = value
 
             fuelTemp = coolant + 260.0 * pdens / 300.0
-            _depleteComponents(group, model, burnup, coolant, fuelTemp)
+            _depleteComponents(group, model, burnup, coolant, fuelTemp, componentTemperatures)
             _updateBlockDensities(group, model, burnup)
 
             reactor = group["Reactor"]
@@ -304,15 +325,29 @@ def _shuffle(model, placement, burnup, residence, rng):
     byBurnup = fuel[np.argsort(assemblyBurnup[fuel] + rng.normal(0, 1.0, len(fuel)))]
     newPlacement = placement.copy()
     newPlacement[byBurnup] = slotsByRadius
-    return newPlacement
+    return newPlacement, discharged
 
 
-def _depleteComponents(group, model, burnup, coolant, fuelTemp):
+def _rename(model, names, assemNum, assembly, number):
+    """Give an assembly and its blocks the names of a new assembly with this number; return the next number."""
+    width = names.dtype.itemsize
+    row = model.assemblyRows[assembly]
+    names[row] = f"A{number:04d}".encode()[:width]
+    for block in np.flatnonzero(model.blockToAssembly == assembly):
+        old = names[model.blockRows[block]].decode()
+        suffix = old.split("-", 1)[1] if "-" in old else str(block)
+        names[model.blockRows[block]] = f"B{number:04d}-{suffix}".encode()[:width]
+    if assemNum is not None:
+        assemNum[assembly] = number
+    return number + 1
+
+
+def _depleteComponents(group, model, burnup, coolant, fuelTemp, temperatures=True):
     for name, info in model.components.items():
         sub = group[name]
         block = info["block"]
         valid = block >= 0
-        if info["temperature"] is not None:
+        if temperatures and info["temperature"] is not None:
             rowsInType = len(info["temperature"])
             temperature = np.array(info["temperature"], dtype=float)
             isFuel = np.zeros(rowsInType, bool)

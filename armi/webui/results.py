@@ -29,6 +29,7 @@ browser lays out the same order from the topology, so a parameter is just a flat
 with nothing else to say where each one goes.
 """
 
+import copy
 import hashlib
 import pathlib
 import re
@@ -149,6 +150,7 @@ class _Topology:
         self.blockRows = blockRows
         self.blockAssembly = np.searchsorted(self.assemblyRows, parent[blockRows])
         self.blocksPerAssembly = np.bincount(self.blockAssembly, minlength=len(self.assemblyRows))
+        self.blockStart = np.concatenate([[0], np.cumsum(self.blocksPerAssembly)])
 
         isBlock = np.zeros(rows, dtype=bool)
         isBlock[blockRows] = True
@@ -158,23 +160,41 @@ class _Topology:
         self.componentsPerBlock = np.bincount(self.componentBlock, minlength=len(blockRows))
         self.componentStart = np.concatenate([[0], np.cumsum(self.componentsPerBlock)])
 
-        self.assemblyNames = names[self.assemblyRows].tolist()
-        self.blockNames = names[blockRows]
-        self.componentNames = names[compRows]
+        self._setNames(names)
         self.blockGrid = gridIndex[blockRows]
         self.blockTypes = typeNames[blockRows]
         self.assemblyTypes = typeNames[self.assemblyRows]
         self.componentTypes = typeNames[compRows]
         self.id = None
         self.firstStep = None
+        self.structureKey = None
         self.designs = None
 
+    def _setNames(self, names):
+        self.assemblyNames = names[self.assemblyRows].tolist()
+        self.blockNames = names[self.blockRows]
+        self.componentNames = names[self.componentRows]
+
+    def renamed(self, names):
+        """The same structure with other names, as when fuel is discharged and fresh fuel takes its place.
+
+        Everything but the names is shared with this topology, so this costs a decode of the names
+        and nothing else.
+        """
+        twin = copy.copy(self)
+        twin._setNames(np.array(_decode(names)))
+        twin.id = None
+        twin.firstStep = None
+        twin.designs = None
+        return twin
+
     def toJson(self):
+        # Block names are left out: a long history with fuel discharged every cycle has a set of them
+        # per cycle, which is megabytes nobody needs until they hover over a block. See ``names``.
         return {
             "id": self.id,
             "assemblyNames": self.assemblyNames,
             "blocksPerAssembly": self.blocksPerAssembly.tolist(),
-            "blockNames": self.blockNames.tolist(),
             "blockCount": int(len(self.blockRows)),
             "componentCount": int(len(self.componentRows)),
         }
@@ -205,7 +225,9 @@ class ResultsDatabase:
         self.steps = self._findSteps()
         if not self.steps:
             raise ResultsError(f"{self.path.name} has no time nodes in it.")
-        self._topologies = {}  # hash -> topology
+        self._structures = {}  # hash of the tree's shape -> the first topology with it
+        self._topologies = {}  # hash of the shape and the names -> topology
+        self._designCache = {}  # hash of the shape and component names -> block insides
         self._stepTopology = {}  # node -> topology
         self._positions = {}  # node -> (frame id, assembly i/j)
         self._frameIds = {}  # hash of positions -> frame id
@@ -257,17 +279,38 @@ class ResultsDatabase:
             types = layout["type"][()]
             numChildren = layout["numChildren"][()]
             locationTypes = layout["locationType"][()]
-            topoKey = hashlib.blake2b(
+            names = layout["name"][()]
+            structureKey = hashlib.blake2b(
                 types.tobytes() + numChildren.tobytes() + locationTypes.tobytes(), digest_size=12
             ).hexdigest()
+            # Names are keyed separately: discharging fuel and loading fresh assemblies in its place
+            # changes the names and nothing else, and following an assembly needs the right ones.
+            topoKey = structureKey + hashlib.blake2b(names.tobytes(), digest_size=8).hexdigest()
             topology = self._topologies.get(topoKey)
             if topology is None:
-                topology = _Topology(types, numChildren, locationTypes, layout["name"][()], layout["gridIndex"][()])
+                structure = self._structures.get(structureKey)
+                if structure is None:
+                    topology = _Topology(types, numChildren, locationTypes, names, layout["gridIndex"][()])
+                    self._structures[structureKey] = topology
+                else:
+                    topology = structure.renamed(names)
                 topology.id = f"t{len(self._topologies)}"
                 topology.firstStep = key
+                topology.structureKey = structureKey
                 self._topologies[topoKey] = topology
             self._stepTopology[key] = topology
             return topology
+
+    def names(self, topologyId):
+        """Every assembly and block name of a topology."""
+        topo = self._topologyById(topologyId)
+        return {"assemblyNames": topo.assemblyNames, "blockNames": topo.blockNames.tolist()}
+
+    def _topologyById(self, topologyId):
+        topo = next((each for each in self._topologies.values() if each.id == topologyId), None)
+        if topo is None:
+            raise ResultsError(f"There is no topology {topologyId!r}.")
+        return topo
 
     def topologies(self):
         """Every node's topology, as ``(topologies by id, topology id per node)``."""
@@ -351,12 +394,24 @@ class ResultsDatabase:
         grid = self._gridParams(key)[self.topologyOf(key).coreGrid]
         return _planarGeometry(grid)
 
+    def coreGrid(self):
+        """ARMI's own grid object for the core, rebuilt from the stored parameters, or None if it cannot be."""
+        if self._coreGrid is False:
+            self._coreGrid = self._buildCoreGrid()
+        return self._coreGrid
+
+    def powerMultiplier(self) -> float:
+        """How many copies of the modelled core make the whole core: 3 for a third, 1 for a full core."""
+        grid = self.coreGrid()
+        try:
+            return float(grid.symmetry.symmetryFactor())
+        except Exception:
+            return 1.0
+
     def symmetricEquivalents(self, ij):
         """For a partial core, where each assembly's copies would sit in the full core, or None."""
-        if self._coreGrid is False:
-            symmetry = (self.coreGeometry().get("symmetry") or "").lower()
-            self._coreGrid = None if not symmetry or symmetry.startswith("full") else self._buildCoreGrid()
-        grid = self._coreGrid
+        symmetry = (self.coreGeometry().get("symmetry") or "").lower()
+        grid = None if not symmetry or symmetry.startswith("full") else self.coreGrid()
         if grid is None:
             return None
         out = []
@@ -612,10 +667,13 @@ class ResultsDatabase:
         out once per topology.
         """
         with self._lock:
-            topo = next((each for each in self._topologies.values() if each.id == topologyId), None)
-            if topo is None:
-                raise ResultsError(f"There is no topology {topologyId!r}.")
+            topo = self._topologyById(topologyId)
             if topo.designs is not None:
+                return topo.designs
+            # Renaming assemblies does not change what is in their blocks, so share the work.
+            designKey = topo.structureKey + hashlib.blake2b(topo.componentNames.tobytes(), digest_size=8).hexdigest()
+            if designKey in self._designCache:
+                topo.designs = dict(self._designCache[designKey], topology=topo.id)
                 return topo.designs
             key = topo.firstStep
             group = self._group(key)
@@ -695,6 +753,7 @@ class ResultsDatabase:
                 blockDesign.append(designIndex[signature])
 
             topo.designs = {"topology": topo.id, "designs": designs, "blockDesign": blockDesign}
+            self._designCache[designKey] = topo.designs
             return topo.designs
 
     def _flagsOf(self, group, typeNames, indexInData):

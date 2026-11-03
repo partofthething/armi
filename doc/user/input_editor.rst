@@ -200,6 +200,28 @@ millisecond or two per frame. To try it on a large case without running one, mak
     $ python -m armi.webui.syntheticResults big.h5 --years 60 --nodes-per-year 4
 
 
+Fuel cycle cost
+---------------
+.. figure:: /.static/inputEditor-fuelcost.png
+   :width: 100%
+   :alt: The fuel cycle cost view
+
+   The fuel cycle cost of the same synthetic 60-year history: every reload the run's fuel management loaded, weighed
+   from the database and priced at the case's settings.
+
+*Fuel $* turns the open database into the economics plugin's fuel cycle cost report: the initial core from the mine to
+spent fuel, where each $/MWh goes, the fuel bought for every load, cycle by cycle costs, cumulative spend, what moves
+the cost, and the basis behind it. It works whether or not the plugin was on during the run.
+
+The fuel is weighed from what the run stored (each component's number densities and volume), exactly as the plugin
+weighs a live core, and the reloads are the assemblies that first appear in the core at the start of a cycle with no
+burnup, as the plugin finds them during a run. Everything after that is the plugin's own costing.
+
+The prices, enrichment plant assumptions, efficiency, discount rate, lead times and where the reloads come from are on
+the right, set from the case. Change one and the whole page follows; nothing is written to the case, and the reset
+arrows put a value back. *Download PDF report* writes the plugin's four-page PDF at whatever prices are showing.
+
+
 Teaching the editor about your settings
 =======================================
 Most settings need nothing more than their type, default and options to get a sensible control. A plugin with many

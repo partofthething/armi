@@ -16,7 +16,6 @@ Everything is laid out in inches on a fixed page so the report looks the same fo
 
 import datetime
 import math
-from dataclasses import replace
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -25,7 +24,7 @@ from matplotlib.lines import Line2D
 from matplotlib.patches import FancyArrowPatch, FancyBboxPatch, Rectangle
 from matplotlib.ticker import MaxNLocator
 
-from armi.physics.economics import fuelCost
+from armi.physics.economics import fuelCost, summary
 
 #: One color per cost category, in a fixed order (a CVD-checked categorical palette).
 CATEGORY_COLORS = dict(zip(fuelCost.COST_CATEGORIES, ("#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4")))
@@ -254,13 +253,13 @@ class _Page:
 def _summaryPage(page, lc):
     core = lc.fuelCost
     first = lc.cycleSummaries()[0]
-    page.pageTitle("Fuel cycle cost", _basisLine(lc))
+    page.pageTitle("Fuel cycle cost", summary.basisLine(lc))
     y = page.tiles(
         PAGE_HEIGHT - 1.7,
         [
-            ("Initial core", _money(core.total), f"fresh fuel, {core.heavyMetal / 1e3:,.1f} tHM"),
+            ("Initial core", summary.money(core.total), f"fresh fuel, {core.heavyMetal / 1e3:,.1f} tHM"),
             ("Fuel cycle cost", f"${lc.lcoe:.2f}", f"per MWh, levelized at {lc.discountRate:.0%} real"),
-            ("Plant-life fuel", _money(lc.totalSpend), f"{len(lc.charges)} loads + spent fuel, undiscounted"),
+            ("Plant-life fuel", summary.money(lc.totalSpend), f"{len(lc.charges)} loads + spent fuel, undiscounted"),
             ("Electricity", f"{lc.totalGeneration / 1e6:,.1f} TWh", f"net, over {lc.years:.0f} years"),
         ],
     )
@@ -409,7 +408,7 @@ def _summaryPage(page, lc):
         [
             fuelCost.CATEGORY_LABELS[cat],
             quantity[cat],
-            _unitPrice(cat, core),
+            summary.unitPrice(cat, core),
             f"{initial[cat] / 1e6:,.2f}" if cat in initial else "–",
             f"{lifetime[cat] / 1e6:,.1f}",
             f"{levelized[cat]:.2f}",
@@ -421,7 +420,7 @@ def _summaryPage(page, lc):
     y = page.table(y - 0.12, columns, rows, total, swatches=[CATEGORY_COLORS[c] for c in fuelCost.COST_CATEGORIES])
 
     # key points
-    points = _keyPoints(lc)
+    points = summary.keyPoints(lc)
     top = y - 0.32
     height = 0.3 + 0.22 * len(points)
     page.box(MARGIN, top - height, CONTENT_WIDTH, height)
@@ -439,26 +438,7 @@ def _reloadsPage(page, lc):
     # fuel utilization
     y = PAGE_HEIGHT - 1.95
     page.heading(y, "Fuel utilization", "over the plant's life, every load included")
-    loads = lc.costs
-    heavyMetal = sum(c.heavyMetal for c in loads)
-    natural = sum(c.oreUranium for c in loads)
-    swu = sum(c.swu for c in loads)
-    uranium = sum(c.uranium for c in loads)
-    gwh = lc.totalGeneration / 1e3
-    reloads = loads[1:] or loads
-    reloadU = sum(c.uranium for c in reloads)
-    reloadAssay = sum(c.assay * c.uranium for c in reloads) / reloadU if reloadU else 0.0
-    feedPerProduct = sum(c.feed for c in reloads) / reloadU if reloadU else 0.0
-    metrics = [
-        ("Discharge burnup", f"{lc.dischargeBurnup:,.1f}", "GWd/tHM, life average"),
-        ("Specific power", f"{lc.thermalPowerMW / (loads[0].heavyMetal / 1e3):,.1f}", "kW/kgHM, initial core"),
-        ("Reload enrichment", f"{100 * reloadAssay:.2f}", f"wt% U-235, feed/product {feedPerProduct:.1f}"),
-        ("Fresh fuel", f"${sum(c.total for c in loads) / heavyMetal:,.0f}", "per kgHM, front end"),
-        ("Natural uranium", f"{natural / gwh:,.2f}", "kgU per GWh(e)"),
-        ("Separative work", f"{swu / gwh:,.2f}", "kg-SWU per GWh(e)"),
-        ("Uranium utilization", f"{lc.thermalEnergyMWd / natural:,.2f}", "MWd(th) per kg natural U"),
-        ("Fuel throughput", f"{heavyMetal / 1e3 / lc.years:,.2f}", f"tHM/y; {uranium / 1e3:,.1f} tU in all"),
-    ]
+    metrics = summary.utilization(lc)
     page.metricGrid(y - 0.25, metrics, columns=4)
     y -= 2.05
 
@@ -531,7 +511,7 @@ def _reloadsPage(page, lc):
             f"{s.costPerMWh:.2f}",
         ]
 
-    groups = _groupAlike(summaries)
+    groups = summary.groupAlike(summaries)
     shown = len(groups) if len(groups) <= MAX_CYCLE_ROWS else MAX_CYCLE_ROWS - 1
     rows = [row(g) for g in groups[:shown]]
     if shown < len(groups):
@@ -562,7 +542,9 @@ def _reloadsPage(page, lc):
         f"{lc.undiscountedLcoe:.2f}",
     ]
     y = page.table(y - 0.12, columns, rows, total)
-    page.note(y - 0.2, f"Reloads: {_reloadsText(lc)}. Fuel still in the core after the last cycle is not credited.")
+    page.note(
+        y - 0.2, f"Reloads: {summary.reloadsText(lc)}. Fuel still in the core after the last cycle is not credited."
+    )
     page.note(
         y - 0.37,
         "Fuel cost: the fuel bought for a cycle plus its spent fuel fees, over that cycle's electricity, "
@@ -576,7 +558,7 @@ def _cashFlowPage(page, lc):
     # cumulative spend
     y = PAGE_HEIGHT - 1.95
     page.heading(
-        y, "Cumulative fuel spend", f"$M, undiscounted, as paid; {_money(lc.totalSpend)} over the plant's life"
+        y, "Cumulative fuel spend", f"$M, undiscounted, as paid; {summary.money(lc.totalSpend)} over the plant's life"
     )
     legendY = y - 0.36
     for i, cat in enumerate(fuelCost.COST_CATEGORIES):
@@ -584,23 +566,12 @@ def _cashFlowPage(page, lc):
         page.box(lx, legendY - 0.01, 0.09, 0.09, color=CATEGORY_COLORS[cat], radius=0.015)
         page.text(lx + 0.15, legendY, SHORT_LABELS[cat], size=7.5, color=SECONDARY)
     ax = page.axes(MARGIN + 0.5, y - 2.25, CONTENT_WIDTH - 0.5, 1.65)
-    flows = lc.purchases
-    t0 = min(year for year, _ in flows)
-    times = np.linspace(t0, lc.years, 600)
+    times, paid = summary.cumulativeSpend(lc)
+    t0 = times[0]
+    times = np.array(times)
     lower = np.zeros_like(times)
     for cat in fuelCost.COST_CATEGORIES:
-        if cat == "backEnd":
-            rate = lc.unitCosts.backEndPerMWh * lc.electricPowerMW * 24 * 365.25 / 1e6
-            paid = np.array(
-                [
-                    sum(rate * c.capacityFactor * min(max(tt - c.start, 0.0), c.length) for c in lc.cycles)
-                    for tt in times
-                ]
-            )
-        else:
-            cash = lc.cashFlows(cat)
-            paid = np.array([sum(a for yr, a in cash if yr <= tt) for tt in times]) / 1e6
-        upper = lower + paid
+        upper = lower + np.array(paid[cat])
         ax.fill_between(times, lower, upper, color=CATEGORY_COLORS[cat], linewidth=0, step=None)
         lower = upper
     ax.plot(times, lower, color=INK, linewidth=1.0)
@@ -667,19 +638,8 @@ def _cashFlowPage(page, lc):
     # from undiscounted to levelized
     y -= 1.2 + height
     page.heading(y, "From fuel bought to levelized cost", "$/MWh: what the time value of money adds")
-    noLead = lc.repriced(replace(lc.unitCosts, leadTimes={})).lcoe
-    steps = [
-        ("Undiscounted", 0.0, lc.undiscountedLcoe, MUTED, "every dollar paid over every MWh made"),
-        (
-            "Discounting",
-            lc.undiscountedLcoe,
-            noLead,
-            "#6f9ad8",
-            f"fuel is paid before its electricity, at {lc.discountRate:.0%}",
-        ),
-        ("Paying ahead of loading", noLead, lc.lcoe, "#9dbbe6", "each step paid its lead time before loading"),
-        ("Levelized fuel cycle cost", 0.0, lc.lcoe, ACCENT, ""),
-    ]
+    colors = (MUTED, "#6f9ad8", "#9dbbe6", ACCENT)
+    steps = [(name, start, end, color, note) for (name, start, end, note), color in zip(summary.waterfall(lc), colors)]
     ax = page.axes(MARGIN + 1.75, y - 1.55, CONTENT_WIDTH - 1.75, 1.25)
     for i, (name, start, end, color, note) in enumerate(steps):
         ax.barh(i, end - start, left=start, height=0.52, color=color, linewidth=0)
@@ -762,7 +722,7 @@ def _basisPage(page, lc):
             else f"{len(lc.cycles)}, {lc.years / len(lc.cycles):.2f} y average",
         ),
         ("Operating life", f"{lc.years:.1f} y, {lc.fullPowerYears:.1f} EFPY"),
-        ("Reloads", "from the run" if lc.source == "run" else _projectedText(lc)),
+        ("Reloads", "from the run" if lc.source == "run" else summary.projectedText(lc)),
         ("Discount rate", f"{lc.discountRate:.1%} real"),
     ]
     u = lc.unitCosts
@@ -821,102 +781,3 @@ def _stackedBar(ax, x, width, segments, scale):
             Rectangle((x - width / 2, bottom), width, max(value - gap, value * 0.5), facecolor=color, edgecolor="none")
         )
         bottom += value
-
-
-def _keyPoints(lc):
-    """Three or four computed sentences a decision maker should take away."""
-    levelized = lc.lcoeByCategory()
-    biggest = max(levelized, key=levelized.get)
-    points = [
-        f"{fuelCost.CATEGORY_LABELS[biggest]} is the largest part of the fuel cycle cost: "
-        f"${levelized[biggest]:.2f} of every ${lc.lcoe:.2f}/MWh ({levelized[biggest] / lc.lcoe:.0%})."
-    ]
-    if lc.reloads:
-        costs = lc.costs[1:]
-        mean = sum(c.total for c in costs) / len(costs)
-        interval = lc.years / len(lc.cycles)
-        what = "measured from the run" if lc.source == "run" else f"{lc.reloadFraction:.0%} of the core"
-        points.append(
-            f"After the {_money(lc.costs[0].total)} initial core, {len(costs)} reloads ({what}) average {_money(mean)} "
-            f"each, about every {interval:.1f} years."
-        )
-    name, low, high, lowLabel, highLabel = lc.sensitivities()[0]
-    points.append(
-        f"The biggest lever is {_leverName(name)}: {lowLabel} to {highLabel} moves the cost from ${low:.2f} "
-        f"to ${high:.2f}/MWh."
-    )
-    noLead = lc.repriced(replace(lc.unitCosts, leadTimes={})).lcoe
-    points.append(
-        f"Buying fuel ahead of loading adds ${lc.lcoe - noLead:.2f}/MWh at a {lc.discountRate:.0%} discount rate; "
-        f"undiscounted, the fuel costs ${lc.undiscountedLcoe:.2f}/MWh."
-    )
-    return points
-
-
-def _groupAlike(summaries):
-    """Runs of consecutive cycles that load the same fuel and make the same electricity."""
-
-    def alike(a, b):
-        return (
-            math.isclose(a.frontEnd, b.frontEnd, rel_tol=1e-6, abs_tol=1e-3)
-            and math.isclose(a.generation, b.generation, rel_tol=1e-6)
-            and math.isclose(a.length, b.length, rel_tol=1e-6)
-        )
-
-    groups = []
-    for s in summaries:
-        if groups and alike(groups[-1][-1], s):
-            groups[-1].append(s)
-        else:
-            groups.append([s])
-    return groups
-
-
-def _leverName(name):
-    """A sensitivity's input as it reads mid-sentence."""
-    if name in fuelCost.CATEGORY_LABELS.values():
-        return f"the {name[0].lower()}{name[1:]} price"
-    return f"the {name.lower()}"
-
-
-def _basisLine(lc):
-    cycle = lc.cycles[0]
-    return "  ·  ".join(
-        [
-            f"{lc.thermalPowerMW:,.0f} MWt",
-            f"{lc.electricPowerMW:,.1f} MWe net",
-            f"{lc.capacityFactor:.0%} capacity factor",
-            f"{len(lc.cycles)} cycles of {cycle.length * cycle.capacityFactor:.2f} EFPY",
-            f"{lc.discountRate:.0%} real discount rate",
-        ]
-    )
-
-
-def _unitPrice(category, core):
-    u = core.unitCosts
-    if category == "ore":
-        return f"${u.orePerLbU3O8:.0f}/lb U3O8"
-    if category == "conversion":
-        return f"${u.conversionPerKgU:.0f}/kgU"
-    if category == "enrichment":
-        return f"${u.swu:.0f}/SWU"
-    if category == "fabrication":
-        prices = {u.fabricationPerKgHM[g.group.form] for g in core.groups}
-        return f"${prices.pop():,.0f}/kgHM" if len(prices) == 1 else "by form"
-    return f"${u.backEndPerMWh:.2f}/MWh"
-
-
-def _projectedText(lc):
-    return f"projected, {lc.reloadFraction:.0%} of the core" if lc.reloads else "none"
-
-
-def _reloadsText(lc):
-    if lc.source == "run":
-        return f"{len(lc.reloads)} batches of fresh fuel, as loaded by the run's fuel management"
-    if not lc.reloads:
-        return "none (one core for the whole life)"
-    return f"projected as {lc.reloadFraction:.0%} of the initial core at the start of each later cycle"
-
-
-def _money(dollars):
-    return f"${dollars / 1e9:,.2f}B" if dollars >= 1e9 else f"${dollars / 1e6:,.1f}M"

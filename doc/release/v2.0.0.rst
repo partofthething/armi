@@ -30,6 +30,12 @@ when zoomed in. Selecting a block charts it through the whole history, following
 reads the HDF5 file directly rather than rebuilding reactors, so a 60-year history of a 313-assembly core scrubs at a
 millisecond or two a frame. ``python -m armi.webui.syntheticResults`` writes a database that size for trying it out.
 
+Next to it, *Fuel $* turns any run's database into the economics plugin's fuel cycle cost report, on a page in the
+browser: the fuel is weighed from the stored number densities and volumes and the reloads are found from the assemblies
+each cycle loads fresh, then costed with the plugin's own code. Prices and assumptions can be changed on the page,
+which follows as you type, and the PDF downloaded at any of them. The figures behind the PDF moved to
+``armi.physics.economics.summary`` so the PDF and the page share them; the PDF is unchanged.
+
 .. figure:: /.static/inputEditor-core.png
    :width: 100%
    :alt: Core map view of the input editor
@@ -79,6 +85,13 @@ millisecond or two a frame. ``python -m armi.webui.syntheticResults`` writes a d
 
    **Results, zoomed in.** Each pin, bond, clad, duct and coolant region coloured by its own ``temperatureInC``, and
    one block's fuel temperature charted through sixty years. (Synthetic values.)
+
+.. figure:: /.static/inputEditor-fuelcost.png
+   :width: 100%
+   :alt: Fuel cycle cost view of the editor
+
+   **Fuel cycle cost.** The economics report for a run, worked out from its database, with every price editable.
+   (Synthetic values.)
 
 Fuel cycle economics
 ====================

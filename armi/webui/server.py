@@ -29,7 +29,7 @@ import webbrowser
 from pathlib import Path
 
 from armi import runLog
-from armi.webui.api import Session
+from armi.webui.api import Download, Session
 
 STATIC_ROOT = Path(__file__).parent / "static"
 TOKEN_HEADER = "X-ARMI-Token"
@@ -229,6 +229,10 @@ class _Handler(http.server.BaseHTTPRequestHandler):
         except Exception as ee:  # pragma: no cover - last resort so the editor stays up
             runLog.error(f"Unhandled error serving {method} {path}: {ee}")
             status, payload = 500, {"error": f"{type(ee).__name__}: {ee}"}
+        if isinstance(payload, Download):
+            disposition = f'attachment; filename="{payload.filename}"'
+            self._send(status, payload.body, payload.contentType, [("Content-Disposition", disposition)])
+            return
         if isinstance(payload, (bytes, bytearray)):
             # Result arrays go as raw float32. As JSON, a parameter's whole history would be several
             # times larger and take the browser longer to parse than to draw.
@@ -265,6 +269,9 @@ class _Handler(http.server.BaseHTTPRequestHandler):
             ("GET", "/api/results/components"): lambda: session.resultsComponents(query),
             ("POST", "/api/results/componentHistory"): lambda: session.resultsComponentHistory(body),
             ("GET", "/api/results/componentRange"): lambda: session.resultsComponentRange(query),
+            ("POST", "/api/fuelcost"): lambda: session.fuelCost(body),
+            ("POST", "/api/fuelcost/pdf"): lambda: session.fuelCostPdf(body),
+            ("GET", "/api/results/names"): lambda: session.resultsNames(query),
             ("GET", "/api/results/designs"): lambda: session.resultsDesigns(query),
             ("GET", "/api/results/block"): lambda: session.resultsBlock(query),
         }
