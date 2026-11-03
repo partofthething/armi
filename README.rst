@@ -11,6 +11,13 @@ utilities working in concert. It is made for and by professional reactor analysi
    problems on `this fork's issue tracker <https://github.com/partofthething/armi/issues>`_, not to TerraPower.
    Trademark and license details are under License, below.
 
+.. figure:: https://raw.githubusercontent.com/partofthething/armi/main/doc/.static/inputEditor-results.png
+   :alt: ARMI's results viewer showing power density across a full hexagonal core, with one assembly's history charted
+
+   Sixty years of a 313-assembly core in the `results viewer`_: drag through time and height, zoom down to individual
+   pins, and follow any assembly through its shuffles. Open any run's database with ``armi gui case.h5``. (The values
+   here are synthetic, from ``python -m armi.webui.syntheticResults``.)
+
 ARMI:
 
 * Provides a hub-and-spoke mechanism to standardize communication and coupling between physics kernels and the
@@ -372,3 +379,4 @@ that have MIT or BSD licenses.
 .. _User Manual: https://partofthething.github.io/armi/user/index.html
 .. _release notes: https://partofthething.github.io/armi/release/index.html
 .. _input editor: https://partofthething.github.io/armi/user/input_editor.html
+.. _results viewer: https://partofthething.github.io/armi/user/input_editor.html#results
