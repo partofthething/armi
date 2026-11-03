@@ -229,6 +229,11 @@ class _Handler(http.server.BaseHTTPRequestHandler):
         except Exception as ee:  # pragma: no cover - last resort so the editor stays up
             runLog.error(f"Unhandled error serving {method} {path}: {ee}")
             status, payload = 500, {"error": f"{type(ee).__name__}: {ee}"}
+        if isinstance(payload, (bytes, bytearray)):
+            # Result arrays go as raw float32. As JSON, a parameter's whole history would be several
+            # times larger and take the browser longer to parse than to draw.
+            self._send(status, bytes(payload), "application/octet-stream")
+            return
         self._sendJson(status, payload)
 
     def _route(self, method, path, body, query):
@@ -253,6 +258,15 @@ class _Handler(http.server.BaseHTTPRequestHandler):
             ("POST", "/api/run"): lambda: session.startRun(body),
             ("GET", "/api/run"): lambda: session.runStatus(query),
             ("POST", "/api/run/stop"): lambda: session.stopRun(body),
+            ("GET", "/api/results"): session.resultsSummary,
+            ("POST", "/api/results/open"): lambda: session.openResults(body),
+            ("GET", "/api/results/positions"): lambda: session.resultsPositions(query),
+            ("GET", "/api/results/series"): lambda: session.resultsSeries(query),
+            ("GET", "/api/results/components"): lambda: session.resultsComponents(query),
+            ("POST", "/api/results/componentHistory"): lambda: session.resultsComponentHistory(body),
+            ("GET", "/api/results/componentRange"): lambda: session.resultsComponentRange(query),
+            ("GET", "/api/results/designs"): lambda: session.resultsDesigns(query),
+            ("GET", "/api/results/block"): lambda: session.resultsBlock(query),
         }
         handler = routes.get(route)
         if handler is None:

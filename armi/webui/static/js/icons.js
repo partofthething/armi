@@ -41,6 +41,12 @@ const PATHS = {
     "M12 15.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4z",
     "M12 2.6v2.6M12 18.8v2.6M21.4 12h-2.6M5.2 12H2.6M18.6 5.4l-1.8 1.8M7.2 16.8l-1.8 1.8M18.6 18.6l-1.8-1.8M7.2 7.2 5.4 5.4",
   ],
+  // Results: a value rising through time.
+  results: [
+    "M4 20h16",
+    "M4 20V4",
+    "M6.5 16.5 10 12l3 2.5 5-7",
+  ],
   // The file itself.
   yaml: [
     "M6 3h8l4 4v14H6z",

@@ -16,6 +16,7 @@ import { componentsView } from "./views/components.js";
 import { nuclidesView } from "./views/nuclides.js";
 import { settingsView } from "./views/settings.js";
 import { yamlView } from "./views/yaml.js";
+import { openResults, resultsView } from "./views/results.js";
 
 const VIEWS = [
   { id: "core", label: "Core", icon: "core", view: coreView, needsBp: true },
@@ -26,6 +27,7 @@ const VIEWS = [
   { id: "nuclides", label: "Nuclides", icon: "nuclide", view: nuclidesView, needsBp: true },
   { id: "settings", label: "Settings", icon: "settings", view: settingsView, needsBp: false },
   { id: "yaml", label: "File", icon: "yaml", view: yamlView, needsBp: true },
+  { id: "results", label: "Results", icon: "results", view: resultsView, needsBp: false },
 ];
 
 const el = {
@@ -36,6 +38,8 @@ const el = {
   appName: document.getElementById("app-name"),
   bpName: document.getElementById("bp-name"),
   csName: document.getElementById("cs-name"),
+  dbName: document.getElementById("db-name"),
+  dbButton: document.getElementById("file-results"),
   saveState: document.getElementById("savestate"),
   statusPrimary: document.getElementById("status-primary"),
   statusSecondary: document.getElementById("status-secondary"),
@@ -161,6 +165,8 @@ function syncChrome() {
   el.csName.textContent = baseName(session.settings?.path) || "nothing open";
   el.bpName.title = session.blueprints?.path || "";
   el.csName.title = session.settings?.path || "";
+  el.dbName.textContent = baseName(session.results?.path) || "nothing open";
+  el.dbName.title = session.results?.path || "";
   syncDirty();
 }
 
@@ -185,14 +191,23 @@ function baseName(path) {
 // -- file actions -----------------------------------------------------------------------------
 
 async function openBlueprints() {
-  const path = await pickPath("Open a case, or blueprints on their own", { startDir: store.session?.cwd || null });
+  const path = await pickPath("Open a case, blueprints on their own, or a results database",
+    { startDir: store.session?.cwd || null });
   if (!path) return;
   try {
-    await store.open(path);
+    const payload = await store.open(path);
     syncChrome();
+    if (payload?.opened === "results") {
+      toast(`Opened results from ${baseName(path)}`, { kind: "ok" });
+      setView("results");
+      return;
+    }
     renderView();
-    const opened = store.session?.settings?.open && store.session?.blueprints?.open
-      ? `Opened ${baseName(store.session.settings.path)} and its blueprints`
+    const parts = [];
+    if (store.session?.blueprints?.open && store.session?.settings?.open) parts.push("its blueprints");
+    if (store.session?.results?.open && store.session?.settings?.open) parts.push("its results");
+    const opened = parts.length
+      ? `Opened ${baseName(store.session.settings.path)} and ${parts.join(" and ")}`
       : `Opened ${baseName(path)}`;
     toast(opened, { kind: "ok" });
   } catch (error) {
@@ -382,6 +397,7 @@ el.save.onclick = (event) => (event.shiftKey ? saveBlueprintsAs() : saveBlueprin
 el.run.onclick = (event) => (event.shiftKey ? runPanel.toggle() : runCase());
 document.getElementById("file-blueprints").onclick = openBlueprints;
 document.getElementById("file-settings").onclick = openSettings;
+el.dbButton.onclick = () => openResults({ go: (id) => setView(id) });
 document.addEventListener("keydown", onKeyDown);
 window.addEventListener("hashchange", () => {
   const target = readHash();
@@ -407,7 +423,9 @@ store
   .boot()
   .then(() => {
     syncChrome();
-    renderView();
+    // Launched on a database alone: there is nothing to edit, so start where there is something.
+    if (!opening && !store.document && store.session?.results?.open) current = "results";
+    setView(current);
     if (store.session?.run) runPanel.reopen();
   })
   .catch((error) => {

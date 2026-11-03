@@ -4,7 +4,8 @@ The input editor
 
 ARMI comes with a browser-based editor for its inputs. Point it at a case and you can see the core you have
 described, paint assemblies onto the map, draw block cross sections to scale, stack assemblies, and change
-settings, all without reading YAML. It is the fastest way to get a feel for an ARMI model, and the easiest way to
+settings, all without reading YAML. Once the case has run, the same tool shows its :ref:`results <results-view>`
+through time. It is the fastest way to get a feel for an ARMI model, and the easiest way to
 check that the inputs say what you meant.
 
 .. figure:: /.static/inputEditor-core.png
@@ -136,6 +137,67 @@ the settings file's folder, where its outputs land, and its screen output goes t
 A console docked under the workspace follows the log as it grows, with how long the run has taken and a Stop button
 that ends the run and anything it started. Hide the console and the run carries on; shift-click Run to bring it
 back, which also works after reloading the page. One run at a time per editor.
+
+
+.. _results-view:
+
+Results
+=======
+.. figure:: /.static/inputEditor-results.png
+   :width: 100%
+   :alt: The results view of the editor
+
+   Power density in a 313-assembly core, 40 years into a 60-year history, with one assembly followed through its
+   shuffles in the chart on the right. The values come from :py:mod:`armi.webui.syntheticResults`, which makes up a
+   database of this size to test against; they are plausible, not physical.
+
+The editor also reads the database a run writes. Open a ``.h5`` file directly, or a case settings file whose run has
+written ``<caseTitle>.h5`` beside it, and the *Results* view shows the core coloured by any block, assembly or
+component parameter, number densities included::
+
+    $ python -m armi gui my-case.h5
+
+Pick a parameter on the left. The slider along the bottom moves through time (or use the arrow keys, and Space to
+play); the one on the right moves the cut. *XY* is a plan view at one height, and *XZ* and *YZ* are sections through a
+row or column of assemblies, with a small plan in the corner showing where the cut is. Values are printed on every
+cell that has room for them, at the size and number of significant figures set in the toolbar. Colour maps, a log
+scale and the range (the whole history, this time node only, or fixed limits) are there too. A partial core can be
+unfolded to the full core with *Full core*.
+
+.. figure:: /.static/inputEditor-results-components.png
+   :width: 100%
+   :alt: Component temperatures in the results view
+
+   Zoomed in on component ``temperatureInC``: pins, bond, clad, ducts and coolant each coloured by their own
+   temperature, with every block's components listed. The selected block's fuel temperature is charted over the
+   whole history on the right.
+
+Scroll to zoom and drag to pan; double-click fits the core again. Zoom in far enough and blocks open up into their
+pins, ducts and coolant, drawn from the component dimensions and pin positions stored in the database. With a
+component parameter chosen, each component is coloured by its own value, and once the pins are large enough each one
+carries its value. Zoomed out, a component parameter shows each block's largest (or mean, or smallest) component value.
+
+Click a block to select it. The inspector then charts its value over the whole history, and lists every parameter
+of that block at the current time node; click one to show it. The chart can follow the assembly wherever fuel
+management moves it, or stay at a core position and show whatever passes through.
+
+.. figure:: /.static/inputEditor-results-section.png
+   :width: 100%
+   :alt: A burnup section in the results view
+
+   An XZ section through the core centre, coloured by burnup. The synthetic history recharges the most-burnt fuel
+   fresh every cycle, so the selected assembly's burnup climbs through each residence and resets, a sawtooth over
+   sixty years.
+
+A component parameter travels one time node at a time, so as soon as one is chosen the rest of its history is
+fetched in the background, nearest the current node first (the footer counts it down). After that, scrubbing never
+waits for the server.
+
+The viewer never rebuilds a reactor. It reads the parameter datasets straight out of the file, sends a parameter's
+whole history to the browser in one go, and draws on a canvas, so moving through sixty years of a full core takes a
+millisecond or two per frame. To try it on a large case without running one, make a synthetic database::
+
+    $ python -m armi.webui.syntheticResults big.h5 --years 60 --nodes-per-year 4
 
 
 Teaching the editor about your settings

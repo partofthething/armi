@@ -23,6 +23,13 @@ them ARMI's last GUI dependency.
 The editor can also run the case it has open (**Run**, Ctrl+Enter) and follow its log in a docked console, with the
 application it was started from, so a plugin's settings and physics come along.
 
+It also views results. Open a run's ``.h5`` database (or a case that has one) and the *Results* view colours the core
+by any block, assembly or component parameter, with a slider through time, another through height or across the core,
+plan and section views, adjustable colour maps and printed values, and pins and ducts drawn and coloured individually
+when zoomed in. Selecting a block charts it through the whole history, following its assembly through shuffles. It
+reads the HDF5 file directly rather than rebuilding reactors, so a 60-year history of a 313-assembly core scrubs at a
+millisecond or two a frame. ``python -m armi.webui.syntheticResults`` writes a database that size for trying it out.
+
 .. figure:: /.static/inputEditor-core.png
    :width: 100%
    :alt: Core map view of the input editor
@@ -58,6 +65,20 @@ application it was started from, so a plugin's settings and physics come along.
    **Settings.** Every setting from every plugin, with its description, searchable and filtered to what differs from
    the default; saving writes only those, so settings files stay short. Plugins can give their own settings a proper
    control (a choice, a multi-select or a table) instead of a text box.
+
+.. figure:: /.static/inputEditor-results.png
+   :width: 100%
+   :alt: Results view of the editor
+
+   **Results.** A parameter over a whole core and a whole history, with sliders for time and height, sections, and a
+   chart that follows one assembly through its shuffles. (Synthetic values, from ``armi.webui.syntheticResults``.)
+
+.. figure:: /.static/inputEditor-results-components.png
+   :width: 100%
+   :alt: Component temperatures in the results view
+
+   **Results, zoomed in.** Each pin, bond, clad, duct and coolant region coloured by its own ``temperatureInC``, and
+   one block's fuel temperature charted through sixty years. (Synthetic values.)
 
 Fuel cycle economics
 ====================

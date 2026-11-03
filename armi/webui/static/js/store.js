@@ -187,6 +187,12 @@ class Store extends EventTarget {
    */
   async open(path) {
     const payload = await api.open(path);
+    if (payload.opened === "results") {
+      // A database is looked at, not edited, so whatever blueprints are open stay open.
+      this.session = payload.state;
+      this.emit("session");
+      return payload;
+    }
     this.settings = null;
     this._accept(payload);
     this.undoStack = [];
@@ -196,6 +202,7 @@ class Store extends EventTarget {
     this.emit("document");
     this.emit("session");
     this.emit("dirty");
+    return payload;
   }
 
   async create(geom, symmetry) {
