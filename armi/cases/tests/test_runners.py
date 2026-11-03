@@ -2,6 +2,7 @@
 
 import json
 import os
+import pathlib
 import subprocess
 import time
 import unittest
@@ -184,7 +185,9 @@ class TestLocalRunner(unittest.TestCase):
             with open(os.path.join(case.directory, "grandchild.pid")) as f:
                 pid = int(f.read())
             time.sleep(0.5)
-            self.assertFalse(os.path.exists(f"/proc/{pid}") and "sleep" in open(f"/proc/{pid}/cmdline").read())
+            self.assertFalse(
+                os.path.exists(f"/proc/{pid}") and "sleep" in pathlib.Path(f"/proc/{pid}/cmdline").read_text()
+            )
 
 
 class TestRunCommands(unittest.TestCase):

@@ -16,6 +16,7 @@
 import datetime
 import io
 import os
+import pathlib
 import unittest
 
 from armi import context, settings
@@ -74,11 +75,11 @@ class TestSettingsReader(unittest.TestCase):
             inPath = os.path.join(TESTING_ROOT, "reactors", "sodiumHexReactor", "armiRun.yaml")
             outPath = "test_readFromFile.yaml"
 
-            txt = open(inPath, "r").read()
+            txt = pathlib.Path(inPath).read_text()
             verb = "branchVerbosity:"
             txt0, txt1 = txt.split(verb)
             newTxt = f"{txt0}{verb} fake\n  {verb}{txt1}"
-            open(outPath, "w").write(newTxt)
+            pathlib.Path(outPath).write_text(newTxt)
 
             with self.assertRaises(InvalidSettingsFileError):
                 settings.caseSettings.Settings(outPath)
@@ -153,7 +154,7 @@ class TestSettingsWriter(unittest.TestCase):
         """Setting output as a sparse file."""
         self.cs.writeToYamlFile(self.filepathYaml, style="short")
         self.cs.loadFromInputFile(self.filepathYaml)
-        txt = open(self.filepathYaml, "r").read()
+        txt = pathlib.Path(self.filepathYaml).read_text()
         self.assertIn("nCycles: 55", txt)
         self.assertNotIn("nTasks", txt)
 
@@ -164,7 +165,7 @@ class TestSettingsWriter(unittest.TestCase):
         with open(self.filepathYaml, "w") as stream:
             # Specify a setting that is also a default
             self.cs.writeToYamlStream(stream, "medium", ["nTasks"])
-        txt = open(self.filepathYaml, "r").read()
+        txt = pathlib.Path(self.filepathYaml).read_text()
         self.assertIn("nCycles: 55", txt)
         self.assertIn("nTasks: 1", txt)
 
@@ -176,7 +177,7 @@ class TestSettingsWriter(unittest.TestCase):
             :tests: R_ARMI_SETTINGS_IO_TXT
         """
         self.cs.writeToYamlFile(self.filepathYaml, style="full")
-        txt = open(self.filepathYaml, "r").read()
+        txt = pathlib.Path(self.filepathYaml).read_text()
         self.assertIn("nCycles: 55", txt)
         # check a default setting
         self.assertIn("nTasks: 1", txt)

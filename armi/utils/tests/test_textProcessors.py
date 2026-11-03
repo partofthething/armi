@@ -36,6 +36,7 @@ class TestTextProcessor(unittest.TestCase):
     def setUp(self):
         godivaSettings = os.path.join(TESTING_ROOT, "reactors", "godiva", "godiva.armi.unittest.yaml")
         self.tp = textProcessors.TextProcessor(godivaSettings)
+        self.addCleanup(self.tp.close)
 
     def test_fsearch(self):
         """Test fsearch in re mode."""

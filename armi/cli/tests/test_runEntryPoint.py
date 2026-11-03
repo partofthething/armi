@@ -15,6 +15,7 @@
 
 import logging
 import os
+import pathlib
 import sys
 import unittest
 from shutil import copyfile
@@ -147,7 +148,7 @@ class TestCloneArmiRunCommandBatch(unittest.TestCase):
             clonedYaml = "armiRun.yaml"
             self.assertTrue(os.path.exists(clonedYaml))
             # validate a setting that has a default value was removed
-            txt = open(clonedYaml, "r").read()
+            txt = pathlib.Path(clonedYaml).read_text()
             self.assertNotIn("availabilityFactor", txt)
 
     def test_cloneArmiRunCommandBatchInvokeMedium(self):
@@ -170,7 +171,7 @@ class TestCloneArmiRunCommandBatch(unittest.TestCase):
             clonedYaml = "armiRun.yaml"
             self.assertTrue(os.path.exists(clonedYaml))
             # validate a setting that has a  default value is still there
-            txt = open(clonedYaml, "r").read()
+            txt = pathlib.Path(clonedYaml).read_text()
             self.assertIn("availabilityFactor", txt)
 
 
@@ -324,7 +325,7 @@ class TestModifyCaseSettingsCommand(unittest.TestCase):
             mcs.invoke()
 
             # validate the change to nTasks was made
-            txt = open("armiRun.yaml", "r").read()
+            txt = pathlib.Path("armiRun.yaml").read_text()
             self.assertIn("nTasks: 333", txt)
 
 

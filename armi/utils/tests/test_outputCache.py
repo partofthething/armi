@@ -14,6 +14,7 @@
 """Tests of the output cache tools."""
 
 import os
+import pathlib
 import shutil
 import unittest
 
@@ -136,7 +137,7 @@ class TestOutputCache(unittest.TestCase):
 
         # throw a new manifest into the new out cache
         with open(os.path.join(newFolder, "CRC-manifest.json"), "w") as f:
-            f.write(open(manifest, "r").read())
+            f.write(pathlib.Path(manifest).read_text())
 
         # attempt to retrieve some output from dummy caches
         result = outputCache.retrieveOutput(fakeExe, inputPaths, cacheDir, newFolder)
@@ -195,7 +196,7 @@ class TestOutputCache(unittest.TestCase):
             f.write("print('This is an empty executable.')")
 
         exeOutputPath = "mc2_ran.txt"
-        execute = lambda: open(exeOutputPath, "w").write("Sum.")
+        execute = lambda: pathlib.Path(exeOutputPath).write_text("Sum.")
 
         # Test Case 0: No cache dir is given, so we MUST run MC2-3.
         self.assertFalse(os.path.exists(exeOutputPath))

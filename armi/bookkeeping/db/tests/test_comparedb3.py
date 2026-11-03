@@ -14,6 +14,7 @@
 
 """Tests for the compareDB3 module."""
 
+import pathlib
 import unittest
 import warnings
 from unittest.mock import patch
@@ -51,7 +52,7 @@ class TestCompareDB3(unittest.TestCase):
         with OutputWriter(fileName) as out:
             out.writeln("Rubber Baby Buggy Bumpers")
 
-        txt = open(fileName, "r").read()
+        txt = pathlib.Path(fileName).read_text()
         self.assertIn("Rubber", txt)
 
     def test_compareSets(self):

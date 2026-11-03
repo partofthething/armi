@@ -52,8 +52,9 @@ class TestC5G7Reactor(unittest.TestCase):
 
             # test warnings are being logged for malformed isotopics info in the settings file
             streamVal = mock.getStdout()
-            self.assertIn("Case Information", streamVal, msg=streamVal)
-            self.assertIn("Input File", streamVal, msg=streamVal)
+            self.assertIn("Triggering Init Event", streamVal, msg=streamVal)
+            # sections of info-level detail print no title when none of their messages is shown
+            self.assertNotIn("Case Information", streamVal, msg=streamVal)
 
             # test that there are 100 of each high, medium, and low MOX pins
             b = r.core.getFirstBlock(Flags.MOX)

@@ -70,8 +70,9 @@ A fourth widget takes a file system path:
 
 ``path``
     A text box with a Browse button that opens the editor's own file picker. ``pathKind`` is
-    ``"file"`` (the default) or ``"dir"``. An
-editor naming a setting this application does not define is ignored, and one the editor cannot
+    ``"file"`` (the default) or ``"dir"``.
+
+An editor naming a setting this application does not define is ignored, and one the editor cannot
 make sense of is dropped with a warning rather than taking the settings page down.
 """
 

@@ -87,4 +87,5 @@ class TestSettingsMigration(unittest.TestCase):
         file_path = os.path.join(TESTING_ROOT, "reactors", "sodiumHexReactor", "armiRun.yaml")
         m = MockSettingsMigration1(None, file_path)
         m._loadStreamFromPath()
+        self.addCleanup(m.stream.close)
         self.assertIsNotNone(m.stream)

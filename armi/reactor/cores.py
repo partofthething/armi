@@ -2174,7 +2174,7 @@ class Core(composites.Composite):
         updateAxialMesh : Perturbs the axial mesh originally set up here.
         """
         self.setOptionsFromCs(cs)
-        runLog.header("=========== Initializing Mesh, Assembly Zones, and Nuclide Categories =========== ")
+        runLog.section("=========== Initializing Mesh, Assembly Zones, and Nuclide Categories =========== ")
 
         for b in self.iterBlocks():
             if b.p.molesHmBOL > 0.0:

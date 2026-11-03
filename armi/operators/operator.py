@@ -320,7 +320,7 @@ class Operator:
             self.createInterfaces()
             self._processInterfaceDependencies()
             if context.MPI_RANK == 0:
-                runLog.header("=========== Interface Stack Summary  ===========")
+                runLog.section("=========== Interface Stack Summary  ===========")
                 runLog.info(reportingUtils.getInterfaceStackSummary(self))
                 self.interactAllInit()
             else:
@@ -715,7 +715,7 @@ class Operator:
         armi.interfaces.STACK_ORDER : A system to determine the required order of interfaces.
         armi.interfaces.getActiveInterfaceInfo : Collects the interface classes from relevant packages.
         """
-        runLog.header("=========== Creating Interfaces ===========")
+        runLog.section("=========== Creating Interfaces ===========")
         interfaceList = interfaces.getActiveInterfaceInfo(self.cs)
 
         for klass, kwargs in interfaceList:

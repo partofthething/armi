@@ -192,7 +192,7 @@ class SystemBlueprint(YamlObject):
     def _loadComposites(self, cs, bp, container, gridContents, orientationBOL):
         from armi.reactor.cores import Core
 
-        runLog.header(f"=========== Adding Composites to {container} ===========")
+        runLog.section(f"=========== Adding Composites to {container} ===========")
         badLocations = set()
         for locationInfo, aTypeID in gridContents.items():
             # handle the hex-grid special case, where the user enters (ring, pos)
@@ -239,7 +239,7 @@ class SystemBlueprint(YamlObject):
         # all cases should have no edge assemblies. They are added ephemerally when needed
         from armi.reactor.converters import geometryConverters
 
-        runLog.header("=========== Applying Geometry Modifications ===========")
+        runLog.section("=========== Applying Geometry Modifications ===========")
         if not container.isFullCore:
             runLog.extra("Applying non-full core modifications")
             converter = geometryConverters.EdgeAssemblyChanger()

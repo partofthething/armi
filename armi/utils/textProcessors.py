@@ -564,6 +564,17 @@ class TextProcessor:
                 raise FileNotFoundError(f"{fname} does not exist.")
         self.f = f
 
+    def close(self):
+        """Close the underlying file, if one was opened."""
+        if self.f is not None:
+            self.f.close()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *excInfo):
+        self.close()
+
     def reset(self):
         """Rewinds the file so you can search through it again."""
         self.f.seek(0)

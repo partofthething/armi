@@ -151,6 +151,38 @@ class TestRunLog(RunLogTestCase):
         self.assertEqual(stdout.getvalue(), "before start\n[info] after start\na header\nafter close\n")
         self.assertFalse(os.path.exists(self.logDir))
 
+    def test_quietSectionsWaitForContent(self):
+        """Below info verbosity, a section title only appears just before a message that is shown."""
+        log = runLog.LOG = runLog._RunLog(0)
+        with mock.patch("sys.stdout", new_callable=StringIO) as stdout:
+            log.startLog("test_quietSectionsWaitForContent")
+            log.setVerbosity("warning")
+            runLog.section("empty section")
+            runLog.info("hidden")
+            runLog.section("section with a warning")
+            runLog.info("hidden too")
+            runLog.warning("shown")
+            runLog.warning("shown, without repeating the title")
+            runLog.section("section dropped by a header")
+            runLog.header("headers are always shown")
+            runLog.close(99)
+
+        self.assertEqual(
+            stdout.getvalue(),
+            "section with a warning\n[warn] shown\n[warn] shown, without repeating the title\n"
+            "headers are always shown\n",
+        )
+
+    def test_sectionsAtInfo(self):
+        """At info verbosity, a section title is written straight away."""
+        log = runLog.LOG = runLog._RunLog(0)
+        with mock.patch("sys.stdout", new_callable=StringIO) as stdout:
+            log.startLog("test_sectionsAtInfo")
+            runLog.section("a section")
+            runLog.close(99)
+
+        self.assertEqual(stdout.getvalue(), "a section\n")
+
     def test_getWhiteSpace(self):
         log = runLog._RunLog(0)
         space0 = len(log.getWhiteSpace(0))

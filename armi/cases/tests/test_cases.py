@@ -17,6 +17,7 @@ import copy
 import cProfile
 import logging
 import os
+import pathlib
 import unittest
 
 import h5py
@@ -230,7 +231,7 @@ class TestArmiCase(unittest.TestCase):
             # Check on some expected settings
             # Availability factor is in the original settings file but since it is a
             # default value, gets removed for the write-out
-            txt = open(clonedYaml, "r").read()
+            txt = pathlib.Path(clonedYaml).read_text()
             self.assertNotIn("availabilityFactor", txt)
             self.assertIn("verbosity: important", txt)
 
@@ -243,7 +244,7 @@ class TestArmiCase(unittest.TestCase):
             self.assertTrue(os.path.exists(clonedYaml))
             # Availability factor is in the original settings file and it is a default
             # value. While "short" (default writing style) removes, "medium" should not
-            txt = open(clonedYaml, "r").read()
+            txt = pathlib.Path(clonedYaml).read_text()
             self.assertIn("availabilityFactor", txt)
 
 
@@ -549,7 +550,7 @@ class TestExtraInputWriting(unittest.TestCase):
             self.assertTrue(os.path.exists(cs[CONF_SHUFFLE_LOGIC]))
             # Availability factor is in the original settings file but since it is a default value,
             # gets removed for the write-out
-            txt = open("armiRun.yaml", "r").read()
+            txt = pathlib.Path("armiRun.yaml").read_text()
             self.assertNotIn("availabilityFactor", txt)
             self.assertIn("armiRun-blueprints.yaml", txt)
 
@@ -558,7 +559,7 @@ class TestExtraInputWriting(unittest.TestCase):
             case.writeInputs(writeStyle="medium")
             # Availability factor is in the original settings file and it is a default value. While
             # "short" (default writing style) removes, "medium" should not
-            txt = open("armiRun.yaml", "r").read()
+            txt = pathlib.Path("armiRun.yaml").read_text()
             self.assertIn("availabilityFactor", txt)
 
 

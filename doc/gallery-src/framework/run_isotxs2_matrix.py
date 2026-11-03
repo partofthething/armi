@@ -37,4 +37,4 @@ u235 = lib.getNuclide("U235", "AA")
 xsNuclides.plotScatterMatrix(u235.micros.inelasticScatter, "U-235 inelastic")
 
 plt.figure()
-xsNuclides.plotScatterMatrix(u235.micros.n2nScatter, "U-235 n,2n src")
+_ = xsNuclides.plotScatterMatrix(u235.micros.n2nScatter, "U-235 n,2n src")

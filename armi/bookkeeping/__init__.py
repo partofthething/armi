@@ -109,7 +109,7 @@ def summarizeMaterialData(container):
     container : Core object
         Any Core object with Blocks and Components defined.
     """
-    runLog.header(f"=========== Summarizing Source of Material Data for {container} ===========")
+    runLog.section(f"=========== Summarizing Source of Material Data for {container} ===========")
     materialNames = set()
     materialData = []
     for c in container.iterComponents():

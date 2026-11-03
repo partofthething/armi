@@ -105,7 +105,7 @@ class TestBlueprints(unittest.TestCase):
                 fout.write(stream.read())
 
             # load the blueprint from that file again
-            bp = blueprints.Blueprints.load(open(filePath, "r").read())
+            bp = blueprints.Blueprints.load(pathlib.Path(filePath).read_text())
 
             # re-validate some core elements from the blueprints
             self.assertEqual(bp.gridDesigns["core"].symmetry, "third periodic")
@@ -184,7 +184,7 @@ class TestZeroValuesInMaterialModifications(unittest.TestCase):
 
             # modify the test reactor so that "" and 0.0 -- which hash identically -- share a list
             bpFile = os.path.join(newDir, "refSmallReactorBase.yaml")
-            txt = open(bpFile, "r").read()
+            txt = pathlib.Path(bpFile).read_text()
 
             testIn = '      ZR_wt_frac: &igniter_fuel_zr_wt_frac ["", 0.06, 0.06, 0.06, ""]'
             testOut = '      ZR_wt_frac: &igniter_fuel_zr_wt_frac ["", 0.0, 0.0, 0.0, ""]'

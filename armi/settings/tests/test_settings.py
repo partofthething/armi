@@ -16,6 +16,7 @@
 import copy
 import io
 import os
+import pathlib
 import unittest
 
 import voluptuous as vol
@@ -144,10 +145,10 @@ class TestAddingOptions(unittest.TestCase):
     def test_addingOptions(self):
         # modify the default/text settings YAML file to include neutronicsKernel
         fin = os.path.join(TESTING_ROOT, "reactors", "sodiumHexReactor", "armiRun.yaml")
-        txt = open(fin, "r").read()
+        txt = pathlib.Path(fin).read_text()
         txt = txt.replace("\n  nCycles:", "\n  neutronicsKernel: MCNP\n  nCycles:")
         fout = "test_addingOptions.yaml"
-        open(fout, "w").write(txt)
+        pathlib.Path(fout).write_text(txt)
 
         # this settings file should load fine, and test some basics
         cs = settings.Settings(fout)

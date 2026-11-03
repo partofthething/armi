@@ -1,4 +1,5 @@
 # Copyright 2019 TerraPower, LLC
+# Copyright 2026 Nick Touran
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -195,6 +196,7 @@ class _RunLog:
         self.logger = logging.getLogger(LOGGER_NAME) if logger is None else logger
 
         self._deduplicationFilter = DeduplicationFilter()
+        self._pendingSection = None
         self.setDefaultHandlers()
         self.logger.setLevel(self._verbosity)
 
@@ -271,7 +273,25 @@ class _RunLog:
             The label used to de-duplicate this message and count it in the warning report. Defaults to the message.
         """
         msgLevel = msgType if isinstance(msgType, int) else self.logLevels[msgType][0]
+        if self._pendingSection is not None and self.logger.isEnabledFor(msgLevel):
+            pending, self._pendingSection = self._pendingSection, None
+            if msgLevel < HEADER:
+                # a shown message belongs to the held-back section, but a header starts something else
+                self.logger.log(HEADER, pending, extra={"single": False, "label": None})
         self.logger.log(msgLevel, str(msg), extra={"single": single, "label": label})
+
+    def section(self, title):
+        """
+        Log the title of a section of detailed (info-level) messages.
+
+        When the verbosity is quieter than info, the messages under the title are filtered out, so the title is held
+        back and only written just before the next message that is shown. A quiet run then prints no empty section
+        titles, and a warning still appears under the title of the section it came from.
+        """
+        if self.logger.isEnabledFor(logging.INFO):
+            self.log("header", title)
+        else:
+            self._pendingSection = str(title)
 
     def getDuplicatesFilter(self):
         """Return the filter that de-duplicates messages and counts warnings."""
@@ -535,7 +555,13 @@ def error(msg, single=False, label=None):
 
 
 def header(msg, single=False, label=None):
+    """Log a header, such as a run event banner, at every verbosity."""
     LOG.log("header", msg, single=single, label=label)
+
+
+def section(title):
+    """Log the title of a section of info-level messages. Below info verbosity it appears only if the section does."""
+    LOG.section(title)
 
 
 def warningReport():

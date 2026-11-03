@@ -304,7 +304,7 @@ class Blueprints(YamlObject, metaclass=_BlueprintsPluginCollector):
                 self._assembliesBySpecifier[aDesign.specifier] = a
                 self.assemblies[aDesign.name] = a
 
-            runLog.header("=========== Verifying Assembly Configurations ===========")
+            runLog.section("=========== Verifying Assembly Configurations ===========")
             self._checkAssemblyAreaConsistency(cs)
 
             if not cs[CONF_DETAILED_AXIAL_EXPANSION]:
@@ -315,7 +315,7 @@ class Blueprints(YamlObject, metaclass=_BlueprintsPluginCollector):
                 )
 
             if not cs[CONF_INPUT_HEIGHTS_HOT]:
-                runLog.header("=========== Axially expanding all assemblies from Tinput to Thot ===========")
+                runLog.section("=========== Axially expanding all assemblies from Tinput to Thot ===========")
                 # expand axial heights from cold to hot so dims and masses are consistent with
                 # specified component hot temperatures.
                 assemsToSkip = [Flags.fromStringIgnoreErrors(t) for t in cs[CONF_ASSEM_FLAGS_SKIP_AXIAL_EXP]]

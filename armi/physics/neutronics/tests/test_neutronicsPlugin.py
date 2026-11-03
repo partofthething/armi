@@ -15,6 +15,7 @@
 """Unit tests for the neutronics plugin."""
 
 import io
+import pathlib
 import unittest
 
 from ruamel.yaml import YAML
@@ -69,7 +70,7 @@ class TestNeutronicsPlugin(TestPlugin):
         self.assertEqual(cs[CONF_CROSS_SECTION]["AA"].geometry, "0D")
         fname = "test_setting_obj_io_.yaml"
         cs.writeToYamlFile(fname)
-        outText = open(fname, "r").read()
+        outText = pathlib.Path(fname).read_text()
         self.assertIn("geometry: 0D", outText)
 
     def test_customSettingRoundTrip(self):
@@ -81,7 +82,7 @@ class TestNeutronicsPlugin(TestPlugin):
         cs[CONF_CROSS_SECTION] = cs[CONF_CROSS_SECTION]
         fname = "test_setting_obj_io_round.yaml"
         cs.writeToYamlFile(fname)
-        outText = open(fname, "r").read()
+        outText = pathlib.Path(fname).read_text()
         self.assertIn("geometry: 0D", outText)
         self.assertIn("geometry: 1D", outText)
 

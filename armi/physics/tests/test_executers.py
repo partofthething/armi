@@ -15,6 +15,7 @@
 """Provide tests for the generic Executers."""
 
 import os
+import pathlib
 import subprocess
 import unittest
 
@@ -136,13 +137,13 @@ class TestExecuters(unittest.TestCase):
 
             # make sure the output file exists now
             self.assertTrue(os.path.exists(outFile))
-            newTxt = open(outFile, "r").read()
+            newTxt = pathlib.Path(outFile).read_text()
             self.assertIn(testString, newTxt)
 
             # now prove the options object can affect the execution
             exe.options.label = label
             exe.run("")
-            newerTxt = open(outFile, "r").read()
+            newerTxt = pathlib.Path(outFile).read_text()
             self.assertIn("extra stuff", newerTxt)
 
     @staticmethod

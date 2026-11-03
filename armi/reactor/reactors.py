@@ -165,7 +165,7 @@ def loadFromCs(cs) -> Reactor:
 
 def factory(cs, bp) -> Reactor:
     """Build a reactor from input settings and blueprints."""
-    runLog.header("=========== Constructing Reactor and Verifying Inputs ===========")
+    runLog.section("=========== Constructing Reactor and Verifying Inputs ===========")
     getPluginManagerOrFail().hook.beforeReactorConstruction(cs=cs)
 
     r = Reactor(cs.caseTitle, bp)

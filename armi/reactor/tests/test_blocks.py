@@ -18,6 +18,7 @@ import io
 import logging
 import math
 import os
+import pathlib
 import shutil
 import unittest
 from glob import glob
@@ -100,9 +101,9 @@ class TestValidateSFPSpatialGrids(unittest.TestCase):
 
             # cut out the SFP grid in the input file
             testFile = os.path.join(newDir2, "refSmallestReactor.yaml")
-            txt = open(testFile, "r").read()
+            txt = pathlib.Path(testFile).read_text()
             txt = txt.split("symmetry: full")[0]
-            open(testFile, "w").write(txt)
+            pathlib.Path(testFile).write_text(txt)
 
             # verify there is no spatial grid defined
             _o, r = loadTestReactor(newDir2, inputFileName="armiRunSmallest.yaml")
@@ -2920,9 +2921,9 @@ class TestHexBlockOrientation(unittest.TestCase):
 
         # modify the reactor to make it flats up
         testFile = os.path.join(self.td.destination, "refSmallestReactor.yaml")
-        txt = open(testFile, "r").read()
+        txt = pathlib.Path(testFile).read_text()
         txt = txt.replace("geom: hex_corners_up", "geom: hex")
-        open(testFile, "w").write(txt)
+        pathlib.Path(testFile).write_text(txt)
 
         # load a flats up reactor
         _o, r = loadTestReactor(self.td.destination, inputFileName="armiRunSmallest.yaml")

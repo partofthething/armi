@@ -61,6 +61,8 @@ armi_configure(apps.App())
 disableFutureConfigures()
 
 APIDOC_REL = ".apidocs"
+# apidoc only adds and overwrites pages, so start clean or pages for deleted modules linger and fail to import
+shutil.rmtree(APIDOC_REL, ignore_errors=True)
 SOURCE_DIR = os.path.join("..", "armi")
 STATIC_DIR = ".static"
 _TUTORIAL_FILES = [fName for fName in bookkeepingTests.TUTORIAL_FILES if "ipynb" not in fName]

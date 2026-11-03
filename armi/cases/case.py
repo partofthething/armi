@@ -507,7 +507,7 @@ class Case:
         bool
             True if the inputs are all good, False otherwise
         """
-        runLog.header("=========== Settings Validation Checks ===========")
+        runLog.section("=========== Settings Validation Checks ===========")
         with DirectoryChanger(self.cs.inputDirectory, dumpOnException=False):
             operatorClass = operators.getOperatorClassFromSettings(self.cs)
             inspector = operatorClass.inspector(self.cs)

@@ -82,7 +82,7 @@ def writeWelcomeHeaders(o, cs):
             (Operator_Date, context.START_TIME),
         ]
 
-        runLog.header("=========== Case Information ===========")
+        runLog.section("=========== Case Information ===========")
         runLog.info(tabulate.tabulate(caseInfo, tableFmt="armi"))
 
     def _listInputFiles(cs):
@@ -160,7 +160,7 @@ def writeWelcomeHeaders(o, cs):
         for label, fileName, shaHash in _listInputFiles(cs):
             inputFileData.append((label, fileName, shaHash))
 
-        runLog.header("=========== Input File Information ===========")
+        runLog.section("=========== Input File Information ===========")
         runLog.info(
             tabulate.tabulate(
                 inputFileData,
@@ -182,7 +182,7 @@ def writeWelcomeHeaders(o, cs):
 
             sysInfo += getSystemInfo()
 
-        runLog.header("=========== Machine Information ===========")
+        runLog.section("=========== Machine Information ===========")
         runLog.info(
             tabulate.tabulate(
                 nodeMappingData,
@@ -192,7 +192,7 @@ def writeWelcomeHeaders(o, cs):
         )
 
         if sysInfo:
-            runLog.header("=========== System Information ===========")
+            runLog.section("=========== System Information ===========")
             runLog.info(sysInfo)
 
     def _writeReactorCycleInformation(o, cs):
@@ -211,7 +211,7 @@ def writeWelcomeHeaders(o, cs):
         for name, param in operatingParams.items():
             paramStr = [str(p) for p in param]
             operatingData.append((name, textwrap.fill(", ".join(paramStr))))
-        runLog.header("=========== Reactor Cycle Information ===========")
+        runLog.section("=========== Reactor Cycle Information ===========")
         runLog.info(tabulate.tabulate(operatingData, tableFmt="armi"))
 
     if context.MPI_RANK > 0:

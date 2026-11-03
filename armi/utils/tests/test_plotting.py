@@ -15,6 +15,7 @@
 """Tests for basic plotting tools."""
 
 import os
+import pathlib
 import shutil
 import unittest
 from glob import glob
@@ -214,7 +215,7 @@ class TestPatches(unittest.TestCase):
             fName = os.path.basename(fPath)
             shutil.copyfile(fPath, fName)
 
-        txt = open("refSmallestReactor.yaml", "r").read()
+        txt = pathlib.Path("refSmallestReactor.yaml").read_text()
         txt = txt.replace("geom: hex_corners_up", "geom: hex")
         with open("refSmallestReactor.yaml", "w") as f:
             f.write(txt)

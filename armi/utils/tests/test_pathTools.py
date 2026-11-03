@@ -15,6 +15,7 @@
 """Unit tests for pathTools."""
 
 import os
+import pathlib
 import types
 import unittest
 
@@ -105,14 +106,14 @@ class TestPathTools(unittest.TestCase):
         with TemporaryDirectoryChanger():
             # TEST 0: File is not safe to delete, due not being a temp dir or under FAST_PATH
             filePath0 = "test0_cleanPathNoMpi"
-            open(filePath0, "w").write("something")
+            pathlib.Path(filePath0).write_text("something")
             self.assertTrue(os.path.exists(filePath0))
             with self.assertRaises(Exception):
                 pathTools.cleanPath(filePath0, mpiRank=0)
 
             # TEST 1: Delete a single file under FAST_PATH
             filePath1 = os.path.join(context.getFastPath(), "test1_cleanPathNoMpi")
-            open(filePath1, "w").write("something")
+            pathlib.Path(filePath1).write_text("something")
             self.assertTrue(os.path.exists(filePath1))
             pathTools.cleanPath(filePath1, mpiRank=0)
             self.assertFalse(os.path.exists(filePath1))
@@ -134,8 +135,8 @@ class TestPathTools(unittest.TestCase):
             # TEST 4: Delete a directory with two files inside with forceClean=True
             dir4 = "dirplease"
             os.mkdir(dir4)
-            open(os.path.join(dir4, "file1.txt"), "w").write("something1")
-            open(os.path.join(dir4, "file2.txt"), "w").write("something2")
+            pathlib.Path(os.path.join(dir4, "file1.txt")).write_text("something1")
+            pathlib.Path(os.path.join(dir4, "file2.txt")).write_text("something2")
             # delete the directory and test
             self.assertTrue(os.path.exists(dir4))
             self.assertTrue(os.path.exists(os.path.join(dir4, "file1.txt")))

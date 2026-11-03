@@ -97,6 +97,8 @@ class Migration(abc.ABC):
                 self._writeNewFile(newStream)
         else:
             newStream = io.StringIO(self.stream.read())
+            if self.path:
+                self.stream.close()
 
         return newStream
 

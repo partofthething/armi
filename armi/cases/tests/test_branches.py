@@ -1,9 +1,11 @@
 """Tests for branch calculations on perturbed copies of a reactor."""
 
 import os
+import pathlib
 import subprocess
 import time
 import unittest
+import warnings
 from unittest import mock
 
 from armi import context
@@ -124,6 +126,15 @@ class TestSerialAndCommon(BranchTestCase):
 
 
 class TestForkExecutor(BranchTestCase):
+    def setUp(self):
+        super().setUp()
+        # Forking is the point of ForkExecutor. Python 3.14 warns about it whenever another thread is alive, which
+        # under pytest-xdist the worker's own threads always are.
+        catcher = warnings.catch_warnings()
+        catcher.__enter__()
+        self.addCleanup(catcher.__exit__, None, None, None)
+        warnings.filterwarnings("ignore", r"This process .* is multi-threaded, use of fork\(\)", DeprecationWarning)
+
     def test_forkedBranches(self):
         # forked children inherit the task, so even a closure works
         results = runBranches(self.r, self.cs, self.sweep(), lambda r, cs: reportPower(r, cs), ForkExecutor(3))
@@ -139,7 +150,8 @@ class TestForkExecutor(BranchTestCase):
         with open(os.path.join("branches", "branch000", "grandchild.pid")) as f:
             pid = int(f.read())
         time.sleep(0.5)
-        self.assertFalse(os.path.exists(f"/proc/{pid}") and "sleep" in open(f"/proc/{pid}/cmdline").read())
+        stillSleeping = os.path.exists(f"/proc/{pid}") and "sleep" in pathlib.Path(f"/proc/{pid}/cmdline").read_text()
+        self.assertFalse(stillSleeping)
 
     def test_crashedChildIsAFailure(self):
         results = runBranches(self.r, self.cs, [SetPower(1.0)], lambda r, cs: os._exit(3), ForkExecutor(1))
