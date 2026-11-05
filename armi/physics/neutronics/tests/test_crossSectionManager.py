@@ -93,6 +93,18 @@ class TestBlockCollMedian(unittest.TestCase):
         avgB = self.bc.createRepresentativeBlock()
         self.assertAlmostEqual(avgB.p.percentBu, 50.0)
 
+    def test_createRepresentativeBlockWithLFPs(self):
+        """The median block's lumped fission products are copied onto the representative block."""
+        fpFactory = test_lumpedFissionProduct.getDummyLFPFile()
+        for b in self.blockList:
+            b.setLumpedFissionProducts(fpFactory.createLFPsFromFile())
+        median = self.bc.createRepresentativeBlock()
+        lfps = median.getLumpedFissionProductCollection()
+        self.assertIsNotNone(lfps)
+        original = self.blockList[0].getLumpedFissionProductCollection()
+        self.assertIsNot(lfps, original)
+        self.assertEqual(sorted(lfps.keys()), sorted(original.keys()))
+
     def test_getBlockNuclideTemperature(self):
         # doesn't have to be in median block tests, but this is a simpler test
         nuc = "U235"

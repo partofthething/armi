@@ -300,9 +300,8 @@ class MedianBlockCollection(BlockCollection):
         newBlock = copy.deepcopy(medianBlock)
         lfpCollection = medianBlock.getLumpedFissionProductCollection()
         if lfpCollection:
-            lfpCollection = lfpCollection.duplicate()
-            lfpCollection.setGasRemovedFrac(newBlock.p.gasReleaseFraction)
-            newBlock.setLumpedFissionProducts(lfpCollection)
+            # Gas removal left the LFP collections in #1022; the copy is all that is needed now.
+            newBlock.setLumpedFissionProducts(lfpCollection.duplicate())
         else:
             runLog.warning("Representative block {0} has no LFPs".format(medianBlock))
         self.calcAvgNuclideTemperatures()
