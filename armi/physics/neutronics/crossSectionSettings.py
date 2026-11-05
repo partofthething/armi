@@ -604,9 +604,22 @@ class XSModelingOptions:
                 runLog.debug(f"\tAttribute: {var}, Value: {val}")
             runLog.debug(f"The valid options for the `{self.geometry}` geometry are: {validOptions}")
 
+    @staticmethod
+    def _wholeBlockCollections():
+        """Block collections whose representative is a whole block, not a set of averaged components."""
+        return [
+            crossSectionGroupManager.MEDIAN_BLOCK_COLLECTION,
+            crossSectionGroupManager.AVERAGE_BLOCK_COLLECTION,
+            crossSectionGroupManager.FLUX_WEIGHTED_AVERAGE_BLOCK_COLLECTION,
+        ]
+
     def setDefaults(self, blockRepresentation, validBlockTypes):
         """
         Sets the defaults based on some recommended values based on the geometry type.
+
+        A 1D slab or cylinder normally gets a component-averaged representative block (its components become the
+        slabs or rings of the model); with ``useHomogenizedBlockComposition`` the block is smeared whole, so the
+        whole-block representations (median, average, flux-weighted average) are used instead.
 
         Parameters
         ----------
@@ -660,14 +673,24 @@ class XSModelingOptions:
             allowableBlockCollections = [
                 crossSectionGroupManager.SLAB_COMPONENTS_BLOCK_COLLECTION,
             ]
+            slabRepresentation = crossSectionGroupManager.SLAB_COMPONENTS_BLOCK_COLLECTION
+            if self.useHomogenizedBlockComposition:
+                # a block smeared whole into the slab needs no component-wise representative
+                allowableBlockCollections = self._wholeBlockCollections()
+                slabRepresentation = blockRepresentation
             defaults = {
                 CONF_GEOM: self.geometry,
                 CONF_MESH_PER_CM: 1.0,
-                CONF_BLOCK_REPRESENTATION: crossSectionGroupManager.SLAB_COMPONENTS_BLOCK_COLLECTION,
+                CONF_BLOCK_REPRESENTATION: slabRepresentation,
                 CONF_BLOCKTYPES: validBlockTypes,
             }
         elif self.geometry == XSGeometryTypes.getStr(XSGeometryTypes.ONE_DIMENSIONAL_CYLINDER):
             allowableBlockCollections = [crossSectionGroupManager.CYLINDRICAL_COMPONENTS_BLOCK_COLLECTION]
+            cylinderRepresentation = crossSectionGroupManager.CYLINDRICAL_COMPONENTS_BLOCK_COLLECTION
+            if self.useHomogenizedBlockComposition:
+                # a block smeared whole into the cylinder needs no component-wise representative
+                allowableBlockCollections = self._wholeBlockCollections()
+                cylinderRepresentation = blockRepresentation
             defaults = {
                 CONF_GEOM: self.geometry,
                 CONF_DRIVER: "",
@@ -677,7 +700,7 @@ class XSModelingOptions:
                 CONF_INTERNAL_RINGS: 0,
                 CONF_EXTERNAL_RINGS: 1,
                 CONF_HOMOGBLOCK: False,
-                CONF_BLOCK_REPRESENTATION: crossSectionGroupManager.CYLINDRICAL_COMPONENTS_BLOCK_COLLECTION,
+                CONF_BLOCK_REPRESENTATION: cylinderRepresentation,
                 CONF_BLOCKTYPES: validBlockTypes,
                 CONF_DUCT_HETEROGENEOUS: False,
                 CONF_TRACE_ISOTOPE_THRESHOLD: 0.0,

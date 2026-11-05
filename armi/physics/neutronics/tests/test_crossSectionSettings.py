@@ -181,6 +181,23 @@ class TestCrossSectionSettings(unittest.TestCase):
         self.assertEqual(xsModel["DA"].traceIsotopeThreshold, 1.0e-5)
         self.assertEqual(xsModel["DA"].mergeIntoFuel, [])
 
+    def test_homogenized1DRepresentation(self):
+        """A 1D model of a block smeared whole takes a whole-block representative, not component averages."""
+        cs = settings.Settings()
+        xsModel = XSSettings()
+        xsModel["RA"] = XSModelingOptions("RA", geometry="1D slab", useHomogenizedBlockComposition=True)
+        xsModel["DA"] = XSModelingOptions("DA", geometry="1D cylinder", useHomogenizedBlockComposition=True)
+        xsModel["SA"] = XSModelingOptions("SA", geometry="1D slab")
+        xsModel.setDefaults("Median", cs[CONF_DISABLE_BLOCK_TYPE_EXCLUSION_IN_XS_GENERATION])
+        self.assertEqual(xsModel["RA"].blockRepresentation, "Median")
+        self.assertEqual(xsModel["DA"].blockRepresentation, "Median")
+        self.assertEqual(xsModel["SA"].blockRepresentation, "ComponentAverage1DSlab")
+
+        # without the smearing a whole-block representative is still refused
+        ca = XSModelingOptions("CA", geometry="1D cylinder", blockRepresentation="Average")
+        with self.assertRaises(ValueError):
+            ca.setDefaults("Median", cs[CONF_DISABLE_BLOCK_TYPE_EXCLUSION_IN_XS_GENERATION])
+
     def test_badCrossSections(self):
         with self.assertRaises(TypeError):
             # This will fail because it is not the required
