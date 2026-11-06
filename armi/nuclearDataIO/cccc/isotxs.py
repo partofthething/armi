@@ -474,6 +474,16 @@ class _IsotxsNuclideIO:
             ]:
                 self._metadata[datum] = nucRecord.rwInt(self._metadata[datum])
 
+            # A nuclide merged into a library with more scattering blocks than its own (P3 data
+            # beside P1) has the blocks it lacks written as absent: no orders (ords 0), no band.
+            for key in ("scatFlag", "ords"):
+                values = self._metadata[key]
+                if values is not None and len(values) < self._maxScatteringBlocks:
+                    missing = self._maxScatteringBlocks - len(values)
+                    self._metadata[key] = np.concatenate([np.asarray(values, dtype=int), np.zeros(missing, int)])
+            writing = bool(self._metadata["jband"])
+            absent = 0 if writing else None
+
             # defines what kind of scattering block each block is; total, inelastic, elastic, n2n
             self._metadata["scatFlag"] = nucRecord.rwList(self._metadata["scatFlag"], "int", self._maxScatteringBlocks)
 
@@ -483,7 +493,7 @@ class _IsotxsNuclideIO:
             jband = self._metadata["jband"] or {}
             for n in range(self._maxScatteringBlocks):
                 for j in range(self._numGroups):
-                    jband[j, n] = nucRecord.rwInt(jband.get((j, n), None))
+                    jband[j, n] = nucRecord.rwInt(jband.get((j, n), absent))
             self._metadata["jband"] = jband
 
             # position of in-group scattering for scattering data in group j
@@ -492,7 +502,7 @@ class _IsotxsNuclideIO:
             # does this mean we never have upscatter? possibly.
             for n in range(self._maxScatteringBlocks):
                 for j in range(self._numGroups):
-                    jj[j, n] = nucRecord.rwInt(jj.get((j, n), None))
+                    jj[j, n] = nucRecord.rwInt(jj.get((j, n), absent))
             self._metadata["jj"] = jj
 
     def _rw5DRecord(self):

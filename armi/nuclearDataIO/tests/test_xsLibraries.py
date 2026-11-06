@@ -448,6 +448,37 @@ class TestIsotxsMerge(AbstractTestXSlibraryMerging, unittest.TestCase):
         self.assertEqual(merged.isotxsMetadata["maxUpScatterGroups"], 33)
         self.assertEqual(merged.isotxsMetadata["maxDownScatterGroups"], downAA + 2)
 
+    def test_writeNuclidesWithFewerScatteringBlocks(self):
+        """Nuclides from a library with fewer scattering blocks are written with the rest absent."""
+        blocks = self.libAA.isotxsMetadata["maxScatteringBlocks"]
+        self.libAB.isotxsMetadata["maxScatteringBlocks"] = blocks + 1
+        for nuc in self.libAB.nuclides:
+            for key in ("scatFlag", "ords"):
+                nuc.isotxsMetadata[key] = np.append(nuc.isotxsMetadata[key], 0)
+        merged = xsLibraries.IsotxsLibrary()
+        merged.merge(self.libAA)
+        merged.merge(self.libAB)
+        self.getWriteFunc()(merged, self.testFileName)
+        back = self.getReadFunc()(self.testFileName)
+        self.assertEqual(back.isotxsMetadata["maxScatteringBlocks"], blocks + 1)
+        label = merged.nuclideLabels[0]
+        compared = 0
+        for name in ("elasticScatter", "inelasticScatter", "n2nScatter", "totalScatter"):
+            written = getattr(merged[label].micros, name)
+            if written is not None:
+                np.testing.assert_allclose(getattr(back[label].micros, name).toarray(), written.toarray())
+                compared += 1
+        self.assertGreater(compared, 0)
+
+    def test_mergeKeepsTheMostScatteringBlocks(self):
+        """A library with P3 scattering merges with one that has fewer scattering blocks."""
+        blocksAA = self.libAA.isotxsMetadata["maxScatteringBlocks"] or 0
+        self.libAB.isotxsMetadata["maxScatteringBlocks"] = blocksAA + 3
+        merged = xsLibraries.IsotxsLibrary()
+        merged.merge(self.libAA)
+        merged.merge(self.libAB)
+        self.assertEqual(merged.isotxsMetadata["maxScatteringBlocks"], blocksAA + 3)
+
     def test_canRemoveIsotopes(self):
         emptyXSLib = xsLibraries.IsotxsLibrary()
         emptyXSLib.merge(self.libAA)

@@ -197,8 +197,9 @@ class FileMetadata(_Metadata):
 class NuclideXSMetadata(FileMetadata):
     """Metadata for library files containing nuclide cross sections, e.g. ``ISOTXS``."""
 
-    #: File-wide extents of the scattering matrices: a merged library needs the widest of each.
-    SCATTER_BAND_KEYS = ("maxUpScatterGroups", "maxDownScatterGroups")
+    #: File-wide extents of the scattering data (bands, Legendre order, number of blocks): a merged
+    #: library needs the largest of each.
+    SCATTER_BAND_KEYS = ("maxUpScatterGroups", "maxDownScatterGroups", "maxScatteringOrder", "maxScatteringBlocks")
 
     def _getSkippedKeys(self, other, selfContainer, otherContainer, mergedData):
         skippedKeys = set(["chi", "libraryLabel"])
