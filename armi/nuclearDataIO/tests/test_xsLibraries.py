@@ -436,6 +436,18 @@ class TestIsotxsMerge(AbstractTestXSlibraryMerging, unittest.TestCase):
     def getLibLumpedPath(self):
         return ISOTXS_LUMPED
 
+    def test_mergeKeepsTheWidestScatteringBand(self):
+        """Libraries whose scattering reaches over different numbers of groups still merge."""
+        self.libAA.isotxsMetadata["maxUpScatterGroups"] = 26
+        self.libAB.isotxsMetadata["maxUpScatterGroups"] = 33
+        downAA = self.libAA.isotxsMetadata["maxDownScatterGroups"] or 0
+        self.libAB.isotxsMetadata["maxDownScatterGroups"] = downAA + 2
+        merged = xsLibraries.IsotxsLibrary()
+        merged.merge(self.libAA)
+        merged.merge(self.libAB)
+        self.assertEqual(merged.isotxsMetadata["maxUpScatterGroups"], 33)
+        self.assertEqual(merged.isotxsMetadata["maxDownScatterGroups"], downAA + 2)
+
     def test_canRemoveIsotopes(self):
         emptyXSLib = xsLibraries.IsotxsLibrary()
         emptyXSLib.merge(self.libAA)
