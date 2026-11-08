@@ -81,6 +81,7 @@ CONF_OUTPUT_CACHE_LOCATION = "outputCacheLocation"
 CONF_OUTPUT_FILE_EXTENSION = "outputFileExtension"
 CONF_PHYSICS_FILES = "savePhysicsFiles"
 CONF_PLOTS = "plots"
+CONF_PLUGINS = "plugins"
 CONF_POWER = "power"
 CONF_POWER_DENSITY = "powerDensity"
 CONF_POWER_FRACTIONS = "powerFractions"
@@ -104,7 +105,6 @@ CONF_TIGHT_COUPLING_SETTINGS = "tightCouplingSettings"
 CONF_TRACE = "trace"
 CONF_TRACK_ASSEMS = "trackAssems"
 CONF_UNIFORM_MESH_MINIMUM_SIZE = "uniformMeshMinimumSize"
-CONF_USER_PLUGINS = "userPlugins"
 CONF_VERBOSITY = "verbosity"
 CONF_VERSIONS = "versions"
 CONF_ZONE_DEFINITIONS = "zoneDefinitions"
@@ -828,12 +828,12 @@ def defineSettings() -> List[setting.Setting]:
             ),
         ),
         setting.Setting(
-            CONF_USER_PLUGINS,
+            CONF_PLUGINS,
             default=[],
-            label=CONF_USER_PLUGINS,
-            description="YAML list defining the locations of UserPlugin subclasses. You can enter "
-            "the full ARMI import path: armi.test.test_what.MyPlugin, or you can enter the full "
-            "file path: /path/to/my/pluginz.py:MyPlugin ",
+            label="Extra plugins",
+            description="YAML list of additional ArmiPlugin classes to add to the ARMI app, e.g. "
+            "armi_openmc.plugin.OpenMCPlugin or /path/to/my/plugin.py:MyPlugin. These are registered "
+            "before the settings are read, so they may define their own settings, parameters, and flags.",
             schema=vol.Any([vol.Coerce(str)], None),
         ),
         setting.Setting(

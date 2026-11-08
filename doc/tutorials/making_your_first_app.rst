@@ -391,71 +391,23 @@ A generic description of the outputs is provided in :doc:`/user/outputs`.
 
 You can add your own outputs from your plugins.
 
-Bonus: Ad-hoc UserPlugins
-=========================
-It will often be the case that you are not building an ARMI application from scratch, but
-you are using a pre-existing ARMI application. And while working with this (potentially
-quite large) ARMI application, you want to add a one-off change. Maybe you want to make a
-special plot during the run, or do a quick "what-if" modification of the 
-:py:class:`Reactor <armi.reactor.reactors.Reactor>`. These things come up for scientific
-or engineering work: a quick one-off idea you want to test out and probably only use once.
+Bonus: Choosing plugins in the settings file
+============================================
+You will not always need a new application to change which plugins a run uses. Often you
+are working with a pre-existing ARMI application and want to add one more plugin for a
+particular case: an existing physics plugin, a special plot during the run, or a
+"what-if" modification of the :py:class:`Reactor <armi.reactor.reactors.Reactor>`.
 
-This is where a :py:class:`UserPlugin <armi.plugins.UserPlugin>` come in.
+Instead, list the plugin under the ``plugins`` setting of your case. It can be an
+installed plugin or a regular plugin in a loose Python file:
 
-There are two parts to defining a :py:class:`UserPlugin <armi.plugins.UserPlugin>`:
+.. code-block:: yaml
 
-Define the UserPlugin in Python
--------------------------------
-This can be done by subclassing :py:class:`armi.plugins.UserPlugin`:
+  settings:
+    plugins:
+      - /path/to/my/tweaks.py:MyTweaksPlugin
 
-.. code-block:: python
-
-    from armi import plugins
-    from armi.reactor.flags import Flags
-
-    class UserPluginExample(plugins.UserPlugin):
-        """
-        This plugin flex-tests the onProcessCoreLoading() hook, and
-        arbitrarily adds "1" to the power ever each fuel block.
-        """
-
-        @staticmethod
-        @plugins.HOOKIMPL
-        def onProcessCoreLoading(core, cs, dbLoad):
-        for b in core.getBlocks(Flags.FUEL):
-            b.p.power += 1.0
-
-In most ways, ``UserPluginExample`` above is just a normal
-:py:class:`ArmiPlugin <armi.plugins.ArmiPlugin>`. You can implement any of the normal
-:py:class:`ArmiPlugin <armi.plugins.ArmiPlugin>` hooks, like: 
-:py:meth:`exposeInterfaces() <armi.plugins.ArmiPlugin.exposeInterfaces>`,
-:py:meth:`defineParameters() <armi.plugins.ArmiPlugin.defineParameters>`, and so on. The
-:py:class:`UserPlugin <armi.plugins.UserPlugin>` class is more limited than a
-regular plugin though, you cannot implement:
-
-* :py:meth:`armi.plugins.ArmiPlugin.defineParameters`
-* :py:meth:`armi.plugins.ArmiPlugin.defineParameterRenames`
-* :py:meth:`armi.plugins.ArmiPlugin.defineSettings`
-* :py:meth:`armi.plugins.ArmiPlugin.defineSettingsValidators`
-
-Define a list of UserPlugins in the Settings File
--------------------------------------------------
-In order for your simulation to know about your custom
-:py:class:`UserPlugin <armi.plugins.UserPlugin>` you need to add a line to your Settings
-file:
-
-.. code-block::
-
-  userPlugins:
-    - armi.tests.test_user_plugins.UserPlugin0
-    - //path/to/my/pluginz.py:UserPlugin1
-    - C:\\path\to\my\pluginZ.py:UserPlugin2
-
-What we have above is actually an example of including three different plugins via your
-settings YAML file:
-
-* By providing a ``.``-separated ARMI import path (if you included your :py:class:`UserPlugin <armi.plugins.UserPlugin>` in your commit.
-* By providing a full Linux/Unix/MacOS file path, then a colon (``:``), followed by the class name.
-* By providing a full Windows file path, then a colon (``:``), followed by the class name.
+Any application run on that case, ``python -m armi`` included, picks it up. See
+:ref:`plugins-in-settings` for the details.
 
 .. |deg| unicode:: U+00B0

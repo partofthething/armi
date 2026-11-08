@@ -275,18 +275,23 @@ class Settings:
         reader, path = self._prepToRead(fName)
         reader.readFromFile(fName, handleInvalids)
         self._applyReadSettings(path if setPath else None)
-        self.registerUserPlugins()
+        self._checkPluginsRegistered(fName)
 
         return reader
 
-    def registerUserPlugins(self):
-        """Add any ad-hoc 'user' plugins that are referenced in the settings file."""
-        userPlugins = self["userPlugins"]
-        if len(userPlugins):
-            from armi import getApp
+    def _checkPluginsRegistered(self, fName):
+        """Make sure the plugins requested by the ``plugins`` setting are part of the configured App."""
+        from armi import getApp
 
-            app = getApp()
-            app.registerUserPlugins(userPlugins)
+        app = getApp()
+        missing = [p for p in self["plugins"] or [] if not app._isPluginRegistered(p)]
+        if missing:
+            raise RuntimeError(
+                f"The settings file `{fName}` requests plugins that are not registered in the `{app.name}` app: "
+                f"{missing}. Plugins have to be registered before ARMI is configured. Pass the settings file on the "
+                "command line, call `armi.init()` before `armi.configure()`, use "
+                "`armi.configure(app, settingsFiles=[...])`, or list the plugins in `ARMI_PLUGINS`."
+            )
 
     def _prepToRead(self, fName):
         if self._failOnLoad:

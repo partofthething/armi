@@ -50,7 +50,7 @@ import subprocess
 import sys
 import traceback
 import warnings
-from typing import List, Optional, Type
+from typing import Iterable, List, Optional, Type
 
 import __main__ as main
 
@@ -123,7 +123,8 @@ def init(fName=None, cs=None, skipInspection=False, choice=None):
     Parameters
     ----------
     fName : str, optional
-        The path to a settings file to load: my_case.yaml
+        The path to a settings file to load: my_case.yaml. If ARMI has not been configured yet, it is configured
+        with the default App plus any plugins named in this file's ``plugins`` setting.
     cs : Settings, optional
         If supplied, this CS object will supersede the other case input methods and use the object directly.
     skipInspection : bool, optional
@@ -140,6 +141,8 @@ def init(fName=None, cs=None, skipInspection=False, choice=None):
     if cs is None:
         if fName is None:
             fName = settings.promptForSettingsFile(choice)
+        if not isConfigured():
+            configure(settingsFiles=[fName])
         cs = settings.Settings(fName)
 
     armiCase = cases.Case(cs=cs)
@@ -231,7 +234,7 @@ def _liveInterpreter():
     return not hasattr(main, "__file__")
 
 
-def configure(app: Optional[apps.App] = None, permissive=False):
+def configure(app: Optional[apps.App] = None, permissive=False, settingsFiles: Optional[Iterable[str]] = None):
     """
     Set the plugin manager for the Framework and configure internals to those plugins.
 
@@ -244,6 +247,10 @@ def configure(app: Optional[apps.App] = None, permissive=False):
         Whether or not an error should be produced if ``configure`` is called more than once. This should only be set to
         ``True`` under testing or demonstration purposes, where the contents of otherwise independent scripts need to be
         run under the same python instance.
+    settingsFiles :
+        Settings files whose ``plugins`` setting lists extra plugins to add to the App before it is configured.
+        Defaults to the command line arguments, so ``python -m myapp run case.yaml`` picks up the plugins listed in
+        ``case.yaml``. Plugins listed in the comma-separated ``ARMI_PLUGINS`` environment variable are added too.
 
     Important
     ---------
@@ -283,6 +290,12 @@ def configure(app: Optional[apps.App] = None, permissive=False):
         "ARMI can no longer be configured after blueprints have been imported. Blueprints were imported from"
         f":\n{context.BLUEPRINTS_IMPORT_CONTEXT}"
     )
+
+    # Add plugins requested by settings files (on the command line by default) or ARMI_PLUGINS. This has to happen
+    # before the App is installed, since parameters and flags are frozen below.
+    if settingsFiles is None:
+        settingsFiles = sys.argv[1:]
+    app.registerPlugins(apps.findRequestedPlugins(settingsFiles))
 
     _ARMI_CONFIGURE_CONTEXT = "".join(traceback.format_stack())
 

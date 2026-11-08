@@ -134,6 +134,11 @@ New features
 * A material can declare that it never thermally expands.
 * ENDF/B-VIII.1 DRAGLIB nuclide names are accepted in the elemental expansion.
 * ``!include`` can be written as the value of a key in blueprints.
+* The settings file can choose plugins: list them under the new ``plugins`` setting (or in the ``ARMI_PLUGINS``
+  environment variable) and ``armi.configure()`` adds them to whatever App is running, no new App needed. They are
+  registered before the settings are read, so they can define settings, parameters and flags (:ref:`plugins-in-settings`). This replaces ``UserPlugin`` and the
+  ``userPlugins`` setting, which have been removed: make user plugins plain ``ArmiPlugin`` subclasses and list them
+  under ``plugins``.
 
 Blueprints and YAML
 ===================

@@ -1,4 +1,5 @@
 # Copyright 2019 TerraPower, LLC
+# Copyright 2026 Nick Touran
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -23,13 +24,18 @@ customizing much of the Framework's behavior.
 # ruff: noqa: E402
 import collections
 import importlib
+import importlib.util
+import os
 import sys
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, Iterable, List, Optional, Tuple, Type
 
 from armi import context, meta, pluginManager, plugins, settings
 from armi.reactor import parameters
 from armi.reactor.flags import Flags
 from armi.settings import Setting, fwSettings
+
+PLUGINS_ENV_VAR = "ARMI_PLUGINS"
+"""Environment variable holding a comma-separated list of extra plugins for the default ARMI App."""
 
 
 class App:
@@ -231,43 +237,28 @@ class App:
 
         self._pluginFlagsRegistered = True
 
-    def registerUserPlugins(self, pluginPaths):
-        r"""
-        Register additional plugins passed in by importable paths.
-        These plugins may be provided e.g. by an application during startup
-        based on user input.
-
-        Format expected to be a list of full namespaces to plugin classes.
-        There should be a comma between individual plugins and dots representing
-        the file path or importable python namespace.
-
-        Examples
-        --------
-        importable namespace:
-        ``armi.stuff.plugindir.pluginMod.pluginCls,armi.whatever.plugMod2.plugCls2``
-
-        or on Linux/Unix:
-        ``/path/to/pluginMod.py:pluginCls,/path/to/plugMod2.py:plugCls2``
-
-        or on Windows:
-        ``C:\\path\\to\\pluginMod.py:pluginCls,C:\\\\path\\to\\plugMod2.py:plugCls2``
-
-        Notes
-        -----
-        These paths are meant to be taken from a settings file, though this method
-        is public. The idea is that these "user plugins" differ from regular plugins
-        because they are defined during run time, not import time. As such, we
-        restrict their flexibility and power as compared to the usual ArmiPlugins.
+    def registerPlugins(self, pluginPaths: Iterable[str]):
         """
+        Register full-featured plugins, given as importable paths, before the app is configured.
+
+        This lets settings choose additional plugins to add to any App, without
+        writing a new App subclass. It is what powers the ``plugins`` setting and the ``ARMI_PLUGINS``
+        environment variable (see :py:func:`armi.configure`). See :py:func:`importPlugin` for the
+        accepted path formats. Plugins that are already registered are skipped.
+
+        The plugins may define settings, parameters, and flags. Those are frozen when
+        :py:func:`armi.configure` is called, so this must be called before the App is configured.
+        """
+        from armi import getApp
+
+        if getApp() is self:
+            raise RuntimeError(
+                "Plugins cannot be registered after the App has been configured because their parameters and flags "
+                "would be missed. Register them before calling `armi.configure()`."
+            )
         for pluginPath in pluginPaths:
-            if self._isPluginRegistered(pluginPath):
-                continue
-            if ".py:" in pluginPath:
-                # The path is of the form: /path/to/why.py:MyPlugin
-                self.__registerUserPluginsAbsPath(pluginPath)
-            else:
-                # The path is of the form: armi.thing.what.MyPlugin
-                self.__registerUserPluginsInternalImport(pluginPath)
+            if not self._isPluginRegistered(pluginPath):
+                self._pm.register(importPlugin(pluginPath))
 
     def _isPluginRegistered(self, pluginPath: str):
         r"""
@@ -276,7 +267,7 @@ class App:
         The expected path formats are:
         ------------------------------
         importable namespace:
-        ``armi.stuff.plugindir.pluginMod.pluginCls``
+        ``armi.stuff.plugindir.pluginMod.pluginCls`` or ``armi.stuff.plugindir.pluginMod:pluginCls``
 
         or on Linux/Unix:
         ``/path/to/pluginMod.py:pluginCls``
@@ -287,7 +278,7 @@ class App:
         Parameters
         ----------
         pluginPath : str
-            String path to a userPlugin.
+            String path to a plugin.
 
         Returns
         -------
@@ -300,48 +291,6 @@ class App:
             pluginName = pluginPath.strip().split(".")[-1]
 
         return self._pm.has_plugin(pluginName)
-
-    def __registerUserPluginsAbsPath(self, pluginPath):
-        """Helper method to register a single UserPlugin via absolute path.
-
-        Here the given path is of the form: /path/to/why.py:MyPlugin
-        """
-        assert pluginPath.count(".py:") == 1, f"Invalid plugin path: {pluginPath}"
-
-        # split the settings string into file path and class name
-        filePath, className = pluginPath.split(".py:")
-        filePath += ".py"
-
-        spec = importlib.util.spec_from_file_location(className, filePath)
-        mod = importlib.util.module_from_spec(spec)
-        sys.modules[spec.name] = mod
-        spec.loader.exec_module(mod)
-        plugin = getattr(mod, className)
-        assert issubclass(plugin, plugins.UserPlugin)
-        self._pm.register(plugin)
-
-        # ensure UserPlugin flags are loaded
-        newFlags = plugin.defineFlags()
-        if newFlags:
-            Flags.extend(newFlags)
-
-    def __registerUserPluginsInternalImport(self, pluginPath):
-        """Helper method to register a single UserPlugin via internal import.
-
-        Here the given path is of the form: armi.thing.what.MyPlugin
-        """
-        names = pluginPath.strip().split(".")
-        modPath = ".".join(names[:-1])
-        clsName = names[-1]
-        mod = importlib.import_module(modPath)
-        plugin = getattr(mod, clsName)
-        assert issubclass(plugin, plugins.UserPlugin)
-        self._pm.register(plugin)
-
-        # ensure UserPlugin flags are loaded
-        newFlags = plugin.defineFlags()
-        if newFlags:
-            Flags.extend(newFlags)
 
     @property
     def splashText(self):
@@ -378,3 +327,66 @@ class App:
 """
 
         return splash
+
+
+def importPlugin(pluginPath: str) -> Type[plugins.ArmiPlugin]:
+    r"""
+    Import and return the plugin class named by a string path.
+
+    Accepted formats are:
+
+    * an importable namespace: ``armi_openmc.plugin.OpenMCPlugin``
+    * an entry-point style namespace: ``armi_openmc.plugin:OpenMCPlugin``
+    * a Python file and class name: ``/path/to/myPlugin.py:MyPlugin`` (or ``C:\path\to\myPlugin.py:MyPlugin``)
+    """
+    pluginPath = pluginPath.strip()
+    if ".py:" in pluginPath:
+        filePath, className = pluginPath.rsplit(".py:", 1)
+        spec = importlib.util.spec_from_file_location(className, filePath + ".py")
+        mod = importlib.util.module_from_spec(spec)
+        sys.modules[spec.name] = mod
+        spec.loader.exec_module(mod)
+    else:
+        sep = ":" if ":" in pluginPath else "."
+        modPath, _, className = pluginPath.rpartition(sep)
+        mod = importlib.import_module(modPath)
+
+    plugin = getattr(mod, className)
+    if not (isinstance(plugin, type) and issubclass(plugin, plugins.ArmiPlugin)):
+        raise TypeError(f"`{pluginPath}` does not name an ArmiPlugin subclass.")
+    return plugin
+
+
+def readPluginsFromSettingsFile(fName: str) -> List[str]:
+    """
+    Return the ``plugins`` listed in a settings file, without loading the rest of it.
+
+    The full settings can only be read once the plugins that define them are registered, so this takes a quick look at
+    just the ``plugins`` setting first. Files that are not ARMI settings files (e.g. blueprints) give an empty list.
+    """
+    from ruamel.yaml import YAML
+
+    from armi.settings.fwSettings.globalSettings import CONF_PLUGINS
+
+    with open(fName, "r") as f:
+        tree = YAML(typ="safe").load(f)
+    if not isinstance(tree, dict) or not isinstance(tree.get("settings"), dict):
+        return []
+    return [str(p) for p in tree["settings"].get(CONF_PLUGINS) or []]
+
+
+def findRequestedPlugins(args: Iterable[str] = ()) -> List[str]:
+    """
+    Gather the extra plugins requested for an App, without duplicates.
+
+    Plugins come from the ``ARMI_PLUGINS`` environment variable (comma-separated) and from the ``plugins`` setting of
+    any existing YAML settings files among ``args`` (typically the command line arguments).
+    """
+    requested = [p.strip() for p in os.environ.get(PLUGINS_ENV_VAR, "").split(",") if p.strip()]
+    for arg in args:
+        if os.path.splitext(arg)[1].lower() in (".yaml", ".yml") and os.path.isfile(arg):
+            try:
+                requested.extend(readPluginsFromSettingsFile(arg))
+            except Exception:  # noqa: BLE001 -- unreadable files are reported later by the real settings reader
+                continue
+    return list(dict.fromkeys(requested))

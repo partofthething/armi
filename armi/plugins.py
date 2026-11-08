@@ -1,4 +1,5 @@
 # Copyright 2019 TerraPower, LLC
+# Copyright 2026 Nick Touran
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -674,114 +675,6 @@ class ArmiPlugin:
         ...         return BespokeAxialExpansion
 
         """
-
-
-class UserPlugin(ArmiPlugin):
-    """
-    A variation on the ArmiPlugin meant to be created at runtime, from the ``userPlugins`` setting.
-
-    This is obviously a more limited use-case than the usual ArmiPlugin, as those are meant to be defined at import
-    time, instead of run time. As such, this class has some built-in tooling to limit how these run-time plugins are
-    used. They are meant to be more limited.
-
-    Notes
-    -----
-    The usual ArmiPlugin is much more flexible, if the UserPlugin does not support what you want to do, just use an
-    ArmiPlugin.
-    """
-
-    def __init__(self, *args, **kwargs):
-        ArmiPlugin.__init__(self, *args, **kwargs)
-        self.__enforceLimitations()
-
-    def __enforceLimitations(self):
-        """
-        Enforce that UserPlugins are more limited than regular ArmiPlugins.
-
-        UserPlugins are different from regular plugins in that they can be defined during a run, and as such, we want to
-        limit how flexible they are, so we can correctly corral their side effects during a run.
-        """
-        if issubclass(self.__class__, UserPlugin):
-            assert len(self.__class__.defineParameters()) == 0, (
-                "UserPlugins cannot define parameters, consider using an ArmiPlugin."
-            )
-            assert len(self.__class__.defineParameterRenames()) == 0, (
-                "UserPlugins cannot define parameter renames, consider using an ArmiPlugin."
-            )
-            assert len(self.__class__.defineSettings()) == 0, (
-                "UserPlugins cannot define new Settings, consider using an ArmiPlugin."
-            )
-            # NOTE: These are the methods that we are staunchly _not_ allowing people to change in this class. If you
-            # need these, please use a regular ArmiPlugin.
-            self.defineParameterRenames = lambda: {}
-            self.defineSettings = lambda: []
-            self.defineSettingsValidators = lambda: []
-
-    @staticmethod
-    @HOOKSPEC
-    def defineParameters():
-        """
-        Prevents defining additional parameters.
-
-        .. warning:: This is not overridable.
-
-        Notes
-        -----
-        It is a designed limitation of user plugins that they not define parameters. Parameters are defined when the
-        App() is read in, which is LONG before the settings file has been read. So the parameters are defined before we
-        discover the user plugin. If this is a feature you need, just use an ArmiPlugin.
-        """
-        return {}
-
-    @staticmethod
-    @HOOKSPEC
-    def defineParameterRenames():
-        """
-        Prevents parameter renames.
-
-        Warning
-        -------
-        This is not overridable.
-
-        Notes
-        -----
-        It is a designed limitation of user plugins that they not generate parameter renames, Parameters are defined
-        when the App() is read in, which is LONG before the settings file has been read. So the parameters are defined
-        before we discover the user plugin. If this is a feature you need, just use a normal Plugin.
-        """
-        return {}
-
-    @staticmethod
-    @HOOKSPEC
-    def defineSettings():
-        """
-        Prevents new settings.
-
-        Warning
-        -------
-        This is not overridable.
-
-        Notes
-        -----
-        It is a designed limitation of user plugins that they not define new settings, so that they are able to be added
-        to the plugin stack during run time.
-        """
-        return []
-
-    @staticmethod
-    @HOOKSPEC
-    def defineSettingsValidators(inspector):
-        """
-        Prevents new settings validators.
-
-        .. warning:: This is not overridable.
-
-        Notes
-        -----
-        It is a designed limitation of user plugins that they not define new settings, so that they are able to be added
-        to the plugin stack during run time.
-        """
-        return []
 
 
 def getNewPluginManager() -> pluginManager.ArmiPluginManager:

@@ -153,3 +153,73 @@ Example: ::
 
    >>> import armi
    >>> armi.configure(MyApp())
+
+.. _plugins-in-settings:
+
+Choosing plugins in the settings file
+-------------------------------------
+
+Writing an ``App`` makes sense for a tool that many people will run. When a case just needs a particular set of
+plugins, say the framework plus OpenMC, or one more plugin on top of an application you already use, the settings file
+can choose them instead:
+
+.. code-block:: yaml
+
+    settings:
+      plugins:
+        - armi_openmc.plugin.OpenMCPlugin
+        - /home/me/scratch/myTweaks.py:MyTweaksPlugin
+      caseTitle: quick-openmc-check
+      # settings defined by the plugins above can be used here too
+
+Then run it with plain ARMI, or with any ARMI-based application::
+
+    $ python -m armi run quick-openmc-check.yaml
+
+When :py:func:`armi.configure` runs, it reads just the ``plugins`` setting of each settings file on the command line
+and adds those plugins to the App before configuring the Framework. They are registered before the rest of the file is
+read, so they are full :py:class:`~armi.plugins.ArmiPlugin` objects that can define settings, parameters, flags, entry
+points, interfaces, and so on. Each entry can be:
+
+* an importable path: ``package.module.PluginClass``,
+* an entry-point style path: ``package.module:PluginClass``, or
+* a Python file and class name: ``/path/to/file.py:PluginClass`` (or ``C:\path\to\file.py:PluginClass``).
+
+A plugin can also live in a plain Python file next to the case, for example to make a special plot or a "what-if"
+change to the reactor:
+
+.. code-block:: python
+
+    # myTweaks.py
+    from armi import plugins
+    from armi.reactor.flags import Flags
+
+
+    class MyTweaksPlugin(plugins.ArmiPlugin):
+        """Add a little power to every fuel block once the core is loaded."""
+
+        @staticmethod
+        @plugins.HOOKIMPL
+        def onProcessCoreLoading(core, cs, dbLoad):
+            for b in core.getBlocks(Flags.FUEL):
+                b.p.power += 1.0
+
+Plugins can also be listed, comma-separated, in the ``ARMI_PLUGINS`` environment variable. This is useful for
+commands that are not given a settings file, such as a plugin's own entry points or reading a database written by a
+run that used extra plugins::
+
+    $ ARMI_PLUGINS=armi_openmc.plugin.OpenMCPlugin python -m armi --list-commands
+
+In a script, :py:func:`armi.init` does the same thing when ARMI has not been configured yet::
+
+    >>> import armi
+    >>> o = armi.init(fName="quick-openmc-check.yaml")
+
+or you can name the settings files when configuring::
+
+    >>> armi.configure(MyApp(), settingsFiles=["quick-openmc-check.yaml"])
+
+Parameters and flags are fixed when ARMI is configured, so plugins have to be registered before that. If a settings
+file is loaded under an App that is missing one of its ``plugins``, loading fails with an error saying so, instead of
+running the case without it. Plugins the App already has are fine, so the same settings file also works with an App
+that includes them, like ``armi-openmc``.
