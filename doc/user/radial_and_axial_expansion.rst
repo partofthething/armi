@@ -438,9 +438,9 @@ design.
 
 #. The top-most Block must be a "dummy Block" containing fluid (typically coolant).
 
-See `armi.tests.detailedAxialExpansion
-<https://github.com/terrapower/armi/tree/main/armi/tests/detailedAxialExpansion>`_ for an example
-blueprint which satisfy the above requirements.
+See `armi/testing/reactors/detailedAxialExpansion
+<https://github.com/partofthething/armi/tree/main/armi/testing/reactors/detailedAxialExpansion>`_ for an
+example blueprint which satisfies the above requirements.
 
 .. _mass_redistribution:
 

@@ -27,60 +27,31 @@ The ARMI project follows a few basic rules for "good" commit messages:
 
 Good Pull Requests
 ==================
-A good commit is like a sentence; it expresses one complete thought. In that context, a good Pull
-Request (PR) is like a paragraph; it contains a few sentences that contain one larger thought. A
-good PR is *not* a chapter or an entire book! It should not contain multiple independent ideas.
+A good commit is like a sentence: it expresses one complete thought. A good Pull Request (PR) is
+like a paragraph: a few commits that add up to one larger idea.
 
 One Idea = One PR
 -----------------
-.. important ::
-    If you *can* break a PR into smaller PRs, containing unrelated changes, please do.
+Keep each PR to one idea. Unrelated changes are easier to review, test, and revert as separate PRs.
 
-It is a discourtesy to your reviewers to make them review a PR with multiple, unrelated changes. It
-forces them to look at every line of diff in your PR and figure out which change it belongs to. They
-are busy people, and it will save them time and effort if your PR only has one main idea. If your
-PRs are smaller, you will notice a great increase in the quality of the reviews you get.
-
-Don't open until it is ready
-----------------------------
-
-.. important ::
-    Wait until your PR is complete to open it.
-
-Your PR isn't complete when the code works, it is complete when the code is polished and all the
-tests are written and working. The idea here is: as soon as you open a PR, people will start
-spending their time looking at it. And their time is valuable. Even though GitHub allows you to
-`open a Draft PR <https://github.blog/2019-02-14-introducing-draft-pull-requests/>`_, this is not
-the default option in ARMI. It should not be your workflow to open a Draft PR by default. We prefer
-to keep the PR list as short as possible. A good rule of thumb is: don't open a PR until you think
-it is ready for final review.
+Open it when it is ready
+------------------------
+Open a PR when you think it is ready for review: the code works, the tests are written, and the
+docs are updated. Use a Draft PR if you want early feedback on something unfinished.
 
 Test It
 -------
-.. important ::
-    If a PR doesn't have any changes to testing, it probably isn't complete.
+Unless a PR only touches documentation or formatting, it needs tests:
 
-Unless a PR is just documentation or linting, it almost certainly needs testing to be complete. For
-example:
-
-* If a PR adds new code, that code needs new tests to prove it is working.
-* If a PR changes existing code, there needs to be test changes to prove the code still works.
-* If a PR fixes a bug, there needs to be a test to prove the bug is fixed.
-
-If the changes in the PR are worth the time to make, they are worth the time to test. Help your
-reviewer by proving your code works.
+* New code needs tests showing it works.
+* Changed code needs tests showing it still works.
+* A bug fix needs a test that fails without the fix.
 
 Document It
 -----------
-
-.. important ::
-    If it isn't documented, it doesn't exist.
-
-We auto-document the API, so don't worry about that. But when it comes to documentation, write it
-for somebody who is new to the code base 3 years from now, who needs to understand it in nitty-
-gritty detail to fix a bug without you. Think about variable names, comments, and docstrings. Also
-consider (if you are making a major change) that you might be making something in the docs out-of-
-date.
+The API reference is generated from docstrings, so write good ones: say what a function does and
+why, for someone who is new to that part of the code. If your change makes something in ``doc/``
+out of date, update it in the same PR.
 
 Watch for Requirements
 ----------------------
@@ -120,16 +91,14 @@ abstractly as possible, the packages that need to be installed **somehow** for t
 In addition, ``extras_require`` are used to specify other packages that are not strictly required,
 but if installed enable extra functionality, like unit testing or building documentation.
 
+.. _third-party-licensing:
+
 Third-Party Licensing
 ---------------------
-Be careful when including any dependency in ARMI (say in the ``pyproject.toml`` file) not to include
-anything with a license that supersedes our Apache license. For instance, any third-party Python
-library included in ARMI with a GPL license will make the whole project fall under the GPL license.
-But a lot of potential users of ARMI will want to keep some of their work private, so we can't allow
-any GPL tools.
-
-For that reason, it is generally considered best-practice in the ARMI ecosystem to only use third-
-party Python libraries that have MIT or BSD licenses.
+ARMI is Apache 2.0 licensed, and people build private and commercial applications on it. New
+dependencies should have permissive licenses that are compatible with that, such as MIT, BSD, or
+Apache 2.0. Avoid copyleft licenses like the GPL, which would put conditions on how ARMI and the
+applications built on it can be distributed.
 
 Releasing a New Version of ARMI
 ===============================
@@ -144,9 +113,8 @@ We use the common ``major.minor.bump`` version scheme where a version string mig
 
 **Any change to a major or minor version is considered a release.**
 
-Only a core member of the ARMI team may release a new version, or add a tag of any kind to the
-repository. The rule is *the only tags in the ARMI repo are for official versions*. If you want to
-release a version of ARMI, you will need admin privileges to multiple TerraPower repos on GitHub.
+Releases are made by the maintainers of this repository. The only tags in the repository are for
+released versions.
 
 Every release should follow this process:
 
@@ -247,7 +215,7 @@ That log message gets printed 1,000 times, but we can ensure it is only printed 
     for _i in range(1000):
         runLog.warning("Something wicked this way comes.", single=True)
 
-Obviously, this will not be useful in every scenario. But it is a handy tool to clean up your log files.
+This is handy for keeping log files readable.
 
 
 Module-Level Logging

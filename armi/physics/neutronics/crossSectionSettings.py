@@ -633,9 +633,8 @@ class XSModelingOptions:
 
         Notes
         -----
-        These defaults are application-specific and design specific. They are included to provide an example and are
-        tuned to fit the internal needs of TerraPower. Consider a separate implementation/subclass if you would like
-        different behavior.
+        These defaults are application-specific and design-specific, and are included as an example. Consider a separate
+        implementation/subclass if you would like different behavior.
         """
         if type(validBlockTypes) is bool:
             validBlockTypes = None if validBlockTypes else ["fuel"]

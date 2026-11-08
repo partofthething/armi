@@ -26,10 +26,10 @@ enable developers to adapt and extend ARMI to their liking:
 
 * **ARMI-Based Applications**: A collection of plugins, along with application-specific
   customizations, working together with the ARMI Framework constitutes an "ARMI-Based
-  Application". As an example, the TerraPower proprietary tool for modeling and
-  analyzing sodium-cooled fast reactors is just such an application. It is from an
-  Application that ARMI gets its collection of active plugins, which in turn dictate
-  much of the ARMI Framework's behavior.
+  Application". For example, ``armi-openmc`` is the default plugins plus an OpenMC
+  plugin, and the :doc:`tutorial app </tutorials/making_your_first_app>` adds a small
+  flux and thermal solver. It is from an Application that ARMI gets its collection of
+  active plugins, which in turn dictate much of the ARMI Framework's behavior.
 
 Both of these concepts are discussed in depth below.
 

@@ -14,7 +14,7 @@
 # limitations under the License.
 
 """
-TerraPower Calculation Results Cache (CRC).
+Calculation Results Cache (CRC).
 
 This helps avoid duplicated time/energy in running cases.
 

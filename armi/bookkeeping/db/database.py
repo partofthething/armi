@@ -964,7 +964,7 @@ class Database:
     @staticmethod
     def _addHomogenizedNumberDensityParams(blocks, h5group):
         """
-        Create on-the-fly block homog. number density params for XTVIEW viewing.
+        Create on-the-fly block homog. number density params for visualization.
 
         See Also
         --------

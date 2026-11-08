@@ -401,9 +401,8 @@ constraining to require any higher-level input for such a general problem.
 In ANL-AFCI-177, section 2 says no shuffling was modeled, and that the core is
 in a batch shuffling mode, limited by a cladding fast fluence of 4.0e23 n/cm\
 :sup:`2`. Often, SFR studies use the REBUS code's implicit equilibrium fuel
-cycle mode. There is an ARMI equilibrium module at TerraPower that performs
-this useful calculation (with different inputs), but for this sample problem,
-we will simply model 10 cycles with explicit fuel management.
+cycle mode. For this sample problem, we will simply model 10 cycles with
+explicit fuel management.
 
 The shuffling algorithm we'll write will simply predict whether or not the
 stated fluence limit will be violated in the next cycle. If it will be, the

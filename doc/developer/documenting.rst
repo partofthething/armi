@@ -67,7 +67,7 @@ Either way, you eventually go to the ``doc`` folder and type this to build the d
 
 This will invoke Sphinx and generate a series of html files in the ``_build/html`` folder. Open up
 ``index.html`` to see the documentation from there. A copy of the documentation is hosted online at
-https://terrapower.github.io/armi/.
+https://partofthething.github.io/armi/.
 
 You can suggest a change to the documentation by opening an ARMI PR.
 
@@ -84,7 +84,7 @@ Sphinx plugin list, and change the default config to read::
 
     intersphinx_mapping = {
         "python": ("https://docs.python.org/3", None),
-        "armi": ("https://terrapower.github.io/armi/", None),
+        "armi": ("https://partofthething.github.io/armi/", None),
     }
 
 Now you can link to the ARMI documentation with links like::
@@ -103,8 +103,8 @@ ARMI plugin is a namespace package, the following extra config is required::
 
 Updating the Gallery
 ====================
-The `ARMI example gallery <https://terrapower.github.io/armi/gallery/index.html>`_ is a great way
-to quickly highlight neat features and uses of ARMI. To add a new item to the gallery, add your
+The `ARMI example gallery <https://partofthething.github.io/armi/gallery/index.html>`_ shows off
+features and uses of ARMI. To add a new item to the gallery, add your
 example code (including the required docstring) to the ``doc/gallery-src`` folder in the ARMI source
 tree. The example will be added to the gallery during the next documentation build.
 

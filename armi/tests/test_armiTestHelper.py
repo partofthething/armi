@@ -26,11 +26,11 @@ class TestArmiTestHelper(ArmiTestHelper):
         self.goodFilePath = os.path.join(THIS_DIR, "goodFile" + self._testMethodName)
         self.badFilePath = os.path.join(THIS_DIR, "badFile" + self._testMethodName)
         self.BLOCK_TEXT = (
-            "TerraPower aims to develop a sustainable and economic nuclear energy technology using:\n"
-            "Next-generation safe, affordable, clean and secure technologies\n"
-            "Advanced materials for more durable metallic fuels\n"
-            "World-class leadership for dynamic reactor engineering and innovation\n"
-            "Supercomputing for reliable and comprehensive modeling\n"
+            "A reactor model is built from a few kinds of objects:\n"
+            "The reactor, which holds the core and any ex-core structures\n"
+            "Assemblies, stacked from blocks\n"
+            "Blocks, each a class of object made of components\n"
+            "Components, with a shape, a material, and dimensions\n"
         )
         self.BAD_TEXT = self.BLOCK_TEXT.replace("class", "NEGATIVE")
         for path, text in zip([self.goodFilePath, self.badFilePath], (self.BLOCK_TEXT, self.BAD_TEXT)):

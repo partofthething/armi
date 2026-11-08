@@ -4,26 +4,11 @@
 Standards and Practices for Coding
 **********************************
 
-The ARMI coding standards are a set of guidelines for helping to create a more consistent and clear code base.
-Subpart 2.7 402 of `NQA-1 <http://nqa-1.com/files/NQA-1%20Nuclear%20Quality%20Manual.pdf>`_ states, "Software
-design verification shall evaluate... the design approach and ensure internal completeness, consistency, clarity
-and correctness." While these are required by NQA-1, the idea is that an ARMI developer, who is familiar with
-these coding standards, should be able to jump from one module to another without changing their coding style.
+These guidelines keep the code base consistent, so that someone familiar with one module can read
+and work on another without adjusting to a new style. The overall theme is: **balance clarity with
+conciseness**. Be as clear as possible, using as few words as possible.
 
-.. tip ::
-    :class: warning
-
-    The overall theme is: **Balance clarity with conciseness.**
-
-Just try to be as clear as possible, while using as few words as possible.
-
-.. important ::
-    Most of the guidelines can be broken, but all deviations need to be justified. It is up to the code reviewers
-    to determine whether the justification was adequate.
-
-    Developers and reviewers should consult the standards/guidelines while writing and reviewing code to ensure
-    consistency. Code reviewers should make sure to be familiar with the standards, so that their comments are
-    consistent with other reviewers.
+Most of the guidelines can be broken when there is a good reason; say why in the PR.
 
 
 Use of Large Language Models (LLMs)
@@ -45,10 +30,8 @@ Reviewers should hold LLM-assisted changes to the same standard as any other con
 
 Code formatting with ruff
 =========================
-ARMI uses the Python code formatter `ruff <https://docs.astral.sh/ruff/>`_. So while developing code
-in ARMI it is important to remember to us the ``ruff`` formatter before pushing any code to the
-repo. All changes pushed to ARMI on github.com will be automatically checked to see if they conform
-to the ``ruff`` code formatter standards.
+ARMI is formatted with `ruff <https://docs.astral.sh/ruff/>`_, and CI checks that every change
+is formatted.
 
 The ``ruff`` formatter provides 100% consistency in ARMI for: whitespace, line length, trailing
 commas, and string formatting. And it is easy to run on the command line:
@@ -59,10 +42,7 @@ commas, and string formatting. And it is easy to run on the command line:
 
 Code linting with ruff
 ======================
-ARMI also uses the amazing Python linter `ruff <https://docs.astral.sh/ruff/>`_. Again, any new code
-you add must have zero ``ruff`` warnings or errors.
-
-This is very easy to run on the command line:
+ARMI is also linted with ``ruff``, and new code should have no ``ruff`` warnings or errors:
 
 .. code-block:: bash
 
@@ -78,29 +58,21 @@ Avoid hard-coding run parameters
 Use the global settings object ``self.cs`` for most user-setable parameters that determine the run
 environment, etc. This will help keep the amount of repeated code down.
 
-Also, do not **ever** code the following things into the code: user names, passwords, or file paths
-on your computer. Use environmental variables where possible and user-configurable settings
+Do not put user names, passwords, or paths on your own computer in the code. Use environmental variables where possible and user-configurable settings
 elsewhere. You can also use the ``armi.ROOT`` variable (for the active code directory) or
 ``armi.RES``, and some other useful root-level variables.
 
 Avoid the global keyword
 ========================
-At all costs, avoid use of the ``global`` keyword in your code. Using this keyword can, and usually does, create
-extremely fragile code that is nigh-impossible to use a debugger on. Especially as part of object-oriented programming,
-this is extremely lazy design. A careful reader might notice that there are several files in ARMI that are currently
-using the ``global`` keyword. These are all schedule for a refactor to remove the use of ``global``. But, for now,
-changing the code would cause more annoyance for the ARMI ecosystem userbase than fixing it would. Still, all of those
-instance in ARMI will be fixed soon.
-
-No new uses of ``global`` will make it through the ARMI pull request process.
+Module-level state changed through ``global`` makes code hard to follow, test, and debug. Pass state
+explicitly or keep it on an object instead. A few older modules still use ``global``; please don't
+add new uses.
 
 Naming conventions
 ==================
 
-.. note::
-   There is a good argument to make that ARMI's use of ``camelCase`` makes the code less readable than if ARMI
-   used ``snake_case``. Unfortunately, making the switch now would affect such a large percentage of the API that
-   it would be more hassle for our user base than it is worth to change.
+ARMI uses ``camelCase`` rather than PEP 8's ``snake_case``, for historical reasons. Follow it so the code stays
+consistent.
 
 Use meaningful names
 --------------------
@@ -204,7 +176,7 @@ Other names are also consistently used throughout ARMI for specific objects:
 
 * ``cs`` when referring to a :py:class:``armi.settings.Settings`` class; this should not be confused with
   the ``.settings`` attribute of ``ArmiObject``.
-* ``lib`` when referring to a cross section library (would have been better as ``xsLib``)
+* ``lib`` when referring to a cross section library
 
 
 Prefer shorter methods
@@ -221,7 +193,7 @@ than 100 lines, see if you can't break it up. This does a few things:
 Avoid repeating code
 ====================
 In other words, don't repeat yourself. (`D. R. Y. <https://en.wikipedia.org/wiki/Don't_repeat_yourself>`_).
-Repetitious code is harder to read, and harderd for others to update. If you ever find yourself copying and pasting
+Repetitious code is harder to read, and harder to update. If you ever find yourself copying and pasting
 code, consider pulling the repeated code out into its own function, or using a loop.
 
 Public methods should have docstrings
@@ -233,10 +205,7 @@ functions and public classes.
 
 Unit tests
 ==========
-All ARMI developers are required to write unit tests.
-
-.. important ::
-    If you add a new function to the code base, you are required to add unit tests to cover that function.
+New code needs unit tests that cover it.
 
 ARMI uses the ``pytest`` library to drive tests, therefore tests need to be runnable from the commandline by
 ``python -m pytest armi``. Furthermore, for consistency:
@@ -282,8 +251,7 @@ Place a single line between each of these groups, for example:
 Don't create naked exceptions.
 ==============================
 When creating ``try``/``except`` blocks, a naked exception is when the ``except`` command is not
-followed by a specific exception type. Naked exceptions hide a lot of sins, particularly unexpected
-bugs. `This article <http://www.wilfred.me.uk/blog/2013/11/03/no-naked-excepts/>`_ explains the concept well,
+followed by a specific exception type. Naked exceptions hide unexpected bugs. `This article <http://www.wilfred.me.uk/blog/2013/11/03/no-naked-excepts/>`_ explains the concept well,
 as well as a few exceptions to this general rule.
 
 Examples:
@@ -320,8 +288,7 @@ Data model
 ==========
 Any reactor state information that is created by an ``Interface`` should be stored in the ARMI data model. The goal
 is that given minimal information (i.e. case settings and blueprints) ARMI should be able to load an entire reactor
-simulation from a given database. If you add state data to your modeling that isn't stored in the reactor, or add
-new input files, you will break this paradigm and make everyone's life just a little bit harder.
+simulation from a given database. State kept outside the reactor, or in new input files, breaks that.
 
 Input files
 ===========
@@ -341,9 +308,8 @@ Do not use ``print``
     ARMI code should not use the ``print`` function; use one of the methods within ``armi.runLog``.
 
 Do not add new ``TODO`` statements to the repo.
-    If your new ``TODO`` statement is important, it should be a GitHub Issue. Similarly, never mark
-    the code with ``FIXME`` or ``XXX```; open a ticket.
+    If it is worth doing, open a GitHub Issue instead. The same goes for ``FIXME`` and ``XXX``.
 
 Do not link GitHub tickets or PRs in code.
-    The idea in ARMI is that either something is worth documenting well in a docstring, or the docs,
-    or it is not. And just linking a ticket or PR in a docstring is not helpful.
+    Explain the point in the docstring or the docs instead; links rot and readers can't follow them
+    offline.

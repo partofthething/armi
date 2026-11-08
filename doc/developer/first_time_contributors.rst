@@ -2,9 +2,7 @@
 First Time Contributors Guide
 *****************************
 
-The ARMI team strongly encourages developers to contribute to the codebase.
-
-The ARMI framework code is open source, and your contributions will become open source. Although fewer laws apply to open source materials because they are publicly-available, you still must comply with all applicable laws and regulations.
+Contributions are welcome. ARMI is open source, so whatever you contribute will be too.
 
 Help Wanted
 ===========
@@ -22,7 +20,7 @@ Naturally, you can also look at the open `ARMI issues <https://github.com/partof
 Testing
 =======
 
-Any contribution must pass all included unit tests. You will frequently have to fix tests your code changes break. And you should definitely add tests to cover anything new your code does.
+Contributions need to pass the unit tests, and new code should come with tests of its own.
 
 The ARMI tests are meant to be run using `pytest <https://docs.pytest.org/en/8.0.x/>`_
 locally ::
@@ -47,13 +45,9 @@ The process for opening a PR against ARMI goes something like this:
 
 > Note that by submitting a pull request you agree to license your contribution under the Apache License 2.0, as described in `CONTRIBUTING.md <https://github.com/partofthething/armi/blob/main/CONTRIBUTING.md>`_.
 
-See our published documentation for a complete guide to our coding standards and practices: :ref:`armi-stds`.
-
-Also, please check out our (quick) synopsis on good commit messages: :ref:`armi-tooling`.
+See :ref:`armi-stds` for the coding standards and :ref:`armi-tooling` for commit messages and PRs.
 
 Licensing of Tools
 ==================
 
-Be careful when including any dependency in ARMI (say in the ``pyproject.toml`` file) not to include anything with a license that supersedes our Apache license. For instance, any third-party Python library included in ARMI with a GPL license will make the whole project fall under the GPL license. But a lot of potential users of ARMI will want to keep some of their work private, so we can't allow any GPL tools.
-
-For that reason, it is generally considered best-practice in the ARMI ecosystem to only use third-party Python libraries that have MIT or BSD licenses.
+New dependencies need licenses compatible with ARMI's Apache 2.0 license; see :ref:`third-party-licensing`.

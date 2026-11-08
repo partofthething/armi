@@ -189,8 +189,8 @@ few cycles and make an output database::
 
 But since the baseline
 app doesn't do any real calculations, it won't have a lot in it.
-You have to add plugins to do calculations (see the 
-`plugin directory <https://github.com/terrapower/armi-plugin-directory>`_). 
+You have to add plugins to do calculations (see :doc:`/user/included_plugins`, and
+:ref:`plugins-in-settings` for adding others to a case).
 
 Of course, you can fiddle around with the reactor in memory. For example, in an
 ipython session, you can plot one of the assembly's pin locations.
@@ -222,7 +222,7 @@ ipython session, you can plot one of the assembly's pin locations.
 
 This should show a simple representation of the block. 
 
-.. figure:: https://terrapower.github.io/armi/_static/c5g7-mox.png
+.. figure:: /.static/c5g7-mox.png
    :figclass: align-center
 
    A representation of a C5G7 fuel assembly.
