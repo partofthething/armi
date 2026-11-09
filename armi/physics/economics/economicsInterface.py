@@ -7,7 +7,7 @@ and the report is written at the end of the run.
 """
 
 from armi import interfaces, runLog
-from armi.physics.economics import fuelCost
+from armi.physics.economics import fuelCost, summary
 from armi.physics.economics import settings as econSettings
 from armi.physics.fuelCycle.settings import CONF_FUEL_HANDLER_NAME
 from armi.utils import tabulate
@@ -164,6 +164,7 @@ def summarize(lc: fuelCost.FuelCycleCost) -> str:
                 headers=["Step", "Initial core $M", "Lifetime $M", "Levelized $/MWh"],
                 floatFmt=".2f",
             ),
+            f"Cycle length: {summary.cycleLengthText(lc)}",
             f"Reloads: {describeReloads(lc)}",
             tabulate.tabulate(
                 cycleRows,

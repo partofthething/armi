@@ -24,7 +24,7 @@ from matplotlib.lines import Line2D
 from matplotlib.patches import FancyArrowPatch, FancyBboxPatch, Rectangle
 from matplotlib.ticker import MaxNLocator
 
-from armi.physics.economics import fuelCost, summary
+from armi.physics.economics import fuelCost, levelized, summary
 
 #: One color per cost category, in a fixed order (a CVD-checked categorical palette).
 CATEGORY_COLORS = dict(zip(fuelCost.COST_CATEGORIES, ("#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4")))
@@ -261,6 +261,11 @@ def _summaryPage(page, lc):
             ("Fuel cycle cost", f"${lc.lcoe:.2f}", f"per MWh, levelized at {lc.discountRate:.0%} real"),
             ("Plant-life fuel", summary.money(lc.totalSpend), f"{len(lc.charges)} loads + spent fuel, undiscounted"),
             ("Electricity", f"{lc.totalGeneration / 1e6:,.1f} TWh", f"net, over {lc.years:.0f} years"),
+            (
+                "Cycle length",
+                f"{summary.cycleLength(lc)[0]:.1f} mo",
+                f"{summary.cycleLength(lc)[2]:,.0f} EFPD, {len(lc.cycles)} cycles",
+            ),
         ],
     )
 
@@ -717,9 +722,10 @@ def _basisPage(page, lc):
         ("Capacity factor", f"{lc.capacityFactor:.1%}"),
         (
             "Cycles",
-            f"{len(lc.cycles)} × {cycle.length:.2f} y, {cycle.length * cycle.capacityFactor:.2f} EFPY each"
+            f"{len(lc.cycles)} × {cycle.length * summary.MONTHS_PER_YEAR:.1f} months, "
+            f"{cycle.length * cycle.capacityFactor * levelized.DAYS_PER_YEAR:,.0f} EFPD each"
             if uniform
-            else f"{len(lc.cycles)}, {lc.years / len(lc.cycles):.2f} y average",
+            else f"{len(lc.cycles)}, {summary.cycleLength(lc)[0]:.1f} months average",
         ),
         ("Operating life", f"{lc.years:.1f} y, {lc.fullPowerYears:.1f} EFPY"),
         ("Reloads", "from the run" if lc.source == "run" else summary.projectedText(lc)),

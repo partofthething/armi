@@ -5,7 +5,7 @@ import os
 import unittest
 from types import SimpleNamespace
 
-from armi.physics.economics import economicsInterface, enrichment, fuelCost, report
+from armi.physics.economics import economicsInterface, enrichment, fuelCost, report, summary
 from armi.physics.economics import settings as econSettings
 from armi.testing import loadTestReactor
 from armi.utils import directoryChangers
@@ -155,6 +155,20 @@ class TestFuelCost(unittest.TestCase):
         cycle = lc.cycles[0]
         perCycle = lc.thermalPowerMW * cycle.capacityFactor * cycle.length * 365.25
         self.assertAlmostEqual(lc.dischargeBurnup, perCycle / lc.fuelCost.heavyMetal)
+
+    def test_cycleLength(self):
+        """The cycle length is reported in calendar months and days and in full-power days."""
+        lc = economicsInterface.costCore(self.r.core, self.cs)
+        months, days, fullPowerDays = summary.cycleLength(lc)
+        self.assertAlmostEqual(days, 400.0)
+        self.assertAlmostEqual(months, 400.0 / 365.25 * 12)
+        self.assertAlmostEqual(fullPowerDays, 400.0 * lc.cycles[0].capacityFactor)
+        text = summary.cycleLengthText(lc)
+        self.assertIn(f"{months:.1f} months", text)
+        self.assertIn("x 4 cycles", text)
+        self.assertIn(f"{months:.1f} months", summary.basisLine(lc))
+        self.assertEqual(summary.utilization(lc)[0][0], "Cycle length")
+        self.assertIn("Cycle length: ", economicsInterface.summarize(lc))
 
     def test_reportPath(self):
         with directoryChangers.TemporaryDirectoryChanger():

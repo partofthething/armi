@@ -79,15 +79,43 @@ def leverName(name: str) -> str:
     return f"the {name.lower()}"
 
 
+MONTHS_PER_YEAR = 12.0
+
+
+def cycleLength(lc) -> tuple[float, float, float]:
+    """
+    The mean cycle length: calendar months, calendar days and full-power days.
+
+    A cycle's calendar length is from one startup to the next, outages included; its full-power days are the days it
+    would take at full power to make its energy.
+    """
+    n = len(lc.cycles)
+    years = sum(c.length for c in lc.cycles) / n
+    fullPowerYears = sum(c.length * c.capacityFactor for c in lc.cycles) / n
+    return years * MONTHS_PER_YEAR, years * levelized.DAYS_PER_YEAR, fullPowerYears * levelized.DAYS_PER_YEAR
+
+
+def cycleLengthText(lc) -> str:
+    """The cycle length as a phrase, e.g. "18.0 months (548 days, 493 full-power days) x 20 cycles"."""
+    months, days, fullPowerDays = cycleLength(lc)
+    lengths = [c.length * MONTHS_PER_YEAR for c in lc.cycles]
+    spread = "" if max(lengths) - min(lengths) < 1e-6 else f", from {min(lengths):.1f} to {max(lengths):.1f} months"
+    each = "" if len(lc.cycles) == 1 else " average" if spread else " each"
+    return (
+        f"{months:.1f} months ({days:,.0f} days, {fullPowerDays:,.0f} full-power days{each}{spread}) "
+        f"x {len(lc.cycles)} cycle{'s' if len(lc.cycles) != 1 else ''}"
+    )
+
+
 def basisLine(lc) -> str:
     """Power, capacity factor, cycles and discount rate on one line."""
-    cycle = lc.cycles[0]
+    months, _, fullPowerDays = cycleLength(lc)
     return "  ·  ".join(
         [
             f"{lc.thermalPowerMW:,.0f} MWt",
             f"{lc.electricPowerMW:,.1f} MWe net",
             f"{lc.capacityFactor:.0%} capacity factor",
-            f"{len(lc.cycles)} cycles of {cycle.length * cycle.capacityFactor:.2f} EFPY",
+            f"{len(lc.cycles)} cycles of {months:.1f} months ({fullPowerDays:,.0f} EFPD)",
             f"{lc.discountRate:.0%} real discount rate",
         ]
     )
@@ -133,7 +161,9 @@ def utilization(lc) -> list[tuple[str, str, str]]:
     reloadU = sum(c.uranium for c in reloads)
     reloadAssay = sum(c.assay * c.uranium for c in reloads) / reloadU if reloadU else 0.0
     feedPerProduct = sum(c.feed for c in reloads) / reloadU if reloadU else 0.0
+    months, days, fullPowerDays = cycleLength(lc)
     return [
+        ("Cycle length", f"{months:,.1f}", f"months; {days:,.0f} d, {fullPowerDays:,.0f} EFPD"),
         ("Discharge burnup", f"{lc.dischargeBurnup:,.1f}", "GWd/tHM, life average"),
         ("Specific power", f"{lc.thermalPowerMW / (loads[0].heavyMetal / 1e3):,.1f}", "kW/kgHM, initial core"),
         ("Reload enrichment", f"{100 * reloadAssay:.2f}", f"wt% U-235, feed/product {feedPerProduct:.1f}"),
