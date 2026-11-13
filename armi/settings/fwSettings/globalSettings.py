@@ -783,9 +783,10 @@ def defineSettings() -> List[setting.Setting]:
             CONF_OUTPUT_CACHE_LOCATION,
             default="",
             label="Location of Output Cache",
-            description="Location where cached calculations are stored and "
-            "retrieved if exactly the same as the calculation requested. Empty "
-            "string will not cache.",
+            description="Directory where the outputs of external code runs are filed under the hash of "
+            "everything that determines them, and restored instead of run again: in a rerun, in another "
+            "case asking for the same calculation, or for anyone sharing the directory (see "
+            "armi.utils.outputCache). Empty uses the ARMI_OUTPUT_CACHE environment variable, or no cache.",
             isEnvironment=True,
         ),
         setting.Setting(

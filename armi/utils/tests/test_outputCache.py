@@ -1,4 +1,5 @@
 # Copyright 2022 TerraPower, LLC
+# Copyright 2026 Nick Touran
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,215 +12,110 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Tests of the output cache tools."""
+"""Tests of the cache of external code runs."""
 
 import os
-import pathlib
-import shutil
 import unittest
+from unittest import mock
 
+from armi import settings
 from armi.utils import outputCache
 from armi.utils.directoryChangers import TemporaryDirectoryChanger
+from armi.utils.outputCache import NAME, OutputCache, denormalize, normalize
+
+
+def write(path, text):
+    os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
+    with open(path, "w") as f:
+        f.write(text)
+    return os.path.abspath(path)
 
 
 class TestOutputCache(unittest.TestCase):
     def setUp(self):
         self.td = TemporaryDirectoryChanger()
         self.td.__enter__()
+        self.cache = OutputCache("cache")
+        self.code = write("code.exe", "a stand-in executable")
+        self.library = write("library.dat", "cross sections")
 
     def tearDown(self):
         self.td.__exit__(None, None, None)
 
-    @staticmethod
-    def _buildDirWithFiles(arbitraryString):
-        """Helper method, to create a directory with a single file in it."""
-        # create an output location
-        os.mkdir(arbitraryString)
+    def run_(self, directory, name, deck="lattice\n", produce=True):
+        """A run of ``name`` in ``directory``: key it, restore it, or 'run' it (write its output) and file it."""
+        deckPath = write(f"{directory}/{name}.inp", f"* {name}\n{deck}FILE './{name}.out'\n")
+        inputs = {f"{name}.inp": deckPath, "library": self.library}
+        key = self.cache.key(self.code, inputs, outputs=[f"{name}.out"], name=name)
+        restored = self.cache.retrieve(key, directory, name=name)
+        if restored is not None:
+            return key, "restored"
+        if produce:
+            output = write(f"{directory}/{name}.out", f"results of {name}\n")
+            self.cache.store(key, [output, f"{directory}/never-made.txt"], name=name)
+        return key, "ran"
 
-        # create some temp file
-        outFile = os.path.join(arbitraryString, f"something_{arbitraryString}.txt")
-        with open(outFile, "w") as f:
-            f.write("test")
+    def test_aRunIsRestoredTheSecondTime(self):
+        key, first = self.run_("a", "p24")
+        _, second = self.run_("b", "p24")
+        self.assertEqual((first, second), ("ran", "restored"))
+        with open("b/p24.out") as f:
+            self.assertEqual(f.read(), "results of p24\n")
+        self.assertEqual(list(self.cache.manifest(key)["outputs"]), [f"{NAME}.out"])
 
-        return outFile
+    def test_theSameRunUnderAnotherNameIsTheSameEntry(self):
+        self.run_("a", "p24")
+        _, how = self.run_("b", "e450-b24x2-r")
+        self.assertEqual(how, "restored")
+        with open("b/e450-b24x2-r.out") as f:
+            self.assertEqual(f.read(), "results of e450-b24x2-r\n")
 
-    @staticmethod
-    def _buildOutputCache(arbitraryString):
-        """
-        Helper method, to set up a semi-stupid output cache directory.
+    def test_anyInputChangeIsANewEntry(self):
+        first, _ = self.run_("a", "p24")
+        second, how = self.run_("b", "p24", deck="another lattice\n")
+        self.assertNotEqual(first, second)
+        self.assertEqual(how, "ran")
+        write("library.dat", "other cross sections")
+        third, _ = self.run_("c", "p24")
+        self.assertNotIn(third, (first, second))
 
-        It will have one file and a manifest. It is expected this will be run from within a self-cleaning temp dir.
-        """
-        # create some temp file
-        outFile = f"something_{arbitraryString}.txt"
-        with open(outFile, "w") as f:
-            f.write("test")
+    def test_aDamagedEntryIsRemoved(self):
+        key, _ = self.run_("a", "p24")
+        write(os.path.join(self.cache.entry(key), f"{NAME}.out"), "tampered")
+        self.assertIsNone(self.cache.retrieve(key, "b", name="p24"))
+        self.assertFalse(os.path.exists(self.cache.entry(key)))
 
-        # create an output location
-        os.mkdir(arbitraryString)
+    def test_anEntryWithoutAManifestIsNotAnEntry(self):
+        key, _ = self.run_("a", "p24", produce=False)
+        os.makedirs(self.cache.entry(key))
+        self.assertIsNone(self.cache.manifest(key))
+        _, how = self.run_("b", "p24")
+        self.assertEqual(how, "ran")
+        self.assertIsNotNone(self.cache.manifest(key))
 
-        # do the worK: call the function that creates the manifest
-        outputCache._makeOutputManifest([outFile], arbitraryString)
+    def test_binaryOutputsAreCopiedAsTheyAre(self):
+        deck = write("a/p24.inp", "deck")
+        key = self.cache.key(self.code, [deck], name="p24")
+        blob = os.path.abspath("a/p24.bin")
+        with open(blob, "wb") as f:
+            f.write(b"\xff\xfe p24 \x00")
+        self.cache.store(key, [blob], name="p24")
+        (restored,) = self.cache.retrieve(key, ".", name="b12")
+        self.assertEqual(os.path.basename(restored), "b12.bin")
+        with open(restored, "rb") as f:
+            self.assertEqual(f.read(), b"\xff\xfe p24 \x00")
 
-    def test_hashFiles(self):
-        files = ["test_hashFiles1.txt", "test_hashFiles2.txt"]
-        for fileName in files:
-            with open(fileName, "w") as f:
-                f.write("hi")
+    def test_theNameIsAWholeWord(self):
+        text = "refl reflector ./refl.out refl-2 REFL"
+        self.assertEqual(normalize(text, "refl"), f"{NAME} reflector ./{NAME}.out refl-2 REFL")
+        self.assertEqual(denormalize(normalize(text, "refl"), "r1"), "r1 reflector ./r1.out refl-2 REFL")
+        self.assertEqual(normalize(text, None), text)
 
-        hashed = outputCache._hashFiles(files)
-
-        self.assertEqual(hashed, "e9f5713dec55d727bb35392cec6190ce")
-
-    def test_deleteCache(self):
-        outDir = "snapshotOutput_Cache"
-        self.assertFalse(os.path.exists(outDir))
-
-        os.mkdir(outDir)
-        with open(os.path.join(outDir, "test_deleteCache2.txt"), "w") as f:
-            f.write("hi there")
-
-        self.assertTrue(os.path.exists(outDir))
-        outputCache.deleteCache(outDir)
-        self.assertFalse(os.path.exists(outDir))
-
-    def test_getCachedFolder(self):
-        exePath = "/path/to/what.exe"
-        inputPaths = ["/path/to/something.txt", "/path/what/some.ini"]
-        cacheDir = "/tmp/thing/what/"
-        with self.assertRaises(FileNotFoundError):
-            _ = outputCache._getCachedFolder(exePath, inputPaths, cacheDir)
-
-        fakeExe = "what_getCachedFolder.exe"
-        with open(fakeExe, "w") as f:
-            f.write("hi")
-
-        with self.assertRaises(FileNotFoundError):
-            _ = outputCache._getCachedFolder(fakeExe, inputPaths, cacheDir)
-
-        fakeIni = "fake_getCachedFolder.ini"
-        with open(fakeIni, "w") as f:
-            f.write("hey")
-
-        folder = outputCache._getCachedFolder(fakeExe, [fakeIni], cacheDir)
-        self.assertTrue(folder.startswith("/tmp/thing/what/what_getCachedFolder"))
-
-    def test_makeOutputManifest(self):
-        # validate manifest does not exist yet
-        manifest = "test_makeOutputManifest/CRC-manifest.json"
-        self.assertFalse(os.path.exists(manifest))
-
-        # create outputCache dir and manifest
-        self._buildOutputCache("test_makeOutputManifest")
-
-        # validate manifest was created
-        manifest = "test_makeOutputManifest/CRC-manifest.json"
-        self.assertTrue(os.path.exists(manifest))
-
-    def test_retrieveOutput(self):
-        # create outputCache dir and manifest
-        cacheDir = "test_retrieveOutput_Output_Cache"
-        self._buildOutputCache(cacheDir)
-
-        # validate manifest was created
-        manifest = f"{cacheDir}/CRC-manifest.json"
-        self.assertTrue(os.path.exists(manifest))
-
-        # create a dummy file (not executable), to stand in for the executable
-        fakeExe = f"what_{cacheDir}.exe"
-        with open(fakeExe, "w") as f:
-            f.write("hi")
-
-        # create folder to retrieve to
-        inputPaths = [f"something_{cacheDir}.txt"]
-        newFolder = outputCache._getCachedFolder(fakeExe, inputPaths, cacheDir)
-        os.makedirs(newFolder)
-
-        # throw a new manifest into the new out cache
-        with open(os.path.join(newFolder, "CRC-manifest.json"), "w") as f:
-            f.write(pathlib.Path(manifest).read_text())
-
-        # attempt to retrieve some output from dummy caches
-        result = outputCache.retrieveOutput(fakeExe, inputPaths, cacheDir, newFolder)
-        self.assertFalse(result)
-
-    def test_store(self):
-        # create a dummy file (not executable), to stand in for the executable
-        cacheDir = "test_store"
-        fakeExe = f"what_{cacheDir}.exe"
-        with open(fakeExe, "w") as f:
-            f.write("hi")
-
-        # create some output files and directories
-        inputPath = self._buildDirWithFiles("inFile1")
-        outputFile = self._buildDirWithFiles("outFile1")
-
-        # run the code and test that it worked
-        folderLoc = outputCache._getCachedFolder(fakeExe, [inputPath], cacheDir)
-        self.assertFalse(os.path.exists(folderLoc))
-
-        outputCache.store(fakeExe, [inputPath], [outputFile], cacheDir)
-
-        self.assertTrue(os.path.exists(folderLoc))
-        self.assertTrue(os.path.exists(os.path.join(folderLoc, "CRC-manifest.json")))
-        self.assertTrue(os.path.exists(os.path.join(folderLoc, "something_outFile1.txt")))
-
-    def test_roundTripWithPathsOutsideTheWorkingDirectory(self):
-        exe = os.path.abspath("code.exe")
-        with open(exe, "w") as f:
-            f.write("code")
-        os.makedirs("run")
-        deck = os.path.abspath(os.path.join("run", "deck.inp"))
-        listing = os.path.abspath(os.path.join("run", "deck.out"))
-        for path, text in ((deck, "deck"), (listing, "listing")):
-            with open(path, "w") as f:
-                f.write(text)
-        cacheDir = os.path.abspath("roundtrip_cache")
-        outputCache.store(exe, [deck], [listing], cacheDir)
-        os.remove(listing)
-        self.assertTrue(outputCache.retrieveOutput(exe, [deck], cacheDir))
-        with open(listing) as f:
-            self.assertEqual(f.read(), "listing")
-
-    def test_cacheCall(self):
-        """Mock up a simple test for cacheCall() where we call a (non-existant) MC2-3 executable, but bypass it because
-        there are existing outputs already.
-        """
-        # create various inputs for the tests below
-        cacheDir = "mc2CacheDir"
-
-        inputPaths = [self._buildDirWithFiles("mc2-input123")]
-        outputFileNames = [self._buildDirWithFiles("mc2-output123")]
-
-        executablePath = "mc2-3.py"
-        with open(executablePath, "w") as f:
-            f.write("print('This is an empty executable.')")
-
-        exeOutputPath = "mc2_ran.txt"
-        execute = lambda: pathlib.Path(exeOutputPath).write_text("Sum.")
-
-        # Test Case 0: No cache dir is given, so we MUST run MC2-3.
-        self.assertFalse(os.path.exists(exeOutputPath))
-
-        outputCache.cacheCall(None, executablePath, [], [], execute)
-
-        self.assertTrue(os.path.exists(exeOutputPath))
-        os.remove(exeOutputPath)
-
-        # Test Case 1: A cache dir is given, but the outputs we want are not in it, so we MUST run MC2-3.
-        self.assertFalse(os.path.exists(exeOutputPath))
-
-        outputCache.cacheCall(cacheDir, executablePath, inputPaths, ["output_that_does_not_exist.txt"], execute)
-        self.assertTrue(os.path.exists(exeOutputPath))
-        os.remove(exeOutputPath)
-
-        # Test Case 2: The outputs we want are already in the cache, do not run MC2-3.
-        folderLoc = outputCache._getCachedFolder(executablePath, inputPaths, cacheDir)
-        shutil.rmtree(folderLoc)
-        self.assertFalse(os.path.exists(folderLoc))
-
-        outputCache.cacheCall(cacheDir, executablePath, inputPaths, outputFileNames, execute)
-
-        self.assertTrue(os.path.exists(folderLoc))
-        self.assertTrue(os.path.exists(os.path.join(folderLoc, "CRC-manifest.json")))
-        self.assertTrue(os.path.exists(os.path.join(folderLoc, "something_mc2-output123.txt")))
+    def test_fromSettings(self):
+        cs = settings.Settings()
+        with mock.patch.dict(os.environ, {outputCache.ENVIRONMENT_VARIABLE: ""}):
+            self.assertIsNone(outputCache.fromSettings(cs))
+        with mock.patch.dict(os.environ, {outputCache.ENVIRONMENT_VARIABLE: "/machine/cache"}):
+            self.assertEqual(outputCache.fromSettings(cs).root, "/machine/cache")
+            here = cs.modified(newSettings={"outputCacheLocation": "/case/cache"})
+            self.assertEqual(outputCache.fromSettings(here).root, "/case/cache")

@@ -14,232 +14,246 @@
 # limitations under the License.
 
 """
-Calculation Results Cache (CRC).
+The outputs of external code runs, filed under the hash of what determines them.
 
-This helps avoid duplicated time/energy in running cases.
+A run of an external code is a function of the executable, the files it reads and what is asked of it. Hash those and
+the outputs can be filed under the hash and handed back the next time anything asks for the same run -- in a rerun, in
+another case that needs the same calculation, or on another person's machine sharing the cache directory -- instead of
+running the code again. Nothing has to be named to be shared, and nothing is shared that differs in any input.
 
-In test systems and analysis, it is possible that the same calc will be done over and over, always giving the same
-result. This system allows the results to be cached and returned instantly instead of re-running, for example, MC2.
+* **Keys are content.** Every input file is hashed with SHA-256 (once per version of the file per process, so a large
+  nuclear data library costs one read) together with its name in the run, the executable's contents, the outputs asked
+  for and anything else the caller says the run depends on. A format version is part of the key, so an entry written
+  by another version of this module is never misread.
+* **A run's own name can be left out of its key.** A deck ``p24.x2m`` writing ``p24.out`` computes the same thing as
+  the same deck called ``b12.x2m``. Given that ``name``, each whole-word occurrence of it is replaced by a placeholder
+  in the input files named after the run, in the output names and in the text of the outputs before they are hashed or
+  filed, and put back as the asking run's name when they are restored.
+* **Safe to share.** An entry is written to a scratch directory and renamed into place with its manifest written last,
+  so a reader never sees half an entry and two runs filing the same result do not corrupt each other. A damaged entry
+  is removed when it is found, and the next run files a good one.
 
-API usage
----------
-Getting a cached file:
+Use::
 
-.. code-block:: python
-
-    exe = "MC2-2018-blah.exe"
-    inpFiles = ["mccAA.inp", "rmzflx"]
-    outputFound = crc.retrieveOutput(exe, inp, output)
-    if not outputFound:
-        mc2.run(exe, inp, output)
-
-Storing a file to the cache:
-
-.. code-block:: python
-
-    crc.store(exe, inp, outFiles)
-
+    cache = outputCache.fromSettings(cs)  # outputCacheLocation, else ARMI_OUTPUT_CACHE, else None
+    key = cache.key(executable, {"deck.inp": deckPath, "library": libraryPath}, outputs=["deck.out"], name="deck")
+    if cache.retrieve(key, workDir, name="deck") is None:
+        run(...)
+        cache.store(key, [os.path.join(workDir, "deck.out")], name="deck")
 """
 
-from __future__ import annotations
-
+import functools
 import hashlib
 import json
 import os
-import subprocess
-from typing import TYPE_CHECKING
+import re
+import shutil
+import tempfile
+import time
+from collections.abc import Callable, Mapping, Sequence
+from pathlib import Path
+from typing import Optional, Union
 
 from armi import runLog
-from armi.utils import safeCopy
-from armi.utils.pathTools import cleanPath
 
-if TYPE_CHECKING:
-    from pathlib import Path
-    from typing import Callable, List, Union
+PathLike = Union[str, Path]
 
-    PathLike = Union[str, Path]
+#: The manifest of an entry: the outputs and their hashes. Written last, so an entry without one is not an entry.
+MANIFEST_NAME = "manifest.json"
 
-MANIFEST_NAME = "CRC-manifest.json"
+#: Bump when the key or the layout changes, so entries of another version are never misread.
+VERSION = 2
 
+#: Stands in for a run's own name in everything the cache keeps.
+NAME = "{RUN-NAME}"
 
-def retrieveOutput(
-    exePath: PathLike, inputPaths: List[PathLike], cacheDir: PathLike, locToRetrieveTo: PathLike = None
-) -> bool:
-    """
-    Check the cache for a valid file and copy it if it exists.
-
-    Notes
-    -----
-    Input paths need to be in the same order each time if the same cached folder is expected to be found.
-    """
-    cachedFolder = _getCachedFolder(exePath, inputPaths, cacheDir)
-    if os.path.exists(cachedFolder):
-        if locToRetrieveTo is None:
-            locToRetrieveTo = os.path.dirname(inputPaths[0])
-
-        successful = _copyOutputs(cachedFolder, locToRetrieveTo)
-
-        if successful:
-            runLog.info(f"Retrieved cached outputs for {exePath}")
-            return True
-        else:
-            # Outputs did not match manifest. Just delete to save checking next time.
-            runLog.warning(f"Outputs in {cachedFolder} were inconsistent with manifest. Deleting and reproducing")
-            try:
-                deleteCache(cachedFolder)
-            except Exception as e:
-                runLog.debug(e)
-
-    return False
+#: The environment variable naming a machine's shared cache, for cases that do not set ``outputCacheLocation``.
+ENVIRONMENT_VARIABLE = "ARMI_OUTPUT_CACHE"
 
 
-def _copyOutputs(cachedFolder: PathLike, locToRetrieveTo: PathLike) -> bool:
-    """Check that the outputs have the expectect hashes and copy them if they do."""
-    manifest = os.path.join(cachedFolder, MANIFEST_NAME)
-    if not os.path.exists(manifest):
-        return False
-
-    with open(manifest) as manifestJSON:
-        storedOutputNamesToHashes = json.load(manifestJSON)
-
-    copies = []
-    for storedOutputName, expectedHash in storedOutputNamesToHashes.items():
-        storedOutputPath = os.path.join(cachedFolder, storedOutputName)
-        try:
-            if _hashFiles([storedOutputPath]) != expectedHash:
-                return False
-        except FileNotFoundError:
-            return False
-        copyPath = os.path.join(locToRetrieveTo, storedOutputName)
-        copies.append([storedOutputPath, copyPath])
-
-    for copy in copies:
-        storedOutputPath, copyPath = copy
-        safeCopy(storedOutputPath, copyPath)
-
-    return True
+@functools.cache
+def _digest(path: str, size: int, mtime: float) -> str:
+    """SHA-256 of a file's contents, once per version of the file (its size and mtime) per process."""
+    digest = hashlib.sha256()
+    with open(path, "rb") as f:
+        for chunk in iter(lambda: f.read(1 << 20), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
 
 
-def _getCachedFolder(exePath: PathLike, inputPaths: List[PathLike], cacheDir: PathLike) -> str:
-    """Return the the folder name expected for this executable and set of inputs."""
-    exeName = os.path.basename(os.path.splitext(exePath)[0])
-    exeHash = _hashFiles([exePath])
-    inputHash = _hashFiles(inputPaths)
-
-    # first 2 helps with reducing the number of folders in a folder
-    first2, remainder = (inputHash[:2], inputHash[2:])
-    return os.path.join(cacheDir, exeName, exeHash, first2, remainder)
+def fileDigest(path: PathLike) -> str:
+    """SHA-256 of what ``path`` holds, following symlinks."""
+    real = os.path.realpath(path)
+    stat = os.stat(real)
+    return _digest(real, stat.st_size, stat.st_mtime)
 
 
-def _hashFiles(paths: List[PathLike]):
-    """Return a MD5 hash of a file's contents."""
-    with open(paths[0], "rb") as binaryF:
-        md5Hash = hashlib.md5(binaryF.read())
-
-    for path in paths[1:]:
-        with open(path, "rb") as binaryF:
-            md5Hash.update(binaryF.read())
-
-    return md5Hash.hexdigest()
+def _pattern(name: str) -> re.Pattern:
+    """``name`` as a whole word: not part of a longer name, such as ``reflector`` for ``refl``."""
+    return re.compile(rf"(?<![\w-]){re.escape(name)}(?![\w-])")
 
 
-def _makeOutputManifest(outputFiles: list, folderLocation: list) -> None:
-    """
-    Make a json file with the output names and expected hash.
-
-    Outputs are named by file name alone, as :py:func:`store` copies them, so outputs given by any path (absolute, or
-    relative to any directory) come back to wherever :py:func:`retrieveOutput` is told.
-    """
-    manifest = {os.path.basename(outputFile): _hashFiles([outputFile]) for outputFile in outputFiles}
-    with open(os.path.join(folderLocation, MANIFEST_NAME), "w") as manifestJSON:
-        json.dump(manifest, manifestJSON)
+def normalize(text: str, name: Optional[str]) -> str:
+    """``text`` with the run's name replaced by :py:data:`NAME`; unchanged without a name."""
+    return _pattern(name).sub(NAME, text) if name else text
 
 
-def store(exePath: PathLike, inputPaths: List[PathLike], outputFiles: List[PathLike], cacheDir: PathLike) -> None:
-    """
-    Store an output file in the cache.
-
-    Notes
-    -----
-    Input paths need to be in the same order each time if the same cached folder is expected to be found. It is
-    difficult to know what outputs will exist from a specific run, so only outputs that do exist will attempt to be
-    copied. This function should be supplied with a greedy list of outputs.
-    """
-    # outputFilePaths is a greedy list and they might not all be produced
-    outputsThatExist = [outputFile for outputFile in outputFiles if os.path.exists(outputFile)]
-
-    folderLoc = _getCachedFolder(exePath, inputPaths, cacheDir)
-    if os.path.exists(folderLoc):
-        deleteCache(folderLoc)
-    os.makedirs(folderLoc)
-    _makeOutputManifest(outputsThatExist, folderLoc)
-
-    for outputFile in outputsThatExist:
-        baseName = os.path.basename(outputFile)
-        cachedLoc = os.path.join(folderLoc, baseName)
-        safeCopy(outputFile, cachedLoc)
-
-    runLog.info(f"Added outputs for {exePath} to the cache.")
+def denormalize(text: str, name: Optional[str]) -> str:
+    """``text`` with :py:data:`NAME` replaced by the run's name; unchanged without a name."""
+    return text.replace(NAME, name) if name else text
 
 
-def deleteCache(cachedFolder: PathLike) -> None:
-    """
-    Remove this folder.
-
-    Requires keyword because this is potentially extremely destructive.
-    """
-    if "cache" not in str(cachedFolder).lower():
-        raise RuntimeError("Cache location must contain keyword: `cache`.")
-
-    # Output caches need to pass in `forceClean` in order to greenlight the deletion.
-    cleanPath(cachedFolder, forceClean=True)
+def _text(path: PathLike) -> Optional[str]:
+    """A file's contents if it is UTF-8 text, else None."""
+    with open(path, "rb") as f:
+        data = f.read()
+    try:
+        return data.decode("utf-8")
+    except UnicodeDecodeError:
+        return None
 
 
-def cacheCall(
-    cacheDir: PathLike,
-    executablePath: PathLike,
-    inputPaths: List[PathLike],
-    outputFileNames: List[PathLike],
-    execute: Callable[[], None] = None,
-    tearDown: Callable[[], None] = None,
-) -> None:
-    """
-    Checks the cache to see if there are outputs for the run and returns them, otherwise calls the execute command.
-
-    Notes
-    -----
-    It is non-trivial to determine the exact set of outputs an executable will produce without running the executable.
-    Therefore, ``outputFileNames`` is expected to be a greedy list and cache will attempt to copy all the files, but not
-    fail if the file is not present. When copying outputs back, all files copied previously will be targeted.
-    """
-    if execute is None:
-        execute = lambda: subprocess.call([executablePath] + inputPaths)
-
-    if not cacheDir:
-        runLog.info(f"Executing {executablePath}")
-        execute()
+def _copy(source: PathLike, destination: PathLike, transform: Callable[[str], str]) -> None:
+    """Copy a file, passing its text through ``transform`` if it is text; anything else is copied as it is."""
+    text = _text(source)
+    if text is None:
+        shutil.copyfile(source, destination)
         return
+    with open(destination, "w", encoding="utf-8", newline="") as f:
+        f.write(transform(text))
 
-    try:
-        if retrieveOutput(executablePath, inputPaths, cacheDir):
+
+class OutputCache:
+    """
+    Code runs filed under the hash of their inputs, in a directory that may be shared.
+
+    Each entry is a directory named by its key, under a subdirectory of the key's first two characters, holding the
+    output files (with the run's name taken out of their names and their text) and the manifest.
+    """
+
+    def __init__(self, root: PathLike):
+        self.root = os.path.abspath(root)
+
+    def __repr__(self):
+        return f"<OutputCache {self.root}>"
+
+    def key(
+        self,
+        executable: PathLike,
+        inputs: Union[Sequence[PathLike], Mapping[str, PathLike]],
+        outputs: Sequence = (),
+        name: Optional[str] = None,
+        extra: Optional[dict] = None,
+    ) -> str:
+        """
+        The hash of everything that determines what a run would produce.
+
+        Parameters
+        ----------
+        executable : path
+            The code. Its contents are hashed, so the same binary anywhere is the same code.
+        inputs : sequence or mapping
+            The files the run reads: paths, named by their base names, or ``{name in the run: path}``.
+        outputs : sequence
+            What is asked of the run: output names, or anything JSON-serializable that describes them.
+        name : str, optional
+            The run's own name, left out of the key: out of every name in it, and out of the text of the input files
+            whose name holds it as a whole word (the run's deck, not a library it reads).
+        extra : dict, optional
+            Anything else the outputs depend on that is not in a file. JSON-serializable.
+        """
+        if not isinstance(inputs, Mapping):
+            inputs = {os.path.basename(path): path for path in inputs}
+        files = {}
+        for runName, path in sorted(inputs.items()):
+            text = _text(path) if name and _pattern(name).search(runName) else None
+            if text is not None:
+                files[normalize(runName, name)] = hashlib.sha256(normalize(text, name).encode()).hexdigest()
+            else:
+                files[normalize(runName, name)] = fileDigest(path)
+        parts = {
+            "version": VERSION,
+            "executable": fileDigest(executable),
+            "inputs": files,
+            "outputs": json.loads(normalize(json.dumps(list(outputs)), name)),
+            "extra": extra or {},
+        }
+        return hashlib.sha256(json.dumps(parts, sort_keys=True).encode()).hexdigest()
+
+    def entry(self, key: str) -> str:
+        """The directory of the entry filed under ``key``."""
+        return os.path.join(self.root, key[:2], key)
+
+    def manifest(self, key: str) -> Optional[dict]:
+        """The manifest of the entry under ``key``, or None if there is no complete entry."""
+        path = os.path.join(self.entry(key), MANIFEST_NAME)
+        if not os.path.exists(path):
+            return None
+        with open(path) as f:
+            return json.load(f)
+
+    def retrieve(self, key: str, destination: PathLike, name: Optional[str] = None) -> Optional[list]:
+        """
+        Copy the outputs filed under ``key`` into ``destination``, named for the asking run, and return their paths.
+
+        None if there is no such entry, or if it is damaged (an output missing or not matching the manifest), in which
+        case it is removed so that the next run files a good one.
+        """
+        manifest = self.manifest(key)
+        if manifest is None:
+            return None
+        entry = self.entry(key)
+        restored = []
+        try:
+            for stored, digest in manifest["outputs"].items():
+                source = os.path.join(entry, stored)
+                if fileDigest(source) != digest:
+                    raise ValueError(f"{stored} does not match the manifest")
+                target = os.path.join(destination, denormalize(stored, name))
+                _copy(source, target, lambda text: denormalize(text, name))
+                restored.append(target)
+        except (OSError, ValueError) as error:
+            runLog.warning(f"Removing the damaged cache entry {entry}: {error}")
+            shutil.rmtree(entry, ignore_errors=True)
+            return None
+        runLog.info(f"Restored {len(restored)} outputs from {entry}")
+        return restored
+
+    def store(
+        self, key: str, outputs: Sequence[PathLike], name: Optional[str] = None, metadata: Optional[dict] = None
+    ) -> None:
+        """
+        File a run's ``outputs`` under ``key``. Outputs that do not exist are skipped, so the list may be greedy.
+
+        An entry already there is kept: whoever filed it ran the same calculation.
+        """
+        if self.manifest(key) is not None:
             return
-    except Exception as e:
-        runLog.warning(
-            "Outputs existed in cache, but failed to retrieve outputs from: {} \nerror: {}".format(
-                _getCachedFolder(executablePath, inputPaths, cacheDir), e
-            )
-        )
+        entry = self.entry(key)
+        os.makedirs(os.path.dirname(entry), exist_ok=True)
+        scratch = tempfile.mkdtemp(prefix=".incoming-", dir=os.path.dirname(entry))
+        try:
+            digests = {}
+            for path in outputs:
+                if not os.path.exists(path):
+                    continue
+                stored = normalize(os.path.basename(path), name)
+                _copy(path, os.path.join(scratch, stored), lambda text: normalize(text, name))
+                digests[stored] = fileDigest(os.path.join(scratch, stored))
+            manifest = {"outputs": digests, "stored": time.strftime("%Y-%m-%d %H:%M:%S"), **(metadata or {})}
+            with open(os.path.join(scratch, MANIFEST_NAME), "w") as f:
+                json.dump(manifest, f, indent=1)
+            if os.path.isdir(entry):
+                # What a writer that died before its manifest left behind; this replaces it.
+                shutil.rmtree(entry, ignore_errors=True)
+            os.rename(scratch, entry)
+            runLog.info(f"Filed {len(digests)} outputs in {entry}")
+        except OSError:
+            # Another process filed the same run first; theirs is as good as this one.
+            shutil.rmtree(scratch, ignore_errors=True)
 
-    runLog.warning(f"Cached outputs were not found, executing {executablePath}")
-    execute()
-    if tearDown is not None:
-        tearDown()
 
-    try:
-        store(executablePath, inputPaths, outputFileNames, cacheDir)
-    except Exception as e:
-        # Something went wrong in storage.
-        # This is okay as the manifest will be inconsistent with the outputs and not used in the future.
-        runLog.warning(
-            f"Failed to store outputs in: {_getCachedFolder(executablePath, inputPaths, cacheDir)}\nerror: {e}"
-        )
+def fromSettings(cs) -> Optional[OutputCache]:
+    """The cache a case uses: its ``outputCacheLocation``, else ``ARMI_OUTPUT_CACHE``, else none."""
+    root = cs["outputCacheLocation"] or os.environ.get(ENVIRONMENT_VARIABLE, "")
+    return OutputCache(root) if root else None
