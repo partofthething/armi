@@ -269,6 +269,14 @@ class TestCaseSuiteDependencies(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             _clone = self.suite.clone("test_clone")
 
+    def test_titlesAreUnique(self):
+        """Two cases of one title in different directories would share every title-keyed result."""
+        bp = blueprints.Blueprints.load(BLUEPRINT_INPUT)
+        twin = cases.Case(cs=settings.Settings(), bp=bp)
+        twin.cs.path = os.path.join("elsewhere", "c1.yaml")
+        with self.assertRaisesRegex(ValueError, "title `c1`"):
+            self.suite.add(twin)
+
     def test_checkInputs(self):
         """
         Test the checkInputs() method on a couple of cases.

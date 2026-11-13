@@ -59,13 +59,15 @@ class CaseSuite:
         """
         Add a Case object to the CaseSuite.
 
-        Case objects within a CaseSuite must have unique ``title`` attributes, a
-        KeyError will be raised
+        Case objects within a CaseSuite must have unique ``title`` attributes, even in different directories: the
+        suite's results, tables and comparisons are keyed by title, so two cases sharing one would silently report
+        the same result. A ``ValueError`` is raised.
         """
-        existing = next((c for c in self if case == c), None)
+        existing = next((c for c in self if c.title == case.title), None)
         if existing is not None:
             raise ValueError(
-                "CaseSuite already contains case with title `{}`\nFirst case:  {}\nSecond case: {}".format(
+                "CaseSuite already contains case with title `{}`\nFirst case:  {}\nSecond case: {}\n"
+                "Name the cases' settings files differently (the file name sets the title).".format(
                     case.title, existing, case
                 )
             )
