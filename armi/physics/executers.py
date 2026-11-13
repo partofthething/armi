@@ -413,8 +413,9 @@ class ExecutionOptions:
     extraInputFiles : list of (str, str)
         ``(source, name in the run directory)`` of further files the code reads: libraries, databases. Sources are
         relative to the case directory (where the run is) or absolute.
-    extraOutputFiles : list of (str, str)
-        ``(name in the run directory, name back)`` of further files to bring back to the working directory.
+    extraOutputFiles : list of str or (str, str)
+        Further files to bring back to the working directory: names or glob patterns, or ``(name in the run
+        directory, name back)`` pairs.
     runDir : str
         Where the code runs, often on a local disk rather than a shared one (see :py:meth:`setRunDirFromCaseTitle`);
         by default beside the input.
@@ -581,7 +582,7 @@ class DefaultExecuter(Executer):
             options.code,
             self.inputPath,
             dataFiles=dataFiles,
-            outputs=[tuple(pair) for pair in options.extraOutputFiles],
+            outputs=[o if isinstance(o, str) else tuple(o) for o in options.extraOutputFiles],
             threads=options.threads,
             runDir=options.runDir,
             listingPath=self.outputPath if options.outputFile else None,
