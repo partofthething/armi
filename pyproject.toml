@@ -16,7 +16,7 @@
 #                        GENERAL PYTHON CONFIG                        #
 #######################################################################
 [build-system]
-requires = ["setuptools>=61.2"]
+requires = ["setuptools>=62.3"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -263,9 +263,7 @@ ignore_errors = true
 armi = [
     "webui/static/*.html",
     "webui/static/css/*.css",
-    "webui/static/js/*.js",
-    "webui/static/js/render/*.js",
-    "webui/static/js/views/*.js",
+    "webui/static/js/**/*.js",
     "bookkeeping/tests/armiRunSmallest-A0000-aHist-ref.txt",
     "matProps/tests/invalidTestFiles/*",
     "matProps/tests/testDir1/*.yaml",
