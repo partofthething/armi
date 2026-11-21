@@ -18,6 +18,7 @@ Base Material classes.
 Most temperatures may be specified in either K or C and the functions will convert for you.
 """
 
+import os
 from copy import deepcopy
 
 import numpy as np
@@ -32,8 +33,19 @@ from armi.utils.units import getTc, getTk
 # works for material properties defined purely in Python.
 FAIL_ON_RANGE = True
 
-# Need for an memoization optimization to cache YAML-based materials
+# Need for an memoization optimization to cache YAML-based materials.
+# A cache entry is (stamp, dict): the file identity it was built from, and the material's __dict__.
+# A file whose mtime or size changed makes the entry stale and forces a reload.
 _YAML_MATERIALS = {}
+
+
+def _yamlMaterialStamp(path):
+    """Fingerprint a YAML material file, or None if it cannot be stat'd."""
+    try:
+        st = os.stat(path)
+        return (st.st_mtime_ns, st.st_size)
+    except OSError:
+        return None
 
 
 class Material(MatPropsMaterial):
@@ -104,11 +116,13 @@ class Material(MatPropsMaterial):
 
         if self.YAML_PATH:
             # Do caching things while updating or loading a material
-            if self.YAML_PATH in _YAML_MATERIALS:
-                self.__dict__.update(_YAML_MATERIALS[self.YAML_PATH].__dict__)
+            stamp = _yamlMaterialStamp(self.YAML_PATH)
+            cached = _YAML_MATERIALS.get(self.YAML_PATH)
+            if stamp is not None and cached is not None and cached[0] == stamp:
+                self.__dict__.update(cached[1])
             else:
                 mat = MatPropsMaterial(self.YAML_PATH)
-                _YAML_MATERIALS[self.YAML_PATH] = mat
+                _YAML_MATERIALS[self.YAML_PATH] = (stamp, mat.__dict__)
                 self.__dict__.update(mat.__dict__)
         else:
             MatPropsMaterial.__init__(self)

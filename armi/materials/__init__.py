@@ -51,11 +51,34 @@ from armi.matProps import getPaths as getYamlPaths
 # armi.reactor.reactors.factory).
 _MATERIAL_NAMESPACE_ORDER = ["armi.materials"]
 
-# Dictionary of loaded materials: d[mat directory][mat name] = instance of Material object
+# Dictionary of loaded materials: d[mat directory] = (stamp, {mat name: instance of Material object})
+#
+# The stamp is a fingerprint of the directory's YAML files (path, mtime, size per file), so a
+# file that changes invalidates the cached copy.
 #
 # NOTE: This is the collection used to cache YAML materials in the usual ARMI workflow. There is something similar in
 # matProps, but that is not typically used in ARMI runs and exists purely for peopel that use matProps without ARMI.
 _loadedYamlMats = {}
+
+
+def _yamlDirStamp(dirPath):
+    stamp = []
+    for path in getYamlPaths(dirPath):
+        try:
+            st = os.stat(path)
+            stamp.append((path, st.st_mtime_ns, st.st_size))
+        except OSError:
+            stamp.append((path, 0, 0))
+    return tuple(stamp)
+
+
+def _loadDirIfNeeded(dirPath: str):
+    """Import a material directory unless the cached copy is still valid."""
+    cached = _loadedYamlMats.get(dirPath)
+    if cached is not None and cached[0] == _yamlDirStamp(dirPath):
+        return cached[1]
+    importYamlMaterialDir(dirPath, overwriteExisting=True, clearFirst=False)
+    return _loadedYamlMats[dirPath][1]
 
 
 def clear() -> None:
@@ -97,7 +120,7 @@ def importYamlMaterialDir(dirPath, overwriteExisting=True, clearFirst=True):
         return
 
     # recursively get all the *.yaml and *.yml files from the provided directory
-    _loadedYamlMats[dirPath] = {}
+    _loadedYamlMats[dirPath] = (_yamlDirStamp(dirPath), {})
     paths = getYamlPaths(dirPath)
     for yamlPath in paths:
         # This makes us load a given YAML twice per material if they have a custom class
@@ -114,7 +137,7 @@ def importYamlMaterialDir(dirPath, overwriteExisting=True, clearFirst=True):
         # Not that you can't touch this, but it is this way for a reason.
         mat.DATA_SOURCE = "venv: " + dirPath.split("site-packages")[1][1:] if "site-packages" in dirPath else dirPath
         # If a class with this name already exists in the package, continue
-        _loadedYamlMats[dirPath][mat.name] = mat
+        _loadedYamlMats[dirPath][1][mat.name] = mat
 
 
 def setMaterialNamespaceOrder(order):
@@ -144,22 +167,23 @@ def setMaterialNamespaceOrder(order):
         else:
             continue
 
-        if yDir not in _loadedYamlMats:
-            importYamlMaterialDir(yDir, clearFirst=False)
+        # Re-check the directory: cached materials are valid only while the files are unchanged.
+        _loadDirIfNeeded(yDir)
+
 
 
 def getLoadedYamlDirs() -> dict:
     """
     Returns the materials yaml directories that are loaded. The structure is:
-    ``_loadedYamlMats[<MAT DB PATH>][<MAT NAME>] = <MAT OBJ>``.
+    ``_loadedYamlMats[<MAT DB PATH>] = (<stamp>, {<MAT NAME>: <MAT OBJ>})``.
 
     Returns
     -------
     dict of dict
-        Dictionary of directories, which are dictionaries of material yaml files
+        Dictionary of directories, which are two-element tuples of (fingerprint, {name: object})
     """
     global _loadedYamlMats
-    return _loadedYamlMats.copy()
+    return {dirPath: (stamp, dict(mats)) for dirPath, (stamp, mats) in _loadedYamlMats.items()}
 
 
 def getMaterialNamespaceOrder() -> list:
@@ -302,11 +326,12 @@ def createMaterialByName(name: str, namespaceOrder: List[str] = None):
             # check and see if you can find the material
             if yDir not in _loadedYamlMats:
                 continue
-            elif name not in _loadedYamlMats[yDir]:
+            mats = _loadDirIfNeeded(yDir)
+            if name not in mats:
                 continue
 
             # grab the global material, and copy it over to a new material to return
-            mat0 = _loadedYamlMats[yDir][name]
+            mat0 = mats[name]
             pm = getPluginManager()
             baseClass = Material
             if pm:
