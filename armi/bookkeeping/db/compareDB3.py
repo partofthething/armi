@@ -417,10 +417,19 @@ def _diffSimpleData(ref: h5py.Dataset, src: h5py.Dataset, diffResults: DiffResul
     paramName = ref.name.split("/")[-1]
     compName = ref.name.split("/")[-2]
 
+    srcData, refData = src[()], ref[()]
+    if srcData.dtype.kind == "b" and refData.dtype.kind == "b":
+        # numpy will not subtract booleans; count each entry that differs as a relative difference of 1
+        diff = np.atleast_1d(srcData != refData).astype(float)
+        if diff.size:
+            absMean = np.mean(diff)
+            diffResults.addDiff(compName, paramName, absMean, absMean, np.max(diff))
+        return
+
     try:
         # use mean to avoid some unnecessary infinities
-        mean = (src[()] + ref[()]) / 2.0
-        diff = (src[()] - ref[()]) / mean
+        mean = (srcData + refData) / 2.0
+        diff = (srcData - refData) / mean
     except TypeError:
         # Strings are persnickety
         if src.dtype.kind == ref.dtype.kind and src.dtype.kind in {"U", "S"}:
