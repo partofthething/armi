@@ -128,8 +128,8 @@ def loadFromCs(cs, roundTrip=False):
         if bpPath.suffix.lower() in (".h5", ".hdf5"):
             # This is a case settings from a database so the blueprints are also in the database.
             try:
-                db = h5py.File(bpPath, "r")
-                bpString = db["inputs/blueprints"].asstr()[()]
+                with h5py.File(bpPath, "r") as db:
+                    bpString = db["inputs/blueprints"].asstr()[()]
                 stream = io.StringIO(bpString)
                 stream = Blueprints.migrate(stream)
                 bp = Blueprints.load(stream)
