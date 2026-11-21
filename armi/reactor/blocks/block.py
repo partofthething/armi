@@ -103,6 +103,13 @@ class Block(composites.Composite):
         for problemParam in ["THcornTemp", "THedgeTemp"]:
             self.p[problemParam] = []
 
+    def clearCache(self):
+        """Clear the cache so all new values are recomputed."""
+        super().clearCache()
+        # Symmetry factor depends on the core symmetry, which can change without locator
+        # changes; the locator-identity guard alone cannot catch that.
+        self._symmetryFactorCache = None
+
     def __repr__(self):
         # be warned, changing this might break unit tests on input file generations
         return "<{type} {name} at {loc} XS: {xs} ENV GP: {env}>".format(
