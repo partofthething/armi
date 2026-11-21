@@ -25,6 +25,7 @@ This module also handles repeat shuffles when doing a restart.
 """
 
 # ruff: noqa: F401
+import ast
 import inspect
 import math
 import os
@@ -1142,7 +1143,7 @@ class FuelHandler:
         makeShuffleReport : writes the file that is read here.
         """
         try:
-            f = open(fname)
+            stream = open(fname)
         except OSError:
             raise RuntimeError(
                 "Could not find/open repeat shuffle file {} in working directory {}".format(fname, os.getcwd())
@@ -1150,35 +1151,40 @@ class FuelHandler:
 
         moves = {}
         numMoves = 0
-        for line in f:
-            if "ycle " in line:
-                # Used to say "Cycle 1 at 0.0 years". Now says: "Before cycle 1 at 0.0 years" to be more specific.
-                # This RE allows backwards compatibility.
-                # Later, we removed the at x years
-                m = re.search(r"ycle (\d+)", line)
-                cycle = int(m.group(1))
-                moves[cycle] = []
-            elif "assembly" in line:
-                # this is the new load style where an actual assembly type is written to the shuffle logic
-                # due to legacy reasons, the assembly type will be put into group 4
-                pat = (
-                    r"([A-Za-z0-9!\-]+) moved to ([A-Za-z0-9!\-]+) with assembly type "
-                    + r"([A-Za-z0-9!\s]+)\s*(ringPosCycle=\[.*\])?\s*with enrich list: (.+)"
-                )
-                m = re.search(pat, line)
-                if not m:
-                    raise InputError('Failed to parse line "{0}" in shuffle file'.format(line))
-                oldLoc = m.group(1)
-                newLoc = m.group(2)
-                assemType = m.group(3).strip()  # take off any possible trailing whitespace
-                ringPosCycle = m.group(4)  # will be None for legacy shuffleLogic files. (pre 2013-08)
-                if ringPosCycle:
-                    ringPosCycle = eval(ringPosCycle.split("=")[1])  # extract the assembly ring, position and cycle.
-                enrichList = [float(i) for i in m.group(5).split()]
-                moves[cycle].append(AssemblyMove(oldLoc, newLoc, enrichList, assemType, ringPosCycle))
-                numMoves += 1
-
-        f.close()
+        with stream:
+            for line in stream:
+                if "ycle " in line:
+                    # Used to say "Cycle 1 at 0.0 years". Now says: "Before cycle 1 at 0.0 years" to be more specific.
+                    # This RE allows backwards compatibility.
+                    # Later, we removed the at x years
+                    m = re.search(r"ycle (\d+)", line)
+                    if m is None:
+                        raise InputError('Failed to parse line "{0}" in shuffle file'.format(line))
+                    cycle = int(m.group(1))
+                    moves[cycle] = []
+                elif "assembly" in line:
+                    # this is the new load style where an actual assembly type is written to the shuffle logic
+                    # due to legacy reasons, the assembly type will be put into group 4
+                    pat = (
+                        r"([A-Za-z0-9!\-]+) moved to ([A-Za-z0-9!\-]+) with assembly type "
+                        + r"([A-Za-z0-9!\s]+)\s*(ringPosCycle=\[.*\])?\s*with enrich list: (.+)"
+                    )
+                    m = re.search(pat, line)
+                    if not m:
+                        raise InputError('Failed to parse line "{0}" in shuffle file'.format(line))
+                    oldLoc = m.group(1)
+                    newLoc = m.group(2)
+                    assemType = m.group(3).strip()  # take off any possible trailing whitespace
+                    ringPosCycle = m.group(4)  # will be None for legacy shuffleLogic files. (pre 2013-08)
+                    if ringPosCycle:
+                        # extract the assembly ring, position and cycle.
+                        try:
+                            ringPosCycle = ast.literal_eval(ringPosCycle.split("=", 1)[1])
+                        except (ValueError, SyntaxError):
+                            raise InputError('Failed to parse ring/position/cycle line "{0}" in shuffle file'.format(line))
+                    enrichList = [float(i) for i in m.group(5).split()]
+                    moves[cycle].append(AssemblyMove(oldLoc, newLoc, enrichList, assemType, ringPosCycle))
+                    numMoves += 1
 
         runLog.info("Read {0} moves over {1} cycles".format(numMoves, len(moves.keys())))
         return moves
