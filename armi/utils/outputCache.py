@@ -32,6 +32,8 @@ running the code again. Nothing has to be named to be shared, and nothing is sha
 * **Safe to share.** An entry is written to a scratch directory and renamed into place with its manifest written last,
   so a reader never sees half an entry and two runs filing the same result do not corrupt each other. A damaged entry
   is removed when it is found, and the next run files a good one.
+* **One run per key at a time, in a process.** Hold :py:meth:`OutputCache.making` while making a run, and an identical
+  run started alongside it waits for it and restores its outputs instead of running the code again.
 
 Use::
 
@@ -49,6 +51,7 @@ import os
 import re
 import shutil
 import tempfile
+import threading
 import time
 from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
@@ -69,6 +72,10 @@ NAME = "{RUN-NAME}"
 
 #: The environment variable naming a machine's shared cache, for cases that do not set ``outputCacheLocation``.
 ENVIRONMENT_VARIABLE = "ARMI_OUTPUT_CACHE"
+
+# One lock per (cache root, key) for the runs being made in this process; see OutputCache.making.
+_making: dict[tuple[str, str], threading.Lock] = {}
+_makingGuard = threading.Lock()
 
 
 @functools.cache
@@ -179,6 +186,17 @@ class OutputCache:
             "extra": extra or {},
         }
         return hashlib.sha256(json.dumps(parts, sort_keys=True).encode()).hexdigest()
+
+    def making(self, key: str) -> threading.Lock:
+        """
+        The lock to hold while checking for, making and filing the run under ``key``.
+
+        Identical runs started side by side would all miss the cache and all run. Holding this lock from the check to
+        the filing makes the later ones wait for the first and restore what it filed. Runs with different keys do not
+        wait on each other. It covers the threads of this process, not other processes sharing the cache directory.
+        """
+        with _makingGuard:
+            return _making.setdefault((self.root, key), threading.Lock())
 
     def entry(self, key: str) -> str:
         """The directory of the entry filed under ``key``."""

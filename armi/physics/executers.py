@@ -212,25 +212,34 @@ class CodeRun:
         return os.path.dirname(self.inputPath)
 
     def run(self) -> RunResult:
-        """Restore the run from the cache, or make it (with retries), bring back its outputs and file it."""
-        key = self.cacheKey() if self.cache else None
-        if key:
+        """Restore the run from the cache, or make it (with retries), bring back its outputs and file it.
+
+        An identical run already being made in this process is waited for and restored, not run a second time.
+        """
+        if not self.cache:
+            return self._runWithRetries()
+        key = self.cacheKey()
+        with self.cache.making(key):
             cached = self.restore(key)
             if cached is not None:
                 return cached
+            result = self._runWithRetries()
+            if result.succeeded:
+                self.cache.store(
+                    key,
+                    [*self.retrieved, self.listingPath],
+                    name=self.stem,
+                    metadata={"input": os.path.basename(self.inputPath), "wallSeconds": result.wallSeconds},
+                )
+            return result
+
+    def _runWithRetries(self) -> RunResult:
         result = self._runOnce()
         for attempt in range(self.retries):
             if result.succeeded:
                 break
             runLog.warning(f"Retrying {os.path.basename(self.inputPath)} (attempt {attempt + 2})")
             result = self._runOnce()
-        if key and result.succeeded:
-            self.cache.store(
-                key,
-                [*self.retrieved, self.listingPath],
-                name=self.stem,
-                metadata={"input": os.path.basename(self.inputPath), "wallSeconds": result.wallSeconds},
-            )
         return result
 
     def prepare(self) -> None:
