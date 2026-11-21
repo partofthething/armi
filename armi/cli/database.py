@@ -104,6 +104,10 @@ class InjectInputs(EntryPoint):
             runLog.error("No settings, blueprints, or geometry files specified; nothing to do.")
             return
 
+        # Opening in append mode would quietly create a new database holding nothing but these inputs.
+        if not os.path.isfile(self.args.h5db):
+            raise FileNotFoundError(f"There is no database at {self.args.h5db} to inject inputs into.")
+
         bp = None
         settings = None
 
