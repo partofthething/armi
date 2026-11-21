@@ -170,16 +170,18 @@ class SettingsDocument:
         settings in five round trips is not how anyone wants to spend an afternoon.
         """
         problems = []
+        candidate = self.cs
         for name, value in values.items():
-            if name not in self.cs:
+            if name not in candidate:
                 problems.append(f"{name}: no such setting")
                 continue
             try:
-                self.cs = self.cs.modified(newSettings={name: value})
+                candidate = candidate.modified(newSettings={name: value})
             except Exception as ee:
                 problems.append(f"{name}: {ee}")
         if problems:
             raise SettingsError("; ".join(problems))
+        self.cs = candidate
 
     def save(self, path=None, style="short") -> pathlib.Path:
         """Write the settings to disk.
