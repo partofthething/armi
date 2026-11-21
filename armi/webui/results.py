@@ -768,6 +768,23 @@ class ResultsDatabase:
                 continue
             sub = group[typeName]
             densities = sub["numberDensities"]
+            attrs = _resolveAttrs(densities)
+            if attrs.get("dict", False):
+                # A dict-format dataset carries the nuclide names as the "keys" attribute
+                # rather than a separate "nuclides" dataset.
+                keys = np.asarray(attrs.get("keys", []))
+                hits = np.flatnonzero(keys.astype("S6") == target)
+                mask = typeNames == typeName
+                if hits.size == 0:
+                    continue
+                data = densities[()]
+                col = np.asarray(data)[:, hits[0]].astype(np.float64)
+                rows = indexInData[mask]
+                ok = rows < len(col)
+                chunk = np.full(mask.sum(), np.nan)
+                chunk[ok] = col[rows[ok]]
+                values[mask] = chunk
+                continue
             names = sub["nuclides"][()]
             data = densities[()]
             count = len(np.flatnonzero(typeNames == typeName))
