@@ -145,7 +145,7 @@ class B4C(material.Material):
 
     @staticmethod
     def getMassEnrichmentFromNumEnrich(
-        b10NumFrac: float, b10AtomicMass: float = None, b11AtomicMass: float = None
+        b10NumFrac: float, b10AtomicMass: float | None = None, b11AtomicMass: float | None = None
     ) -> float:
         """Given a B10 number fraction, give the B10 weight fraction."""
         if b10AtomicMass is None:
@@ -155,7 +155,7 @@ class B4C(material.Material):
 
         return b10NumFrac * b10AtomicMass / (b10NumFrac * b10AtomicMass + (1.0 - b10NumFrac) * b11AtomicMass)
 
-    def density(self, Tk: float = None, Tc: float = None) -> float:
+    def density(self, Tk: float | None = None, Tc: float | None = None) -> float:
         """
         Return density that preserves mass when thermally expanded in 3D.
 
@@ -165,7 +165,7 @@ class B4C(material.Material):
         """
         return material.Material.density(self, Tk, Tc) * self.theoreticalDensityFrac
 
-    def linearExpansionPercent(self, Tk: float = None, Tc: float = None) -> float:
+    def linearExpansionPercent(self, Tk: float | None = None, Tc: float | None = None) -> float:
         """Boron carbide expansion. Very preliminary."""
         Tc = getTc(Tc, Tk)
         self.checkPropertyTempRange("linear expansion percent", Tc)

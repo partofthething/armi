@@ -71,7 +71,7 @@ class Function:
         self._references = []
         """Reference data"""
 
-    def __call__(self, point: dict = None, **kwargs):
+    def __call__(self, point: dict | None = None, **kwargs):
         """
         Calculate the quantity of a specific Property.
 
@@ -115,7 +115,7 @@ class Function:
 
         return self._calcSpecific(data)
 
-    def calc(self, point: dict = None, **kwargs):
+    def calc(self, point: dict | None = None, **kwargs):
         """
         A simple pass-through to __call__.
 

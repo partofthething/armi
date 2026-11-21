@@ -95,7 +95,7 @@ class TableFunction2D(TableFunction):
             )
 
             if cache:
-                self.independentVars[list(cache.keys())[0]] = list(cache.values())[0]
+                self.independentVars[next(iter(cache.keys()))] = next(iter(cache.values()))
         elif node == 1:
             self.independentVars[var] = (float(min(self._rowValues)), float(max(self._rowValues)))
         else:
@@ -139,7 +139,7 @@ class TableFunction2D(TableFunction):
         point: dict
             dictionary of independent variable/value pairs
         """
-        columnVar = list(self.independentVars.keys())[0]
+        columnVar = next(iter(self.independentVars.keys()))
         rowVar = list(self.independentVars.keys())[1]
         if columnVar in point and rowVar in point:
             columnVal = point[columnVar]

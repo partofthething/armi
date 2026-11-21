@@ -309,9 +309,7 @@ class FullFactorialSuiteBuilder(SuiteBuilder):
         SuiteBuilder.addDegreeOfFreedom
         """
         # Cartesian product. Append a new modifier to the end of a chain of previously defined.
-        new = [
-            existingModSet + (newModifier,) for newModifier in inputModifiers for existingModSet in self.modifierSets
-        ]
+        new = [(*existingModSet, newModifier) for newModifier in inputModifiers for existingModSet in self.modifierSets]
         del self.modifierSets[:]
         self.modifierSets.extend(new)
 
@@ -338,7 +336,7 @@ class FullFactorialSuiteBuilderNoisy(FullFactorialSuiteBuilder):
                     self._perturb(mod)
                 newModCopy = copy.deepcopy(newMod)
                 self._perturb(newModCopy)
-                new.append(existingModSetCopy + (newModCopy,))
+                new.append((*existingModSetCopy, newModCopy))
 
         del self.modifierSets[:]
         self.modifierSets.extend(new)

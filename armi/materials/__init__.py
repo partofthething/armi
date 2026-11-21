@@ -248,7 +248,7 @@ def iterAllMaterialClassesInNamespace(namespace):
             yield obj
 
 
-def createMaterialByName(name: str, namespaceOrder: list[str] = None):
+def createMaterialByName(name: str, namespaceOrder: list[str] | None = None):
     """
     Find the first material that matches a name in an ordered namespace.
 
@@ -357,6 +357,6 @@ def createMaterialByName(name: str, namespaceOrder: list[str] = None):
             return getattr(mod, name)()
 
     raise KeyError(
-        f"Cannot find material named `{name}` in any of: {str(namespaceOrder)}. Please update inputs or plugins. See "
+        f"Cannot find material named `{name}` in any of: {namespaceOrder!s}. Please update inputs or plugins. See "
         "CONF_MATERIAL_NAMESPACE_ORDER setting."
     )

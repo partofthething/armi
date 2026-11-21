@@ -61,14 +61,14 @@ class TestGamiso(unittest.TestCase):
         self.assertEqual(len(self.xsLib.xsIDs), 0)
         self.assertTrue(gamiso.addDummyNuclidesToLibrary(self.xsLib, dummyNuclides))
         self.assertEqual(len(self.xsLib.xsIDs), 1)
-        self.assertEqual(list(self.xsLib.xsIDs)[0], "38")
+        self.assertEqual(next(iter(self.xsLib.xsIDs)), "38")
 
         after = self.xsLib.getNuclides("")
         self.assertGreater(len(after), len(before))
 
         diff = set(after).difference(set(before))
         self.assertEqual(len(diff), 1)
-        self.assertEqual(list(diff)[0].xsId, "38")
+        self.assertEqual(next(iter(diff)).xsId, "38")
 
     def test_addDummyNuclidesToLibraryNumGroups(self):
         isoLib = isotxs.readBinary(os.path.join(FIXTURE_DIR, "ISOAA"))

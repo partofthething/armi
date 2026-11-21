@@ -84,7 +84,7 @@ class TestLatticePhysicsWriter(unittest.TestCase):
 
         nucs = self.w._getAllNuclidesByTemperatureInC(None)
         self.assertEqual(len(nucs.keys()), 1)
-        self.assertAlmostEqual(list(nucs.keys())[0], 450.0, delta=0.1)
+        self.assertAlmostEqual(next(iter(nucs.keys())), 450.0, delta=0.1)
 
     def test_writeTitle(self):
         self.w._writeTitle("test_writeTitle")

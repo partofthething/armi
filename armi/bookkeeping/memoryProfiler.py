@@ -166,7 +166,7 @@ class MemoryProfiler(interfaces.Interface):
             if isinstance(attrObj, list) and isinstance(attrObj[0], ArmiObject):
                 runLog.important(f"List {attrName:30s} has {len(attrObj):4d} ArmiObjects")
 
-            if isinstance(attrObj, dict) and isinstance(list(attrObj.values())[0], ArmiObject):
+            if isinstance(attrObj, dict) and isinstance(next(iter(attrObj.values())), ArmiObject):
                 runLog.important(f"Dict {attrName:30s} has {len(attrObj):4d} ArmiObjects")
 
         if self.r.excore.get("sfp") is not None:

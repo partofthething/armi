@@ -105,7 +105,7 @@ class Table(Group):
             return ""
 
         # set up
-        prototypical_data = list(self.data.values())[0]
+        prototypical_data = next(iter(self.data.values()))
         num_cols = len(prototypical_data) + 1
         border_dashes = "-" * (num_cols * 31) + "\n"
 

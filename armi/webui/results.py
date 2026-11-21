@@ -138,7 +138,7 @@ def isPerInstance(name, group) -> bool:
         return False
     mult = group["mult"][()] if "mult" in group else np.ones(len(values))
     sized = [(v, m) for v, m in zip(values, mult) if v is not None]
-    return bool(sized) and all(len(v) == int(round(float(m))) for v, m in sized)
+    return bool(sized) and all(len(v) == round(float(m)) for v, m in sized)
 
 
 def decodeFlags(data, flagOrder):
@@ -245,8 +245,8 @@ class _Topology:
             "id": self.id,
             "assemblyNames": self.assemblyNames,
             "blocksPerAssembly": self.blocksPerAssembly.tolist(),
-            "blockCount": int(len(self.blockRows)),
-            "componentCount": int(len(self.componentRows)),
+            "blockCount": len(self.blockRows),
+            "componentCount": len(self.componentRows),
         }
 
 
@@ -851,7 +851,7 @@ class ResultsDatabase:
                         where = hashlib.blake2b(cells.tobytes(), digest_size=8).digest()
                 typeName = typeNames[comp]
                 shapeDims = tuple(
-                    round(float(dims[name][comp]), 6) for name in _SHAPE_DIMS.get(typeName, ()) + ("mult",)
+                    round(float(dims[name][comp]), 6) for name in (*_SHAPE_DIMS.get(typeName, ()), "mult")
                 )
                 signature = (
                     typeName,
@@ -876,7 +876,7 @@ class ResultsDatabase:
                     "material": materials[comp],
                     "flags": flags[comp],
                 }
-                for name in _SHAPE_DIMS.get(typeName, ()) + ("mult",):
+                for name in (*_SHAPE_DIMS.get(typeName, ()), "mult"):
                     value = dims[name][comp]
                     if np.isfinite(value):
                         shape[name] = round(float(value), 6)

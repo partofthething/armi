@@ -68,7 +68,7 @@ def plotAll(xlim, ylim):
         nuclideBases.imposeBurnChain(burnChainStream)
     nbs = nuclideBases.instances
 
-    fig, ax = plt.subplots(figsize=(15, 10))
+    _fig, ax = plt.subplots(figsize=(15, 10))
 
     patches = []
     for nb in nbs:

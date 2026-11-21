@@ -286,20 +286,20 @@ class Parameter:
     # to go through Parameter objects to get to a specific parameter's value in a
     # ParameterCollection)
     __slots__ = (
-        "name",
-        "fieldName",
+        "_backup",
+        "_getter",
+        "_setter",
+        "assigned",
+        "categories",
         "collectionType",
+        "default",
+        "description",
+        "fieldName",
         "location",
+        "name",
         "saveToDB",
         "serializer",
         "units",
-        "default",
-        "_getter",
-        "_setter",
-        "description",
-        "categories",
-        "assigned",
-        "_backup",
     )
 
     def __init__(
@@ -484,7 +484,7 @@ class ParameterDefinitionCollection:
 
     # Slots are not being used here as an attempt at optimization. Rather, they serve to add some
     # needed rigidity to the parameter system.
-    __slots__ = ("_paramDefs", "_paramDefDict", "_representedTypes", "_locked")
+    __slots__ = ("_locked", "_paramDefDict", "_paramDefs", "_representedTypes")
 
     def __init__(self):
         self._paramDefs = []

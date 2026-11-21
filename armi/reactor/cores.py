@@ -2265,7 +2265,7 @@ class Core(composites.Composite):
         self,
         typeSpec: flags.TypeSpec | None = None,
         exact=False,
-        predicate: Callable[[blocks.Block], bool] = None,
+        predicate: Callable[[blocks.Block], bool] | None = None,
     ) -> Iterator[blocks.Block]:
         """Iterate over the blocks in the core.
 

@@ -268,25 +268,25 @@ def getElementsByChemicalGroup(group: ChemicalGroup) -> list[Element]:
     return elements.getElementsByChemicalGroup(group)
 
 
-def getName(z: int = None, symbol: str = None) -> str:
+def getName(z: int | None = None, symbol: str | None = None) -> str:
     """Pass through to Elements.getName() for the global Elements object."""
     global elements
     return elements.getName(z, symbol)
 
 
-def getSymbol(z: int = None, name: str = None) -> str:
+def getSymbol(z: int | None = None, name: str | None = None) -> str:
     """Pass through to Elements.getSymbol() for the global Elements object."""
     global elements
     return elements.getSymbol(z, name)
 
 
-def getElementZ(symbol: str = None, name: str = None) -> int:
+def getElementZ(symbol: str | None = None, name: str | None = None) -> int:
     """Pass through to Elements.getElementZ() for the global Elements object."""
     global elements
     return elements.getElementZ(symbol, name)
 
 
-def factory(elementsFile: str = None):
+def factory(elementsFile: str | None = None):
     """Pass through to Elements.factory() for the global Elements object."""
     global elements
     global byZ
@@ -333,7 +333,7 @@ class Elements:
 
     DEFAULT_ELEMENTS_FILE = os.path.join(context.RES, "elements.dat")
 
-    def __init__(self, elementsFile: str = None):
+    def __init__(self, elementsFile: str | None = None):
         self.byZ: dict[int, Element] = {}
         self.byName: dict[str, Element] = {}
         self.bySymbol: dict[str, Element] = {}
@@ -360,7 +360,7 @@ class Elements:
         self.byName[element.name] = element
         self.bySymbol[element.symbol] = element
 
-    def factory(self, elementsFile: str = None):
+    def factory(self, elementsFile: str | None = None):
         """Generate the :class:`Elements <Element>` instances."""
         self.clear()
 
@@ -434,7 +434,7 @@ class Elements:
 
         return elems
 
-    def getName(self, z: int = None, symbol: str = None) -> str:
+    def getName(self, z: int | None = None, symbol: str | None = None) -> str:
         r"""
         Returns element name.
 
@@ -460,7 +460,7 @@ class Elements:
 
         return element.name
 
-    def getSymbol(self, z: int = None, name: str = None) -> str:
+    def getSymbol(self, z: int | None = None, name: str | None = None) -> str:
         r"""
         Returns element abbreviation given atomic number Z.
 
@@ -487,7 +487,7 @@ class Elements:
 
         return element.symbol
 
-    def getElementZ(self, symbol: str = None, name: str = None) -> int:
+    def getElementZ(self, symbol: str | None = None, name: str | None = None) -> int:
         """
         Get element atomic number given a symbol or name.
 

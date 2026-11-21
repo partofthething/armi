@@ -329,7 +329,7 @@ class Field:
         Human-readable description, for generated documentation.
     """
 
-    __slots__ = ("name", "key", "type", "default", "validatorFunc", "doc", "storageName")
+    __slots__ = ("default", "doc", "key", "name", "storageName", "type", "validatorFunc")
 
     def __init__(self, name=None, key=None, type=NODEFAULT, default=NODEFAULT, validator=None, doc=None):
         self.name = None
@@ -439,7 +439,7 @@ class Field:
 class FieldCollection:
     """The fields of one :py:class:`YamlObject` subclass, in declaration order."""
 
-    __slots__ = ("order", "byKey", "byName")
+    __slots__ = ("byKey", "byName", "order")
 
     def __init__(self, fields=()):
         self.order = []

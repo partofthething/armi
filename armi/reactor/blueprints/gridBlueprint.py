@@ -611,7 +611,7 @@ def _filterOutsideDomain(gridBp):
     contentsToRemove = {
         idx
         for idx, _contents in gridBp.gridContents.items()
-        if not grid.locatorInDomain(grid[idx + (0,)], symmetryOverlap=False)
+        if not grid.locatorInDomain(grid[(*idx, 0)], symmetryOverlap=False)
     }
     for idx in contentsToRemove:
         symmetrics = grid.getSymmetricEquivalents(idx)

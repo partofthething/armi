@@ -1124,7 +1124,7 @@ class Operator:
 
         fileNamePossibilities = [f"ISOTXS-c{cycle}n{node}", f"ISOTXS-c{cycle}"]
         if iteration is not None:
-            fileNamePossibilities = [f"ISOTXS-c{cycle}n{node}i{iteration}"] + fileNamePossibilities
+            fileNamePossibilities = [f"ISOTXS-c{cycle}n{node}i{iteration}", *fileNamePossibilities]
 
         for isoFName in fileNamePossibilities:
             if os.path.exists(isoFName):

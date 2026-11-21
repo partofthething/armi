@@ -43,7 +43,7 @@ def recursivelyLoadSettingsFiles(
     rootDir,
     patterns: list[str],
     recursive=True,
-    ignorePatterns: list[str] = None,
+    ignorePatterns: list[str] | None = None,
     handleInvalids=True,
 ):
     """

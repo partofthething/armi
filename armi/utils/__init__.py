@@ -589,7 +589,7 @@ def createFormattedStrWithDelimiter(dataList, maxNumberOfValuesBeforeDelimiter=9
     if not maxNumberOfValuesBeforeDelimiter:
         numRows = 1
     else:
-        numRows = int(math.ceil(float(len(dataList)) / float(maxNumberOfValuesBeforeDelimiter))) or 1
+        numRows = math.ceil(float(len(dataList)) / float(maxNumberOfValuesBeforeDelimiter)) or 1
 
     # Create a list of string delimiters to use when joining the strings
     commaList = ["," for d in dataList]

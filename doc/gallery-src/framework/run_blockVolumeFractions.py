@@ -69,7 +69,7 @@ def plotVolFracsWithComponentTemps(b, uniformTemps):
 
             relativeVols[c].append((c.getVolume() - initialVols[c]) / initialVols[c] * 100.0)
 
-    fig, ax = plt.subplots()
+    _fig, ax = plt.subplots()
 
     for c in b.getComponents():
         ax.plot(uniformTempsInC, relativeVols[c], label=c.name)

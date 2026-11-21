@@ -381,7 +381,7 @@ def getDefaultNuclideFlags():
     actinides = {
         "U": [234, 235, 236, 238],
         "NP": [237, 238],
-        "PU": [236] + list(range(238, 243)),
+        "PU": [236, *list(range(238, 243))],
         "AM": [241, 243],
         "CM": range(242, 248),
     }

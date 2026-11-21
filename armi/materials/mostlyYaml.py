@@ -53,7 +53,7 @@ class SiC(Material):
         Material.__init__(self)
         self.refDens = 3.21
 
-    def pseudoDensity(self, Tk: float = None, Tc: float = None) -> float:
+    def pseudoDensity(self, Tk: float | None = None, Tc: float | None = None) -> float:
         """2D-expanded density in g/cc, at the TD_frac of theoretical density."""
         return super().pseudoDensity(Tk=Tk, Tc=Tc) * self.getTD()
 
@@ -159,7 +159,7 @@ class Uranium(FuelMaterial):
         Material.__init__(self)
         self.refDens = 19.07
 
-    def pseudoDensity(self, Tk: float = None, Tc: float = None) -> float:
+    def pseudoDensity(self, Tk: float | None = None, Tc: float | None = None) -> float:
         """2D-expanded density in g/cc."""
         return super().pseudoDensity(Tk=Tk, Tc=Tc) * self.getTD()
 
@@ -178,7 +178,7 @@ class UCO(FuelMaterial):
         FuelMaterial.__init__(self)
         self.refDens = 11.03
 
-    def pseudoDensity(self, Tk: float = None, Tc: float = None) -> float:
+    def pseudoDensity(self, Tk: float | None = None, Tc: float | None = None) -> float:
         """2D-expanded density in g/cc, at the TD_frac of theoretical density."""
         return super().pseudoDensity(Tk=Tk, Tc=Tc) * self.getTD()
 

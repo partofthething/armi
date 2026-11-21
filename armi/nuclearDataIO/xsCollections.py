@@ -67,10 +67,10 @@ OTHER_SCAT_MATRIX = ["totalScatter", "elasticScatter1stOrder"]
 HIGHORDER_SCATTER = "higherOrderScatter"
 
 # Subset of vector xs used to evaluate absorption cross-section
-ABSORPTION_XS = CAPTURE_XS + [FISSION_XS, N2N_XS]
+ABSORPTION_XS = [*CAPTURE_XS, FISSION_XS, N2N_XS]
 
 # Subset of vector xs evaluated by _convertBasicXS
-BASIC_XS = ABSORPTION_XS + [NUSIGF]
+BASIC_XS = [*ABSORPTION_XS, NUSIGF]
 
 # Subset vector xs that are derived from basic cross sections
 DERIVED_XS = ["absorption", "removal"]
@@ -82,13 +82,7 @@ TOTAL_XS = ["total", "transport"]
 ALL_XS = BASIC_XS + BASIC_SCAT_MATRIX + OTHER_SCAT_MATRIX + DERIVED_XS + TOTAL_XS
 
 # All xs collection data
-ALL_COLLECTION_DATA = ALL_XS + [
-    "chi",
-    NU,
-    "strpd",
-    HIGHORDER_SCATTER,
-    "diffusionConstants",
-]
+ALL_COLLECTION_DATA = [*ALL_XS, "chi", NU, "strpd", HIGHORDER_SCATTER, "diffusionConstants"]
 
 E_CAPTURE = "ecapt"
 E_FISSION = "efiss"

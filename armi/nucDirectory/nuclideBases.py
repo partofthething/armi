@@ -377,7 +377,7 @@ class INuclide(NuclideInterface):
                     f"Improperly defined ``burn-chain`` of {self}. {nuclideBurnCategory.keys()} should be a single "
                     "burn type."
                 )
-            nuclideBurnType = list(nuclideBurnCategory.keys())[0]
+            nuclideBurnType = next(iter(nuclideBurnCategory.keys()))
             if nuclideBurnType == self.TRANSMUTATION:
                 self.trans.append(transmutations.Transmutation(self, nuclideBurnCategory[nuclideBurnType]))
             elif nuclideBurnType == self.DECAY:
@@ -1166,7 +1166,9 @@ class NuclideBases:
         if not isinstance(nuclide, (NaturalNuclideBase, LumpNuclideBase, DummyNuclideBase)):
             self.byAAAZZZSId[nuclide.getAAAZZZSId()] = nuclide
 
-    def factory(self, nuclidesFile: str = None, mccNuclidesFile: str = None, elementsFile: str = None):
+    def factory(
+        self, nuclidesFile: str | None = None, mccNuclidesFile: str | None = None, elementsFile: str | None = None
+    ):
         """
         Reads data files to instantiate the :py:class:`INuclides <INuclide>`.
 

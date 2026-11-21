@@ -898,14 +898,14 @@ class TestInputHeightsConsideredHot(unittest.TestCase):
 
     def setUp(self):
         """Use a different armiRun.yaml than the default."""
-        o, r = loadTestReactor(
+        _o, r = loadTestReactor(
             os.path.join(TESTING_ROOT, "reactors", "detailedAxialExpansion"),
             customSettings={"inputHeightsConsideredHot": True},
         )
 
         self.stdAssems = list(r.core)
 
-        oCold, rCold = loadTestReactor(
+        _oCold, rCold = loadTestReactor(
             os.path.join(TESTING_ROOT, "reactors", "detailedAxialExpansion"),
             customSettings={"inputHeightsConsideredHot": False},
         )

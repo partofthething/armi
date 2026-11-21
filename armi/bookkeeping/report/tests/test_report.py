@@ -224,7 +224,7 @@ class TestReport(unittest.TestCase):
             mock.emptyStdout()
 
     def test_writeWelcomeHeaders(self):
-        o, r = loadTestReactor(TESTING_ROOT, inputFileName="reactors/smallestTestReactor/armiRunSmallest.yaml")
+        o, _r = loadTestReactor(TESTING_ROOT, inputFileName="reactors/smallestTestReactor/armiRunSmallest.yaml")
 
         # grab this file path
         randoFile = os.path.abspath(__file__)

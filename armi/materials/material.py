@@ -208,7 +208,7 @@ class Material(MatPropsMaterial):
         """See deepcopy, retained for API compatibility."""
         return deepcopy(self)
 
-    def linearExpansion(self, Tk: float = None, Tc: float = None) -> float:
+    def linearExpansion(self, Tk: float | None = None, Tc: float | None = None) -> float:
         """
         The instantaneous linear expansion coefficient (dL/L)/dT.
 
@@ -225,7 +225,7 @@ class Material(MatPropsMaterial):
         deltaStrain = self.linearExpansionPercent(Tk + 1.0) / 100.0 - self.linearExpansionPercent(Tk - 1.0) / 100.0
         return deltaStrain / 2.0
 
-    def linearExpansionPercent(self, Tk: float = None, Tc: float = None) -> float:
+    def linearExpansionPercent(self, Tk: float | None = None, Tc: float | None = None) -> float:
         """
         Average thermal expansion dL/L. Used for computing hot dimensions and density.
 
@@ -462,7 +462,7 @@ class Material(MatPropsMaterial):
         """Fraction of the material that is gas void (unitless)."""
         return 0.0 if self.parent is None else self.parent.gasPorosity
 
-    def pseudoDensity(self, Tk: float = None, Tc: float = None) -> float:
+    def pseudoDensity(self, Tk: float | None = None, Tc: float | None = None) -> float:
         """
         Return density that preserves mass when thermally expanded in 2D (in g/cm^3).
 
@@ -481,7 +481,7 @@ class Material(MatPropsMaterial):
         f = 1.0 + dLL / 100.0
         return density * f
 
-    def density(self, Tk: float = None, Tc: float = None) -> float:
+    def density(self, Tk: float | None = None, Tc: float | None = None) -> float:
         """
         Return density that preserves mass when thermally expanded in 3D (in g/cm^3).
 
@@ -511,27 +511,27 @@ class Material(MatPropsMaterial):
         f = (1.0 + dLL / 100.0) ** 3
         return self.refDens / f
 
-    def dynamicVisc(self, Tk: float = None, Tc: float = None) -> float:
+    def dynamicVisc(self, Tk: float | None = None, Tc: float | None = None) -> float:
         """Dynamic viscosity in Pa-s."""
         Tc = getTc(Tc, Tk)
         return self.mu_d(T=Tc)
 
-    def enthalpy(self, Tk: float = None, Tc: float = None) -> float:
+    def enthalpy(self, Tk: float | None = None, Tc: float | None = None) -> float:
         """Return enthalpy in J/kg."""
         Tc = getTc(Tc, Tk)
         return self.H(T=Tc)
 
-    def yieldStrength(self, Tk: float = None, Tc: float = None) -> float:
+    def yieldStrength(self, Tk: float | None = None, Tc: float | None = None) -> float:
         """Returns yield strength at given T in MPa."""
         Tc = getTc(Tc, Tk)
         return self.Sy(T=Tc)
 
-    def thermalConductivity(self, Tk: float = None, Tc: float = None) -> float:
+    def thermalConductivity(self, Tk: float | None = None, Tc: float | None = None) -> float:
         """Thermal conductivity for given T (in units of W/m/K)."""
         Tc = getTc(Tc, Tk)
         return self.k(T=Tc)
 
-    def getProperty(self, propName: str, Tk: float = None, Tc: float = None, **kwargs) -> float:
+    def getProperty(self, propName: str, Tk: float | None = None, Tc: float | None = None, **kwargs) -> float:
         """
         Gets properties in a way that caches them.
 
@@ -656,7 +656,7 @@ class Material(MatPropsMaterial):
 class Fluid(Material):
     """A material that fills its container. Could also be a gas."""
 
-    def pseudoDensity(self, Tk: float = None, Tc: float = None) -> float:
+    def pseudoDensity(self, Tk: float | None = None, Tc: float | None = None) -> float:
         """Density and pseudoDensity are the same for Fluids."""
         return self.density(Tk=Tk, Tc=Tc)
 
@@ -697,7 +697,7 @@ class SimpleSolid(Material):
         Material.__init__(self)
         self.refDens = self.density(Tk=self.refTempK)
 
-    def pseudoDensity(self, Tk: float = None, Tc: float = None) -> float:
+    def pseudoDensity(self, Tk: float | None = None, Tc: float | None = None) -> float:
         """A 2D density, for materials linearly expanding (in g/cm^3)."""
         return Material.pseudoDensity(self, Tk=Tk, Tc=Tc) * self.getTD()
 

@@ -493,7 +493,7 @@ class Blueprints(YamlObject, metaclass=_BlueprintsPluginCollector):
                     )
 
     @classmethod
-    def migrate(cls, inp: typing.TextIO, version: str = None):
+    def migrate(cls, inp: typing.TextIO, version: str | None = None):
         """Given a stream representation of a blueprints file, migrate it.
 
         Parameters

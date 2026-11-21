@@ -98,7 +98,7 @@ class TableFunction1D(TableFunction):
         point: dict
             dictionary of independent variable/value pairs
         """
-        var = list(self.independentVars.keys())[0]
+        var = next(iter(self.independentVars.keys()))
         if var in point:
             return linearLinear(point[var], self._var1s, self._values)
 

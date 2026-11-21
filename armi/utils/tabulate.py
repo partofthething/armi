@@ -944,7 +944,7 @@ def _prependRowIndex(rows, index):
     indexIter = iter(index)
     for row in sansRows:
         indexV = next(indexIter)
-        newRows.append([indexV] + list(row))
+        newRows.append([indexV, *list(row)])
     rows = newRows
     _reinsertSeparatingLines(rows, separatingLines)
     return rows
@@ -1056,7 +1056,7 @@ def _normalizeTabularData(data, headers, showIndex="default"):
     # take headers from the first row if necessary
     if headers == "firstrow" and len(rows) > 0:
         if index is not None:
-            headers = [index[0]] + list(rows[0])
+            headers = [index[0], *list(rows[0])]
             index = index[1:]
         else:
             headers = rows[0]

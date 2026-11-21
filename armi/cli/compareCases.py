@@ -28,7 +28,8 @@ DEFAULT_EXCLUSIONS = (
 
 # Parameters that under normal circumstances would be the same, but may not be
 # faithfully represented by an old database format.
-CONVERTED_EXCLUSIONS = DEFAULT_EXCLUSIONS + (
+CONVERTED_EXCLUSIONS = (
+    *DEFAULT_EXCLUSIONS,
     "^.*/serialNum$",
     "^.*/temperatureInC$",
     "^.*/volume$",

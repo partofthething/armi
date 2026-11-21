@@ -262,7 +262,7 @@ def filterNuclideList(nuclideVector, nuclides):
     nuclideVector : dict
         dictionary of values indexed by nuclide identifiers -- e.g. nucNames or nuclideBases
     """
-    if not isinstance(list(nuclideVector.keys())[0], nuclides[0].__class__):
+    if not isinstance(next(iter(nuclideVector.keys())), nuclides[0].__class__):
         raise ValueError(
             f"nuclide vector is indexed by {nuclideVector.keys()[0].__class__} where as the nuclides list is "
             f"{nuclides[0].__class__}"
@@ -353,7 +353,7 @@ def expandElementalMassFracsToNuclides(
 def expandElementalNuclideMassFracs(
     element: elements.Element,
     massFrac: float,
-    isotopicSubset: list[nuclideBases.NuclideBase] = None,
+    isotopicSubset: list[nuclideBases.NuclideBase] | None = None,
 ):
     """
     Return a dictionary of nuclide names to isotopic mass fractions.

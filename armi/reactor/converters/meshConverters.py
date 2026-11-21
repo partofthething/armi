@@ -102,7 +102,7 @@ class RZThetaReactorMeshConverter(MeshConverter):
         # thetaMesh doesn't include the zero point so add it back in.
         # axial mesh is handled on assemblies so make this 2-D.
 
-        mesh = grids.ThetaRZGrid(bounds=([0.0] + self.thetaMesh, self.radialMesh, (0.0, 0.0)))
+        mesh = grids.ThetaRZGrid(bounds=([0.0, *self.thetaMesh], self.radialMesh, (0.0, 0.0)))
         return mesh
 
     def writeMeshData(self):

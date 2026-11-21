@@ -233,7 +233,7 @@ class RegionXSMetadata(FileMetadata):
         mergedData["numFissComps"] = self["numFissComps"] + other["numFissComps"]
 
     def _getSkippedKeys(self, other, selfContainer, otherContainer, mergedData):
-        return set(["numComps", "compFamiliesWithPrecursors", "numFissComps"] + COMPXS_POWER_CONVERSION_FACTORS)
+        return {"numComps", "compFamiliesWithPrecursors", "numFissComps", *COMPXS_POWER_CONVERSION_FACTORS}
 
 
 class NuclideMetadata(_Metadata):

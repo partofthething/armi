@@ -55,7 +55,7 @@ class TestSynchronization(unittest.TestCase):
             for bi in range(3):
                 a.add(makeComp(f"block{ai}-{bi}"))
 
-        self.comps = [self.r.core] + self.r.core.getChildren(deep=True)
+        self.comps = [self.r.core, *self.r.core.getChildren(deep=True)]
 
     @unittest.skipIf(context.MPI_SIZE <= 1 or MPI_EXE is None, "Parallel test only")
     def test_noConflicts(self):

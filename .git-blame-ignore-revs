@@ -3,3 +3,12 @@
 
 # Modernize syntax for Python 3.11 with ruff's pyupgrade fixes
 30619c2ac39eb0d71db45f967d829a321f71d79a
+
+# Lint: enforce flake8-comprehensions (C4)
+556ab325dd575c3135c3395c7dbc8bc123dcb89a
+
+# Lint: enforce flake8-pie (PIE)
+85a75c893d2c89b26be6eca8e004dd36393a8f77
+
+# Lint: enforce flake8-return (RET), except RET504
+80904a2562245d8c102e4330b086168ee5b81e77

@@ -83,7 +83,7 @@ class Code:
     def command(self, inputName: str, threads: int) -> list:
         """The command line of a run on ``inputName`` with ``threads`` OpenMP threads."""
         argv = ["env", f"OMP_NUM_THREADS={threads}", self.executable]
-        return argv if self.inputOnStdin else argv + [inputName]
+        return argv if self.inputOnStdin else [*argv, inputName]
 
     def succeeded(self, result: "RunResult") -> bool:
         if self.successMarker is None:
@@ -485,7 +485,7 @@ class ExecutionOptions:
 
         Optional: ``runDir`` can be anything. This gives a consistent, short name per case, label and rank.
         """
-        caseString = f"{caseTitle}-{str(self.label)}".encode()
+        caseString = f"{caseTitle}-{self.label!s}".encode()
         caseTitleHash = str(hashlib.sha1(caseString).hexdigest())[:8]
         self.runDir = os.path.join(getFastPath(), f"{caseTitleHash}-{MPI_RANK}")
 

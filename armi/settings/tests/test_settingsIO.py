@@ -123,14 +123,14 @@ class TestSettingsRename(unittest.TestCase):
     def test_collidingRenames(self):
         settings = {
             setting.name: setting
-            for setting in self.testSettings
-            + [
+            for setting in [
+                *self.testSettings,
                 setting.Setting(
                     "someOtherSetting",
                     default=None,
                     oldNames=[("oSetting1", None)],
                     description="Just a unit test setting.",
-                )
+                ),
             ]
         }
         with self.assertRaises(SettingException):

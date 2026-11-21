@@ -684,7 +684,7 @@ class Case:
             newSettings[CONF_LOADING_FILE] = self.title + "-blueprints.yaml"
             if self.independentVariables:
                 newSettings["independentVariables"] = [
-                    f"({repr(varName)}, {repr(val)})" for varName, val in self.independentVariables.items()
+                    f"({varName!r}, {val!r})" for varName, val in self.independentVariables.items()
                 ]
 
             with open(newSettings[CONF_LOADING_FILE], "w") as loadingFile:

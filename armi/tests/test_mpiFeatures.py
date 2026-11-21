@@ -222,10 +222,8 @@ class TestMpiDistributeState(unittest.TestCase):
             # CONF_CROSS_SECTION is removed because unittest is being mean about
             # comparing dicts...
             for key in ["stationaryBlockFlags", "verbosity", CONF_CROSS_SECTION]:
-                if key in original:
-                    del original[key]
-                if key in current:
-                    del current[key]
+                original.pop(key, None)
+                current.pop(key, None)
 
             for key in original.keys():
                 self.assertEqual(original[key], current[key])

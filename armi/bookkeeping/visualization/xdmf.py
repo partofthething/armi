@@ -37,6 +37,7 @@ visualization tool that supports XDMF.
 """
 
 import io
+import itertools
 import math
 import pathlib
 import xml.dom.minidom
@@ -61,22 +62,42 @@ _QUADRATIC_HEXAHEDRON = 48
 # and have the number of face vertices inserted into the proper locations (notice the
 # [0] placeholders).
 _HEX_PRISM_TOPO = np.array(
-    [0]
-    + list(range(6))
-    + [0]
-    + list(range(6, 12))
-    + [0]
-    + [0, 1, 7, 6]
-    + [0]
-    + [1, 2, 8, 7]
-    + [0]
-    + [2, 3, 9, 8]
-    + [0]
-    + [3, 4, 10, 9]
-    + [0]
-    + [4, 5, 11, 10]
-    + [0]
-    + [5, 0, 6, 11]
+    [
+        0,
+        *list(range(6)),
+        0,
+        *list(range(6, 12)),
+        0,
+        0,
+        1,
+        7,
+        6,
+        0,
+        1,
+        2,
+        8,
+        7,
+        0,
+        2,
+        3,
+        9,
+        8,
+        0,
+        3,
+        4,
+        10,
+        9,
+        0,
+        4,
+        5,
+        11,
+        10,
+        0,
+        5,
+        0,
+        6,
+        11,
+    ]
 )
 
 # The indices of the placeholder zeros from _HEX_PRISM_TOPO array above
@@ -227,7 +248,7 @@ class XdmfDumper(dumper.VisFileDumper):
         are within Ndup*epsilon of each other. In such cases, this function probably
         isn't valid anyways.
         """
-        assert all(a <= b for a, b in zip(times, times[1:])), "Input list must be sorted"
+        assert all(a <= b for a, b in itertools.pairwise(times)), "Input list must be sorted"
 
         # This should be used as a multiplicative epsilon, to avoid precision issues
         # with large times
@@ -446,12 +467,9 @@ def _getTopologyFromShape(b: blocks.Block, offset: int) -> tuple[int, list[int]]
     if isinstance(b, blocks.CartesianBlock):
         return (
             8,
-            [
-                _HEXAHEDRON,
-            ]
-            + list(range(offset, offset + 8)),
+            [_HEXAHEDRON, *list(range(offset, offset + 8))],
         )
     if isinstance(b, blocks.ThRZBlock):
-        return 20, [_QUADRATIC_HEXAHEDRON] + list(range(offset, offset + 20))
+        return 20, [_QUADRATIC_HEXAHEDRON, *list(range(offset, offset + 20))]
 
     raise TypeError(f"Unsupported block type `{type(b)}`")

@@ -1603,7 +1603,7 @@ class TestTabulateOutput(unittest.TestCase):
 
     def test_listOfListsIndexFirstrow(self):
         """Output: a table with a running index and header='firstrow'."""
-        dd = zip(*[["a"] + list(range(3)), ["b"] + list(range(101, 104))])
+        dd = zip(*[["a", *list(range(3))], ["b", *list(range(101, 104))]])
         expected = "\n".join(
             [
                 "      a    b",

@@ -460,7 +460,7 @@ class TestHexGrid(unittest.TestCase):
         self.assertEqual(label1, "012-005")
         self.assertEqual(grids.locatorLabelToIndices(label1), (12, 5, None))
 
-        label2 = grid.getLabel(indices + (5,))
+        label2 = grid.getLabel((*indices, 5))
         self.assertEqual(label2, "012-005-005")
         self.assertEqual(grids.locatorLabelToIndices(label2), (12, 5, 5))
 
@@ -533,9 +533,9 @@ class TestHexGrid(unittest.TestCase):
 
     def test_triangleCoords(self):
         g = grids.HexGrid.fromPitch(8.15)
-        indices1 = g.getIndicesFromRingAndPos(5, 3) + (0,)
-        indices2 = g.getIndicesFromRingAndPos(5, 23) + (0,)
-        indices3 = g.getIndicesFromRingAndPos(3, 4) + (0,)
+        indices1 = (*g.getIndicesFromRingAndPos(5, 3), 0)
+        indices2 = (*g.getIndicesFromRingAndPos(5, 23), 0)
+        indices3 = (*g.getIndicesFromRingAndPos(3, 4), 0)
         cur = g.triangleCoords(indices1)
         ref = [
             (16.468_916_428_634_078, 25.808_333_333_333_337),

@@ -70,7 +70,7 @@ class DatabaseInterface(interfaces.Interface):
                     pDef.saveToDB = True
 
     def __repr__(self):
-        return f"<{self.__class__.__name__} '{self.name}' {repr(self._db)} >"
+        return f"<{self.__class__.__name__} '{self.name}' {self._db!r} >"
 
     @property
     def database(self):

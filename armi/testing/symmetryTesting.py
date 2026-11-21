@@ -159,7 +159,7 @@ class SymmetryFactorTester:
         reduceTestReactorRings(self.r, self.o.cs, 3)
         self.core = self.r.core
         # there is exactly one assembly with 3-symmetry in the test core
-        self.partialAssembly = [a for a in self.r.core.getAssemblies() if a.getSymmetryFactor() == 3][0]
+        self.partialAssembly = next(a for a in self.r.core.getAssemblies() if a.getSymmetryFactor() == 3)
         self.partialBlock = self.partialAssembly.getBlocks()[0]
         # expectedSymmetry describes the ratio of (post-expansion / pre-expansion) values
         self.expectedSymmetryRatio = 3

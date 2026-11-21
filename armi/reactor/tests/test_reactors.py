@@ -315,7 +315,7 @@ class TestHexReactor(TestReactor):
         originalMesh = self.r.core.p.axialMesh
         bigMesh = list(originalMesh)
         bigMesh[2] = 30.0
-        smallMesh = originalMesh[0:2] + [40.0, 47.0] + originalMesh[2:]
+        smallMesh = [*originalMesh[0:2], 40.0, 47.0, *originalMesh[2:]]
         newMesh1, originalMeshGood = self.r.core.addMoreNodes(originalMesh)
         newMesh2, bigMeshGood = self.r.core.addMoreNodes(bigMesh)
         newMesh3, smallMeshGood = self.r.core.addMoreNodes(smallMesh)
@@ -528,7 +528,7 @@ class TestHexReactor(TestReactor):
         mesh[lastIndex] -= 5
 
         # expand the core
-        self.r.core.p.referenceBlockAxialMesh = [0] + mesh
+        self.r.core.p.referenceBlockAxialMesh = [0, *mesh]
         for a in self.r.core:
             a.setBlockMesh(mesh)
         aType = self.r.core.getFirstAssembly(Flags.FUEL).getType()

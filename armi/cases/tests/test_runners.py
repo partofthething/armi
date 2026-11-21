@@ -143,17 +143,17 @@ class TestLocalRunner(unittest.TestCase):
                 self.assertTrue(f.readline().startswith("case,status,wallSeconds,power"))
 
             # nothing changed: everything is cached and the results stay put
-            stamp = os.path.getmtime(os.path.join(list(suite)[0].directory, worker.RESULT_FILE))
+            stamp = os.path.getmtime(os.path.join(next(iter(suite)).directory, worker.RESULT_FILE))
             again = suite.run(LocalRunner(maxWorkers=3))
             self.assertEqual([r["outcome"] for r in again.values()], ["cached"] * 3)
             self.assertEqual([r["status"] for r in again.values()], ["ok"] * 3)
-            self.assertEqual(stamp, os.path.getmtime(os.path.join(list(suite)[0].directory, worker.RESULT_FILE)))
+            self.assertEqual(stamp, os.path.getmtime(os.path.join(next(iter(suite)).directory, worker.RESULT_FILE)))
 
             # change one design: only that case reruns
             builder.modifierSets[1] = (Power(2.5e6),)
             suite = builder.buildSuite(namingFunc=nameByIndex, task=f"{__name__}:reportPower")
             suite.run(LocalRunner(maxWorkers=3))
-            self.assertEqual(stamp, os.path.getmtime(os.path.join(list(suite)[0].directory, worker.RESULT_FILE)))
+            self.assertEqual(stamp, os.path.getmtime(os.path.join(next(iter(suite)).directory, worker.RESULT_FILE)))
             self.assertEqual(suite.resultsTable()[1]["power"], 2.5e6)
 
     def test_dependenciesAndFailures(self):

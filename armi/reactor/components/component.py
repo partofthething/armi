@@ -877,7 +877,7 @@ class Component(composites.Composite, metaclass=ComponentType):
         except ZeroDivisionError:
             return 0.0
 
-    def getMass(self, nuclideNames: None | str | list[str] = None) -> float:
+    def getMass(self, nuclideNames: str | list[str] | None = None) -> float:
         r"""
         Determine the mass in grams of nuclide(s) and/or elements in this object.
 

@@ -700,17 +700,17 @@ assemblies:
 
             # Set ENDF/B-VII.0 as MCNP cross section library base
             cs = cs.modified(newSettings={CONF_MCNP_LIB_BASE: "ENDF/B-VII.0"})
-            eleToKeep, expansions = isotopicOptions.eleExpandInfoBasedOnCodeENDF(cs)
+            eleToKeep, _expansions = isotopicOptions.eleExpandInfoBasedOnCodeENDF(cs)
             E70_elem = [x.label for x in eleToKeep]
 
             # Set ENDF/B-VII.1 as MCNP cross section library base
             cs = cs.modified(newSettings={CONF_MCNP_LIB_BASE: "ENDF/B-VII.1"})
-            eleToKeep, expansions = isotopicOptions.eleExpandInfoBasedOnCodeENDF(cs)
+            eleToKeep, _expansions = isotopicOptions.eleExpandInfoBasedOnCodeENDF(cs)
             E71_elem = [x.label for x in eleToKeep]
 
             # Set ENDF/B-VIII.0 as MCNP cross section library base
             cs = cs.modified(newSettings={CONF_MCNP_LIB_BASE: "ENDF/B-VIII.0"})
-            eleToKeep, expansions = isotopicOptions.eleExpandInfoBasedOnCodeENDF(cs)
+            eleToKeep, _expansions = isotopicOptions.eleExpandInfoBasedOnCodeENDF(cs)
             E80_elem = [x.label for x in eleToKeep]
 
             # Assert equality of returned elements to reference elements

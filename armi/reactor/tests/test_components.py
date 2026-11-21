@@ -60,7 +60,7 @@ from armi.utils.units import getTc
 class MockCompositionDependentExpander(materials.Material):
     """Dummy material that has a composition-dependent thermal expansion coefficient."""
 
-    def linearExpansionPercent(self, Tk: float = None, Tc: float = None) -> float:
+    def linearExpansionPercent(self, Tk: float | None = None, Tc: float | None = None) -> float:
         """
         Composition-dependent linear expansion coefficient.
 
@@ -627,7 +627,7 @@ class TestDerivedShapeGetArea(unittest.TestCase):
         blockArea = b.getMaxArea()
         compArea = sum([c.getArea(Tc=300) for c in b if not isinstance(c, DerivedShape)])
 
-        comp = [c for c in b if isinstance(c, DerivedShape)][0]
+        comp = next(c for c in b if isinstance(c, DerivedShape))
 
         self.assertAlmostEqual(blockArea - compArea, comp.getComponentArea(Tc=300))
 

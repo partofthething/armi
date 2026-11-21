@@ -612,7 +612,7 @@ def buildMixedPinAssembly(
         blueprints = Blueprints.load(stream)
         blueprints._prepConstruction(cs)
 
-    return list(blueprints.assemblies.values())[0]
+    return next(iter(blueprints.assemblies.values()))
 
 
 def buildMixedThreePinAssembly(
@@ -631,7 +631,7 @@ def buildMixedThreePinAssembly(
         blueprints = Blueprints.load(stream)
         blueprints._prepConstruction(cs)
 
-    return list(blueprints.assemblies.values())[0]
+    return next(iter(blueprints.assemblies.values()))
 
 
 def _createHexBlockTemplate(blockType: str):

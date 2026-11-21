@@ -74,7 +74,7 @@ PROPERTIES = {
 class Property:
     """A Property of a material. Most properties are computed as temperature-dependent functions."""
 
-    def __init__(self, name: str, symbol: str, units: str, tex: str = None):
+    def __init__(self, name: str, symbol: str, units: str, tex: str | None = None):
         """
         Constructor for Property class.
 
@@ -124,7 +124,7 @@ def contains(name: str):
     return any(name == p.name for p in properties)
 
 
-def defProp(symbol: str, name: str, units: str, tex: str = None):
+def defProp(symbol: str, name: str, units: str, tex: str | None = None):
     """
     Method which constructs and adds Property objects to global properties object.
 

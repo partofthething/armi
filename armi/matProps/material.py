@@ -72,7 +72,7 @@ class MatPropsMaterial:
 
     def __repr__(self):
         """Provides string representation for MatPropsMaterial class."""
-        return f"<MatPropsMaterial {self.name} {str(self.materialType)}>"
+        return f"<MatPropsMaterial {self.name} {self.materialType!s}>"
 
     def hash(self) -> str:
         """Returns the SHA1 hash value of a MatPropsMaterial instance."""

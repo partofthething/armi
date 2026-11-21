@@ -64,7 +64,7 @@ class Migration(abc.ABC):
     def __repr__(self):
         return f"<Migration from {self.fromVersion}: {self.__doc__[:40]}..."
 
-    def apply(self, version: str = None):
+    def apply(self, version: str | None = None):
         """
         Apply migration.
 

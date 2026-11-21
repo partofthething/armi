@@ -264,7 +264,7 @@ class TestCheckOverlap(AxialExpansionTestBase):
         for method, dims in componentsToTest.items():
             typeA = method(*self.common, **dims[0])
             typeB = method(*self.common, **dims[1])
-            msg = f"{self._testMethodName} failed for component type {str(method)}!"
+            msg = f"{self._testMethodName} failed for component type {method!s}!"
             assertion(_checkOverlap(typeA, typeB), msg=msg)
             assertion(_checkOverlap(typeB, typeA), msg=msg)
 

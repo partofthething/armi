@@ -1057,7 +1057,7 @@ class CrossSectionGroupManager(interfaces.Interface):
                 raise ValueError("Burnup groups must be ascending")
             lastBu = upperBu
 
-        self._buGroupBounds = buGroupBounds + [float("inf")]
+        self._buGroupBounds = [*buGroupBounds, float("inf")]
 
     def _setTempGroupBounds(self, tempGroupBounds):
         """Set the temperature group structure."""
@@ -1069,7 +1069,7 @@ class CrossSectionGroupManager(interfaces.Interface):
             if upperTemp < lastTemp:
                 raise ValueError("Temp groups must be ascending")
             lastTemp = upperTemp
-        self._tempGroupBounds = tempGroupBounds + [float("inf")]
+        self._tempGroupBounds = [*tempGroupBounds, float("inf")]
 
     def _updateEnvironmentGroups(self, blockList):
         """

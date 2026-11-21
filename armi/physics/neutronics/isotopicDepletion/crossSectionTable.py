@@ -156,7 +156,7 @@ class CrossSectionTable(collections.OrderedDict):
         return output
 
 
-def makeReactionRateTable(obj, nuclides: list = None):
+def makeReactionRateTable(obj, nuclides: list | None = None):
     """
     Generate a reaction rate table for given nuclides.
 

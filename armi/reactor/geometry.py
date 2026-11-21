@@ -145,7 +145,7 @@ class DomainType(enum.Enum):
         if canonical == "":
             return cls.NULL
 
-        errorMsg = f"{str(canonical)} is not a valid domain option. Valid domain options are:"
+        errorMsg = f"{canonical!s} is not a valid domain option. Valid domain options are:"
         errorMsg += ", ".join([f"{sym}" for sym in domainTypes])
         raise ValueError(errorMsg)
 
@@ -220,7 +220,7 @@ class BoundaryType(enum.Enum):
         if canonical == REFLECTIVE:
             return cls.REFLECTIVE
 
-        errorMsg = f"{str(canonical)} is not a valid boundary option. Valid boundary options are:"
+        errorMsg = f"{canonical!s} is not a valid boundary option. Valid boundary options are:"
         errorMsg += ", ".join([f"{sym}" for sym in boundaryTypes])
         raise ValueError(errorMsg)
 
@@ -302,7 +302,7 @@ class SymmetryType:
         self.isThroughCenterAssembly = throughCenterAssembly
 
         if not self.checkValidSymmetry():
-            errorMsg = f"{str(self)} is not a valid symmetry option. Valid symmetry options are: "
+            errorMsg = f"{self!s} is not a valid symmetry option. Valid symmetry options are: "
             errorMsg += ", ".join([f"{sym}" for sym in self.createValidSymmetryStrings()])
             raise ValueError(errorMsg)
 
@@ -399,7 +399,7 @@ def checkValidGeomSymmetryCombo(
     symmetry = SymmetryType.fromAny(symmetryInput)
     if (symmetry.domain, symmetry.boundary) in VALID_GEOM_SYMMETRY[GeomType.fromAny(geomType)]:
         return True
-    raise ValueError(f"GeomType: {str(geomType)} and SymmetryType: {str(symmetry)} is not a valid combination!")
+    raise ValueError(f"GeomType: {geomType!s} and SymmetryType: {symmetry!s} is not a valid combination!")
 
 
 SYSTEMS = "systems"

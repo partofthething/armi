@@ -14,6 +14,7 @@
 
 """Energy group tests."""
 
+import itertools
 import unittest
 
 from armi.physics.neutronics import energyGroups
@@ -52,7 +53,7 @@ class TestEnergyGroups(unittest.TestCase):
         bounds = energyGroups.getGroupStructure("ECCO1968")
         self.assertEqual(len(bounds), 1968)
         self.assertAlmostEqual(bounds[0], 1.96403e7, delta=100)
-        self.assertTrue(all(a > b for a, b in zip(bounds, bounds[1:])))
+        self.assertTrue(all(a > b for a, b in itertools.pairwise(bounds)))
 
     def test_getFastFluxGroupCutoff(self):
         """Test ability to get the ARMI energy group index contained in energy threshold.

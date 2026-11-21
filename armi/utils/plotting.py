@@ -685,12 +685,12 @@ class DepthSlider(Slider):
 
 
 def plotAssemblyTypes(
-    assems: list = None,
-    fileName: str = None,
-    maxAssems: int = None,
+    assems: list | None = None,
+    fileName: str | None = None,
+    maxAssems: int | None = None,
     showBlockAxMesh: bool = True,
-    yAxisLabel: str = None,
-    title: str = None,
+    yAxisLabel: str | None = None,
+    title: str | None = None,
     hot: bool = True,
 ) -> plt.Figure:
     """
@@ -774,7 +774,7 @@ def plotAssemblyTypes(
     yBlockHeights.insert(0, 0.0)
     yBlockHeights.sort()
     yBlockHeightDiffs = np.diff(yBlockHeights)  # Compute differential heights between each block
-    yTicks = np.array([0.0] + list(set(np.cumsum(yBlockHeightDiffs))))
+    yTicks = np.array([0.0, *list(set(np.cumsum(yBlockHeightDiffs)))])
     if len(yTicks) > 20:
         # keep the number of y-axis ticks to a legible maximum
         yTicks = np.linspace(yTicks[0], yTicks[-1], 20, dtype=float)
@@ -843,10 +843,10 @@ def _plotBlocksInAssembly(
                 ) from ee
 
         # Get the basic text label for the block
-        try:
-            blockType = [bType for bType in blockTypeColorMap.keys() if b.hasFlags(Flags.fromString(bType))][0]
+        blockType = next((bType for bType in blockTypeColorMap if b.hasFlags(Flags.fromString(bType))), None)
+        if blockType is not None:
             color = blockTypeColorMap[blockType]
-        except IndexError:
+        else:
             blockType = b.getType()
             color = "grey"
 
@@ -1584,8 +1584,8 @@ def plotConvertedRZTReactor(reactor, fNameBase=None):
             f"{outerTheta * units.RAD_TO_REV:.4f} revolutions",
             y=1.03,
         )
-        ax.set_xticks([0.0] + radialMesh)
-        ax.set_yticks([0.0] + axialMesh)
+        ax.set_xticks([0.0, *radialMesh])
+        ax.set_yticks([0.0, *axialMesh])
         ax.tick_params(axis="both", which="major", labelsize=11, length=0, width=0)
         ax.grid()
         labels = ax.get_xticklabels()

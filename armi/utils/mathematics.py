@@ -14,6 +14,7 @@
 
 """Various math utilities."""
 
+import itertools
 import math
 import operator  # the python package, not the ARMI module
 import re
@@ -314,7 +315,7 @@ def isMonotonic(inputIter, relation):
     except KeyError as ee:
         raise ValueError(f"Valid relation not specified: {relation}") from ee
 
-    return all(op(x, y) for x, y in zip(inputIter, inputIter[1:]))
+    return all(op(x, y) for x, y in itertools.pairwise(inputIter))
 
 
 def linearInterpolation(x0, y0, x1, y1, targetX=None, targetY=None):

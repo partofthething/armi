@@ -145,7 +145,7 @@ class TestPlotting(unittest.TestCase):
         )
         self.assertEqual(xBlockLoc, 0.5)
         self.assertEqual(yBlockHeights[0], 25.0)
-        yBlockAxMesh = list(yBlockAxMesh)[0]
+        yBlockAxMesh = next(iter(yBlockAxMesh))
         self.assertIn(10.0, yBlockAxMesh)
         self.assertIn(25.0, yBlockAxMesh)
         self.assertIn(1, yBlockAxMesh)

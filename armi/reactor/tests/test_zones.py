@@ -331,7 +331,7 @@ class TestZones(unittest.TestCase):
         zs.addZone(self.zonez["ring-2"])
 
         # check the initial order of the zones
-        self.assertEqual(list(zs._zones.keys())[0], "ring-3")
+        self.assertEqual(next(iter(zs._zones.keys())), "ring-3")
         self.assertEqual(list(zs._zones.keys())[1], "ring-1")
         self.assertEqual(list(zs._zones.keys())[2], "ring-2")
 
@@ -339,7 +339,7 @@ class TestZones(unittest.TestCase):
         zs.sortZones()
 
         # check the final order of the zones
-        self.assertEqual(list(zs._zones.keys())[0], "ring-1")
+        self.assertEqual(next(iter(zs._zones.keys())), "ring-1")
         self.assertEqual(list(zs._zones.keys())[1], "ring-2")
         self.assertEqual(list(zs._zones.keys())[2], "ring-3")
 

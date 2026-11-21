@@ -35,7 +35,7 @@ class LocationBase(ABC):
     It's immutable (you can't set things after construction) and has names.
     """
 
-    __slots__ = ("_i", "_j", "_k", "_grid")
+    __slots__ = ("_grid", "_i", "_j", "_k")
 
     def __init__(self, i: int, j: int, k: int, grid: Optional["Grid"]):
         self._i = i

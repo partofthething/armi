@@ -540,10 +540,10 @@ class AxialExpansionChanger:
     def _checkBlockHeight(self, b):
         """Do some basic block height validation."""
         if b.getHeight() < self.DIF3D_MIN_BLOCK_HEIGHT:
-            runLog.debug(f"Block {b.name} ({str(b.p.flags)}) has a height less than 3.0 cm. ({b.getHeight():.12e})")
+            runLog.debug(f"Block {b.name} ({b.p.flags!s}) has a height less than 3.0 cm. ({b.getHeight():.12e})")
 
         if b.getHeight() < 0.0:
-            raise ArithmeticError(f"Block {b.name} ({str(b.p.flags)}) has a negative height. ({b.getHeight():.12e})")
+            raise ArithmeticError(f"Block {b.name} ({b.p.flags!s}) has a negative height. ({b.getHeight():.12e})")
 
         for c in iterSolidComponents(b):
             if c.height - b.getHeight() > self.COMP_BLOCK_HEIGHT_DIFF_THRESHOLD:

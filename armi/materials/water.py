@@ -85,11 +85,11 @@ class Water(Fluid):
         for nucName, mfrac in massFrac.items():
             self.setMassFrac(nucName, mfrac)
 
-    def theta(self, Tk: float = None, Tc: float = None) -> float:
+    def theta(self, Tk: float | None = None, Tc: float | None = None) -> float:
         """Returns temperature normalized to the critical temperature."""
         return getTk(Tc=Tc, Tk=Tk) / self.TEMPERATURE_CRITICAL_K
 
-    def tau(self, Tc: float = None, Tk: float = None) -> float:
+    def tau(self, Tc: float | None = None, Tk: float | None = None) -> float:
         """
         Returns 1 - temperature normalized to the critical temperature.
 
@@ -99,7 +99,7 @@ class Water(Fluid):
         """
         return 1.0 - self.theta(Tc=Tc, Tk=Tk)
 
-    def vaporPressure(self, Tk: float = None, Tc: float = None) -> float:
+    def vaporPressure(self, Tk: float | None = None, Tc: float | None = None) -> float:
         """
         Returns vapor pressure in (Pa).
 
@@ -136,7 +136,7 @@ class Water(Fluid):
         # past the supercritical point tau's raised to .5 cause complex #'s
         return vapor_pressure.real
 
-    def vaporPressurePrime(self, Tk: float = None, Tc: float = None, dT: float = 1e-6) -> float:
+    def vaporPressurePrime(self, Tk: float | None = None, Tc: float | None = None, dT: float = 1e-6) -> float:
         """
         Approximation of derivative of vapor pressure wrt temperature.
 
@@ -157,7 +157,7 @@ class Water(Fluid):
         dp = self.vaporPressure(Tk=Thot) - self.vaporPressure(Tk=Tcold)
         return dp / dT
 
-    def auxiliaryQuantitySpecificEnthalpy(self, Tk: float = None, Tc: float = None) -> float:
+    def auxiliaryQuantitySpecificEnthalpy(self, Tk: float | None = None, Tc: float | None = None) -> float:
         """
         Returns the auxiliary quantity for specific enthalpy.
 
@@ -195,7 +195,7 @@ class Water(Fluid):
         # past the supercritical point tau's raised to .5 cause complex #'s
         return normalized_alpha.real * self.ALPHA_0
 
-    def auxiliaryQuantitySpecificEntropy(self, Tk: float = None, Tc: float = None) -> float:
+    def auxiliaryQuantitySpecificEntropy(self, Tk: float | None = None, Tc: float | None = None) -> float:
         """
         Returns the auxiliary quantity for specific entropy.
 
@@ -233,7 +233,7 @@ class Water(Fluid):
         # past the supercritical point tau's raised to .5 cause complex #'s
         return normalized_phi.real * self.PHI_0
 
-    def enthalpy(self, Tk: float = None, Tc: float = None) -> float:
+    def enthalpy(self, Tk: float | None = None, Tc: float | None = None) -> float:
         """
         Returns enthalpy of saturated water.
 
@@ -261,7 +261,7 @@ class Water(Fluid):
 
         return alpha + T / rho * dp_dT
 
-    def entropy(self, Tk: float = None, Tc: float = None) -> float:
+    def entropy(self, Tk: float | None = None, Tc: float | None = None) -> float:
         """
         Returns entropy of saturated water.
 
@@ -299,7 +299,7 @@ class SaturatedWater(Water):
     This is the Saturated Liquid Water Material Class. For steam look to the Saturated Steam Material Class.
     """
 
-    def density(self, Tk: float = None, Tc: float = None) -> float:
+    def density(self, Tk: float | None = None, Tc: float | None = None) -> float:
         """
         Returns density in g/cc.
 
@@ -354,7 +354,7 @@ class SaturatedSteam(Water):
     This is the Saturated Liquid Water Material Class. For steam look to the Saturated Steam Material Class.
     """
 
-    def density(self, Tk: float = None, Tc: float = None) -> float:
+    def density(self, Tk: float | None = None, Tc: float | None = None) -> float:
         """
         Returns density in g/cc.
 

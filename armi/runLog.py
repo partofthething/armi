@@ -313,12 +313,12 @@ class _RunLog:
 
         total = 0
         for label, count in sorted(warningCounts.items(), key=operator.itemgetter(1), reverse=True):
-            self.logger.info(f"  {str(count):^10s}   {str(label):^25s}")
+            self.logger.info(f"  {count!s:^10s}   {label!s:^25s}")
             total += count
         self.logger.info("------------------------------------")
 
         # add a totals line
-        self.logger.info(f"  {str(total):^10s}   Total Number of Warnings")
+        self.logger.info(f"  {total!s:^10s}   Total Number of Warnings")
         self.logger.info("------------------------------------")
 
     def getLogVerbosityRank(self, level):
@@ -615,7 +615,7 @@ class DeduplicationFilter(logging.Filter):
         return True
 
 
-def createLogDir(logDir: str = None) -> None:
+def createLogDir(logDir: str | None = None) -> None:
     """A helper method to create the log directory."""
     # the usual case is the user does not pass in a log dir path, so we use the global one
     if logDir is None:

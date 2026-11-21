@@ -122,7 +122,7 @@ def numRingsToHoldNumCells(numCells):
     """
     if numCells == 0:
         return 0
-    nPinRings = int(math.ceil(0.5 * (1 + math.sqrt(1 + 4 * (numCells - 1) // 3))))
+    nPinRings = math.ceil(0.5 * (1 + math.sqrt(1 + 4 * (numCells - 1) // 3)))
 
     return nPinRings
 

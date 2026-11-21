@@ -1402,7 +1402,7 @@ assemblies:
         self.blueprints._prepConstruction(self.cs)
 
     def test_areaCheck(self):
-        assembly = list(self.blueprints.assemblies.values())[0]
+        assembly = next(iter(self.blueprints.assemblies.values()))
         fuelBlock = assembly.getFirstBlock(Flags.FUEL)
         intercoolant = fuelBlock.getComponent(Flags.INTERCOOLANT)
 

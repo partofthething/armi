@@ -742,7 +742,7 @@ class TestExceptionForMultiPin(TestMultiPinConservationBase):
         with io.StringIO(BLOCK_DEFINITIONS_2PIN + FINE_ASSEMBLY_DEF + GRID_DEFINITION) as stream:
             blueprints = Blueprints.load(stream)
             blueprints._prepConstruction(cs)
-        self.a = list(blueprints.assemblies.values())[0]
+        self.a = next(iter(blueprints.assemblies.values()))
         self.axialExpChngr = AxialExpansionChanger()
         self.axialExpChngr.setAssembly(self.a)
 

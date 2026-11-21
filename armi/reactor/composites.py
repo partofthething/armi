@@ -730,7 +730,7 @@ class ArmiObject(metaclass=CompositeModelType):
         """
         raise NotImplementedError()
 
-    def getMass(self, nuclideNames: None | str | list[str] = None) -> float:
+    def getMass(self, nuclideNames: str | list[str] | None = None) -> float:
         """
         Determine the mass in grams of nuclide(s) and/or elements in this object.
 
@@ -766,7 +766,7 @@ class ArmiObject(metaclass=CompositeModelType):
             " of composite such as Blocks or Components have the concept of micro suffixes."
         )
 
-    def _getNuclidesFromSpecifier(self, nucSpec: None | str | list[str]):
+    def _getNuclidesFromSpecifier(self, nucSpec: str | list[str] | None):
         """
         Convert a nuclide specification to a list of valid nuclide/element keys.
 
@@ -1727,7 +1727,7 @@ class Composite(ArmiObject):
         fracs = [(ci, nu / denom) for ci, nu in zip(children, numerator)]
         return fracs
 
-    def getMass(self, nuclideNames: None | str | list[str] = None) -> float:
+    def getMass(self, nuclideNames: str | list[str] | None = None) -> float:
         """
         Determine the mass in grams of nuclide(s) and/or elements in this object.
 

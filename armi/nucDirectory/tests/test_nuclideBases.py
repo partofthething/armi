@@ -268,7 +268,7 @@ class TestNuclideBases(unittest.TestCase):
                 self.assertTrue(nb.isHeavyMetal())
 
     def test_getDecay(self):
-        nb = list(self.nuclideBases.where(lambda nn: nn.z == 89))[0]
+        nb = next(iter(self.nuclideBases.where(lambda nn: nn.z == 89)))
         # This test is a bit boring, because the test nuclide library is a bit boring.
         self.assertIsNone(nb.getDecay("sf"))
 

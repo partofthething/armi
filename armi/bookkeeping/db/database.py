@@ -79,7 +79,7 @@ _SERIALIZER_NAME = "serializerName"
 _SERIALIZER_VERSION = "serializerVersion"
 
 
-def getH5GroupName(cycle: int, timeNode: int, statePointName: str = None) -> str:
+def getH5GroupName(cycle: int, timeNode: int, statePointName: str | None = None) -> str:
     """
     Naming convention specifier.
 
@@ -541,7 +541,7 @@ class Database:
             del self.h5db[name]
 
     def genTimeStepGroups(
-        self, timeSteps: Sequence[tuple[int, int]] = None
+        self, timeSteps: Sequence[tuple[int, int]] | None = None
     ) -> Generator[h5py._hl.group.Group, None, None]:
         """Returns a generator of HDF5 Groups for all time nodes, or for the passed selection."""
         assert self.h5db is not None, "Must open the database before calling genTimeStepGroups"
@@ -1042,7 +1042,7 @@ class Database:
                     except AssertionError as ae:
                         # happens when a param was deprecated but being loaded from old DB
                         runLog.warning(
-                            f"{str(ae)}\nSkipping load of invalid param `{paramName}` (possibly loading from old DB)\n"
+                            f"{ae!s}\nSkipping load of invalid param `{paramName}` (possibly loading from old DB)\n"
                         )
 
     def getHistoryByLocation(

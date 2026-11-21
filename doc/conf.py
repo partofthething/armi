@@ -118,7 +118,7 @@ class ExecDirective(Directive):
             return [para]
         except Exception as e:
             docname = self.state.document.settings.env.docname
-            raise self.error(f"Unable to execute embedded doc code at {docname}:{self.lineno}\n{str(e)}") from e
+            raise self.error(f"Unable to execute embedded doc code at {docname}:{self.lineno}\n{e!s}") from e
 
 
 class PyReverse(Directive):
@@ -192,8 +192,7 @@ class PyReverse(Directive):
             docname = self.state.document.settings.env.docname
             # add the error message directly to the built documentation and also tell the builder
             raise self.error(
-                f"Unable to execute embedded doc code at {docname}:{self.lineno} ... "
-                f"{datetime.datetime.now()}\n{str(e)}"
+                f"Unable to execute embedded doc code at {docname}:{self.lineno} ... {datetime.datetime.now()}\n{e!s}"
             ) from e
 
 

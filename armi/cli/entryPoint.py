@@ -192,7 +192,7 @@ class EntryPoint(metaclass=_EntryPointEnforcer):
         """
         raise NotImplementedError("Subclasses of EntryPoint must override the .invoke() method")
 
-    def createOptionFromSetting(self, settingName: str, additionalAlias: str = None, suppressHelp: bool = False):
+    def createOptionFromSetting(self, settingName: str, additionalAlias: str | None = None, suppressHelp: bool = False):
         """
         Create a CLI option from an ARMI setting.
 
