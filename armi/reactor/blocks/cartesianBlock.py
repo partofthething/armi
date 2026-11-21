@@ -74,21 +74,8 @@ class CartesianBlock(Block):
     def setPitch(self, val, updateBolParams=False):
         raise NotImplementedError("Directly setting the pitch of a cartesian block is currently not supported.")
 
-    def getSymmetryFactor(self):
-        """Return a factor between 1 and N where 1/N is how much cut-off by symmetry lines this mesh cell is.
-
-        Cached per spatial locator: the result depends only on the locator, the core symmetry and
-        the mesh, and it is queried once per component per mass/volume query.
-        """
-        locator = self.spatialLocator
-        cached = getattr(self, "_symmetryFactorCache", None)
-        if cached is not None and cached[0] is locator:
-            return cached[1]
-        value = self._computeSymmetryFactor()
-        self._symmetryFactorCache = (locator, value)
-        return value
-
     def _computeSymmetryFactor(self):
+        """Return a factor between 1 and N where 1/N is how much cut-off by symmetry lines this mesh cell is."""
         if self.core is not None and self.core.symmetry.domain != geometry.DomainType.FULL_CORE:
             indices = self.spatialLocator.getCompleteIndices()
             if self.core.symmetry.isThroughCenterAssembly:

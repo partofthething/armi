@@ -106,8 +106,6 @@ class Block(composites.Composite):
     def clearCache(self):
         """Clear the cache so all new values are recomputed."""
         super().clearCache()
-        # Symmetry factor depends on the core symmetry, which can change without locator
-        # changes; the locator-identity guard alone cannot catch that.
         self._symmetryFactorCache = None
 
     def __repr__(self):
@@ -696,7 +694,24 @@ class Block(composites.Composite):
         See Also
         --------
         armi.reactor.converters.geometryConverter.EdgeAssemblyChanger.scaleParamsRelatedToSymmetry
+
+        Notes
+        -----
+        This is queried once per component on every mass or volume query, so the result is cached. The factor depends on
+        where the block's assembly sits, so the cache is keyed on both the block's and the assembly's locator objects:
+        any move replaces one of them. Changes that move nothing (the core symmetry, edge assemblies being added or
+        removed) must go through ``clearCache``, as they already have to for the other cached values.
         """
+        key = (self.spatialLocator, self.parent.spatialLocator if self.parent is not None else None)
+        cached = getattr(self, "_symmetryFactorCache", None)
+        if cached is not None and cached[0][0] is key[0] and cached[0][1] is key[1]:
+            return cached[1]
+        value = self._computeSymmetryFactor()
+        self._symmetryFactorCache = (key, value)
+        return value
+
+    def _computeSymmetryFactor(self):
+        """Compute the symmetry factor; see :py:meth:`getSymmetryFactor`."""
         return 1.0
 
     def adjustDensity(self, frac, adjustList, returnMass=False):

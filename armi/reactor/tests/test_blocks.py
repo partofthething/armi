@@ -964,6 +964,20 @@ class TestBlock(unittest.TestCase):
             self.assertEqual(0, b.spatialLocator.k)
             self.assertEqual(b.getSymmetryFactor(), powerMult)
 
+    def test_cachedSymmetryFactorFollowsItsAssembly(self):
+        """The cached symmetry factor is recomputed when the assembly moves, even with no clearCache in between."""
+        b = self.block
+        a = b.parent
+        b.core.symmetry = geometry.SymmetryType(geometry.DomainType.THIRD_CORE, geometry.BoundaryType.PERIODIC)
+
+        a.spatialLocator = b.core.spatialGrid[0, 0, 0]
+        self.assertEqual(b.getSymmetryFactor(), 3.0)
+        massCentered = b.getMass()
+
+        a.spatialLocator = b.core.spatialGrid[2, 0, 0]
+        self.assertEqual(b.getSymmetryFactor(), 1.0)
+        self.assertAlmostEqual(b.getMass(), 3.0 * massCentered)
+
     def test_setBuLimitInfo(self):
         self.block.adjustUEnrich(0.1)
         self.block.setType("igniter fuel")

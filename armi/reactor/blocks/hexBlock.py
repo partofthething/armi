@@ -421,7 +421,7 @@ class HexBlock(Block):
         """
         self.p.orientation[2] = 60.0 * rotNum
 
-    def getSymmetryFactor(self):
+    def _computeSymmetryFactor(self):
         """
         Return a factor between 1 and N where 1/N is how much cut-off by symmetry lines this mesh cell is.
 
@@ -433,19 +433,7 @@ class HexBlock(Block):
         and no assembly at the top edge so the ones at the bottom are considered full (symmetryFactor=1).
 
         If this block is not in any grid at all, then there can be no symmetry so return 1.
-
-        The result is cached per spatial locator: it depends only on the locator, the grid's symmetry
-        and the core, and it is queried once per component per mass/volume query.
         """
-        locator = self.spatialLocator
-        cached = getattr(self, "_symmetryFactorCache", None)
-        if cached is not None and cached[0] is locator:
-            return cached[1]
-        value = self._computeSymmetryFactor()
-        self._symmetryFactorCache = (locator, value)
-        return value
-
-    def _computeSymmetryFactor(self):
         try:
             symmetry = self.parent.spatialLocator.grid.symmetry
         except Exception:
