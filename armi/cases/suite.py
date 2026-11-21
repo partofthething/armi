@@ -88,8 +88,8 @@ class CaseSuite:
     def discover(
         self,
         rootDir=None,
-        patterns=[],
-        ignorePatterns=[],
+        patterns=None,
+        ignorePatterns=None,
         recursive=True,
         skipInspection=False,
     ):
@@ -114,22 +114,22 @@ class CaseSuite:
         assert not isinstance(patterns, str), "Bare string passed as patterns. Make sure to pass a list"
         assert not isinstance(ignorePatterns, str), "Bare string passed as ignore patterns. Make sure to pass a list"
 
+        patterns = patterns if patterns is not None else []
+        ignorePatterns = ignorePatterns if ignorePatterns is not None else []
+
         # handle the case where someone gives just a string (input), but they meant to add an asterisk (input*)
         regexChars = [".", "^", "$", "*", "+", "?", "{", "}", "[", "]", "|", "(", ")"]
-        for i in range(len(patterns)):
-            pat = patterns[i]
-            foundRegex = False
-            for rChar in regexChars:
-                if rChar in pat:
-                    foundRegex = True
-                    break
+        normalized = []
+        for pat in patterns:
+            foundRegex = any(rChar in pat for rChar in regexChars)
             if not foundRegex:
-                patterns[i] = pat = pat + "*"
+                pat = pat + "*"
+            normalized.append(pat)
 
         # find all settings files that match the root dir and patterns provided
         csFiles = settings.recursivelyLoadSettingsFiles(
             rootDir or os.path.abspath(os.getcwd()),
-            patterns or ["*.yaml"],
+            normalized or ["*.yaml"],
             recursive=recursive,
             ignorePatterns=ignorePatterns,
             handleInvalids=False,
@@ -284,7 +284,7 @@ class CaseSuite:
 
         refTitles = set(c.title for c in self)
         cmpTitles = set(c.title for c in that)
-        suiteHasMissingFiles = False
+        missingTitles = []
         tableResults = {}
         for caseTitle in refTitles.union(cmpTitles):
             refCase = next((c for c in self if c.title == caseTitle), None)
@@ -302,7 +302,7 @@ class CaseSuite:
                 # test is made it will be an issue. After the first push with the new tests the files will be copied
                 # over and future tests will be fine.
                 caseIssues = 1
-                suiteHasMissingFiles = False
+                missingTitles.append(caseTitle)
             else:
                 caseIssues = refCase.compare(
                     cmpCase,
@@ -314,8 +314,8 @@ class CaseSuite:
             tableResults[caseTitle] = (userFile, refFile, caseIssues)
 
         self.writeTable(tableResults)
-        if suiteHasMissingFiles:
-            runLog.warning((UNMISSABLE_FAILURE.format(", ".join(t for t in refTitles - cmpTitles))))
+        if missingTitles:
+            runLog.warning((UNMISSABLE_FAILURE.format(", ".join(missingTitles))))
 
         return nIssues
 
