@@ -87,6 +87,17 @@ class TestVisDump(unittest.TestCase):
             with dumper:
                 dumper.dumpState(self.r)
 
+    def test_booleanParamsAreWritable(self):
+        """VTK has no boolean type; a boolean parameter (fuelCladLocked, say) is written as 0/1, not a crash."""
+        blocks_ = self.r.core.getBlocks()
+        blocks_[0].p.fuelCladLocked = True
+        data = vtk._collectObjectData(blocks_, includeParams={"fuelCladLocked"})
+        self.assertEqual(data["fuelCladLocked"].dtype, np.uint8)
+        self.assertEqual(data["fuelCladLocked"][0], 1)
+        with TemporaryDirectoryChanger(dumpOnException=False):
+            with vtk.VtkDumper("testVtk", inputName=None) as dumper:
+                dumper.dumpState(self.r, includeParams={"fuelCladLocked"})
+
     def test_dumpReactorXdmf(self):
         # This does a lot, and is hard to verify. at least make sure it doesn't crash
         with TemporaryDirectoryChanger(dumpOnException=False):

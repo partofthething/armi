@@ -156,6 +156,9 @@ def _collectObjectData(
         if data.dtype.kind == "S" or data.dtype.kind == "U":
             # no string support!
             continue
+        if data.dtype.kind == "b":
+            # VTK has no boolean type
+            data = data.astype(np.uint8)
         if data.dtype.kind == "O":
             # datatype is "object", usually because it's jagged, or has Nones. We are
             # willing to try handling the Nones, but jagged also isn't visualizable.
