@@ -51,7 +51,7 @@ class TestNucDirectory(unittest.TestCase):
             self.assertEqual(nuc, nucDir.getNuclideFromName(nuc.name))
 
     def test_nucDir_getNuclidesFromForBadName(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(KeyError):
             nucDir.getNuclideFromName("Charlie")
 
     def test_getDisplacementEnergy(self):

@@ -724,21 +724,19 @@ class UniformMeshGeometryConverter(GeometryConverter):
             # xsType is the one with the majority of overlap
             xsType = next(k for k, v in typeHeight.items() if v == max(typeHeight.values()))
             for b in blocks:
-                if checkPriorityFlags(b) or not fuelOrAbsorber:
-                    if b.p.xsType == xsType:
-                        sourceBlock = b
-                        break
+                if (checkPriorityFlags(b) or not fuelOrAbsorber) and b.p.xsType == xsType:
+                    sourceBlock = b
+                    break
 
-            if len(typeHeight) > 1:
-                if sourceBlock:
-                    totalHeight = sum(typeHeight.values())
-                    runLog.debug(
-                        f"Multiple XS types exist between {bottom} and {topMeshPoint}. "
-                        f"Using the XS type from the largest region, {xsType}"
-                    )
-                    for xs, h in typeHeight.items():
-                        heightFrac = h / totalHeight
-                        runLog.debug(f"XSType {xs}: {heightFrac:.4f}")
+            if len(typeHeight) > 1 and sourceBlock:
+                totalHeight = sum(typeHeight.values())
+                runLog.debug(
+                    f"Multiple XS types exist between {bottom} and {topMeshPoint}. "
+                    f"Using the XS type from the largest region, {xsType}"
+                )
+                for xs, h in typeHeight.items():
+                    heightFrac = h / totalHeight
+                    runLog.debug(f"XSType {xs}: {heightFrac:.4f}")
 
             block = sourceBlock.createHomogenizedCopy(includePinCoordinates)
             block.p.xsType = xsType

@@ -19,6 +19,7 @@ This script is meant to be called by the docs build process, to help automate th
 """
 
 import argparse
+import contextlib
 import os
 import subprocess
 
@@ -58,10 +59,8 @@ def clearScrLog():
     """Just a little helper method to clear the SCR error log before we start."""
     # clean up any old SCR error files
     if os.path.exists(ERROR_FILE):
-        try:
+        with contextlib.suppress(FileNotFoundError):
             os.remove(ERROR_FILE)
-        except FileNotFoundError:
-            pass
 
 
 def logScrError(msg: str):
@@ -268,11 +267,9 @@ def buildScrListing(pastCommit: str, thisPrNum: int = -1):
             break
         elif line.endswith(")") and "(#" in line:
             # get the PR number
-            try:
+            # A ValueError means this is not a PR: someone unwisely put some trash in the commit message.
+            with contextlib.suppress(ValueError):
                 prNums.add(int(line.split("(#")[-1].split(")")[0]))
-            except ValueError:
-                # This is not a PR. Someone unwisely put some trash in the commit message.
-                pass
 
     # 3. Build a list of GitHub Users
     ghUsers = parseAuthorsFile()

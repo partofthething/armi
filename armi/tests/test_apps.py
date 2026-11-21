@@ -244,7 +244,9 @@ class TestArmiHighLevel(unittest.TestCase):
 
     def test_mainReportsAFailedCommand(self):
         """A command that raises exits with code 1 after logging, rather than failing inside the handler."""
-        with mock.patch("armi.cli.ArmiCLI.run", side_effect=RuntimeError("boom")):
-            with self.assertRaises(SystemExit) as caught:
-                main()
+        with (
+            mock.patch("armi.cli.ArmiCLI.run", side_effect=RuntimeError("boom")),
+            self.assertRaises(SystemExit) as caught,
+        ):
+            main()
         self.assertEqual(caught.exception.code, 1)

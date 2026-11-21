@@ -200,9 +200,9 @@ class PmatrxIO(cccc.Stream):
             self._rwGroupStructure()
             self._rwDoseConversionFactor()
             self._rwIsotopes(numNucs)
-        except Exception:
+        except Exception as ee:
             runLog.error(traceback.format_exc())
-            raise OSError(f"Failed to read/write {self}")
+            raise OSError(f"Failed to read/write {self}") from ee
         finally:
             properties.lockImmutableProperties(self._lib)
 

@@ -19,13 +19,13 @@ These tests actually run a jupyter notebook that is in the documentation to buil
 test fixtures. Thus they take a little longer than usual.
 """
 
+import contextlib
 import os
 import shutil
 
 import numpy as np
 
-from armi import init as armi_init
-from armi import settings, utils
+from armi import init as armi_init, settings, utils
 from armi.reactor.flags import Flags
 from armi.testing import TESTING_ROOT
 from armi.tests import ArmiTestHelper
@@ -87,10 +87,8 @@ class TestHistoryTracker(ArmiTestHelper):
     @classmethod
     def tearDownClass(cls):
         cls.dirChanger.__exit__(None, None, None)
-        try:
+        with contextlib.suppress(FileNotFoundError):
             cls.o.getInterface("database").database.close()
-        except FileNotFoundError:
-            pass
         cls.r = None
         cls.o = None
 
@@ -153,7 +151,7 @@ class TestHistoryTracker(ArmiTestHelper):
         params = {}
         for param in ["height", "pdens", "power"]:
             params[param] = []
-            for ts, years in enumerate(timesInYears):
+            for ts, _years in enumerate(timesInYears):
                 cycle, node = utils.getCycleNodeFromCumulativeNode(ts, self.o.cs)
                 params[param].append(hti.getBlockHistoryVal(bName, param, (cycle, node)))
 

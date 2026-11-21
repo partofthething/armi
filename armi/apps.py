@@ -21,7 +21,6 @@ Framework for a specific application. An ``App`` implements a simple interface f
 customizing much of the Framework's behavior.
 """
 
-# ruff: noqa: E402
 import collections
 import importlib
 import importlib.util
@@ -383,6 +382,6 @@ def findRequestedPlugins(args: Iterable[str] = ()) -> list[str]:
         if os.path.splitext(arg)[1].lower() in (".yaml", ".yml") and os.path.isfile(arg):
             try:
                 requested.extend(readPluginsFromSettingsFile(arg))
-            except Exception:  # noqa: BLE001 -- unreadable files are reported later by the real settings reader
+            except Exception:  # unreadable files are reported later by the real settings reader
                 continue
     return list(dict.fromkeys(requested))

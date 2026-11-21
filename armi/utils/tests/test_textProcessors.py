@@ -13,6 +13,7 @@
 # limitations under the License.
 """Tests for functions in textProcessors.py."""
 
+import contextlib
 import logging
 import os
 import pathlib
@@ -58,8 +59,8 @@ class YamlIncludeTest(unittest.TestCase):
 
         # Make sure that there aren't any !include tags left in the converted stream
         anyIncludes = False
-        for l in resolved:
-            if "!include" in l:
+        for line in resolved:
+            if "!include" in line:
                 anyIncludes = True
         self.assertFalse(anyIncludes)
 
@@ -73,10 +74,10 @@ class YamlIncludeTest(unittest.TestCase):
         resolved.seek(0)
         commentFound = False
         anchorFound = False
-        for l in resolved:
-            if l.strip() == "# some comment in includeA":
+        for line in resolved:
+            if line.strip() == "# some comment in includeA":
                 commentFound = True
-            if "*bobby" in l:
+            if "*bobby" in line:
                 anchorFound = True
 
         self.assertTrue(commentFound)
@@ -157,10 +158,8 @@ X  Y  0.0"""
 
     def tearDown(self):
         if os.path.exists(self._DUMMY_FILE_NAME):
-            try:
+            with contextlib.suppress(OSError):
                 os.remove(self._DUMMY_FILE_NAME)
-            except OSError:
-                pass
 
         self.td.__exit__(None, None, None)
 

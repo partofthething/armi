@@ -393,8 +393,4 @@ def _buildMo99LumpedFissionProduct():
 
 def isGas(nuc):
     """True if nuclide is considered a gas."""
-    # ruff: noqa: SIM110
-    for element in elements.getElementsByChemicalPhase(elements.ChemicalPhase.GAS):
-        if element == nuc.element:
-            return True
-    return False
+    return any(element == nuc.element for element in elements.getElementsByChemicalPhase(elements.ChemicalPhase.GAS))

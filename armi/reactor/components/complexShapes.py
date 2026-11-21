@@ -18,7 +18,8 @@ import math
 
 import numpy as np
 
-from armi.reactor.components import ShapedComponent, basicShapes, componentParameters
+from armi.reactor.components import basicShapes, componentParameters
+from armi.reactor.components.component import ShapedComponent
 
 
 class HoledHexagon(basicShapes.Hexagon):

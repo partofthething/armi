@@ -193,15 +193,15 @@ class TestMemoryProfiler(unittest.TestCase):
             self.assertIn(expectedStr, mockLogs.getStdout())
 
     def _setMemUseMock(self, mockPrintSysMemUseAction):
-        class mockMemUse:
+        class MockMemUse:
             def __init__(self, mem: float):
                 self.processVirtualMemoryInMB = mem
 
         instance = mockPrintSysMemUseAction.return_value
         instance.gather.return_value = [
-            mockMemUse(1 * 1024),
-            mockMemUse(2 * 1024),
-            mockMemUse(3 * 1024),
+            MockMemUse(1 * 1024),
+            MockMemUse(2 * 1024),
+            MockMemUse(3 * 1024),
         ]
 
 

@@ -677,8 +677,8 @@ class Case:
             Similar to this but doesn't let you write out new/modified blueprints objects
         """
         with ForcedCreationDirectoryChanger(self.cs.inputDirectory, dumpOnException=False):
-            # These seemingly no-ops load the bp via properties if they are not yet initialized.
-            self.bp
+            # Accessing the property loads the blueprints if they are not yet initialized.
+            _ = self.bp
 
             newSettings = {}
             newSettings[CONF_LOADING_FILE] = self.title + "-blueprints.yaml"

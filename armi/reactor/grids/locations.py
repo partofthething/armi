@@ -240,9 +240,12 @@ class IndexLocation(LocationBase):
         """
         parentLocation = self.parentLocation  # to avoid evaluating property if's twice
         indices = self.indices
-        if parentLocation is not None:
-            if parentLocation.grid is not None and addingIsValid(self.grid, parentLocation.grid):
-                indices += parentLocation.indices
+        if (
+            parentLocation is not None
+            and parentLocation.grid is not None
+            and addingIsValid(self.grid, parentLocation.grid)
+        ):
+            indices += parentLocation.indices
         return tuple(indices)
 
     def getLocalCoordinates(self, nativeCoords=False):

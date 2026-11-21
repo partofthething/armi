@@ -25,7 +25,8 @@ it: the host *is* the matrix, and the matrix plus its particles fill the host ou
 
 import math
 
-from armi.reactor.components import ShapedComponent, componentParameters
+from armi.reactor.components import componentParameters
+from armi.reactor.components.component import ShapedComponent
 
 
 def sphereVolume(od, iD=0.0):

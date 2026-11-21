@@ -111,9 +111,7 @@ class TestAssemblyUniformMesh(unittest.TestCase):
         prevB = None
         for newB in newAssem:
             sourceB = sourceAssem.getBlockAtElevation(newB.p.z)
-            if newB.isFuel() and sourceB.isFuel():
-                self.assertEqual(newB.p["xsType"], sourceB.p["xsType"])
-            elif not newB.isFuel() and not sourceB.isFuel():
+            if newB.isFuel() and sourceB.isFuel() or not newB.isFuel() and not sourceB.isFuel():
                 self.assertEqual(newB.p["xsType"], sourceB.p["xsType"])
             elif newB.isFuel() and not sourceB.isFuel():
                 # a newB that is fuel can overwrite the xsType of a nonfuel sourceB;

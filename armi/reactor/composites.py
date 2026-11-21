@@ -2527,8 +2527,8 @@ class Composite(ArmiObject):
         """
         try:
             return next(self.iterComponents(typeSpec, exact))
-        except StopIteration:
-            raise ValueError(f"No component matches {typeSpec} {exact}")
+        except StopIteration as ee:
+            raise ValueError(f"No component matches {typeSpec} {exact}") from ee
 
     def iterComponents(self, typeSpec: TypeSpec = None, exact: bool = False) -> Iterator["Component"]:
         """
@@ -3040,12 +3040,7 @@ class Composite(ArmiObject):
         if nuclides is None:
             nuclides = self.getNuclides()
 
-        # ruff: noqa: SIM110
-        for nucName in nuclides:
-            if isinstance(self.nuclideBases.byName[nucName], nuclideBases.LumpNuclideBase):
-                return True
-
-        return False
+        return any(isinstance(self.nuclideBases.byName[nucName], nuclideBases.LumpNuclideBase) for nucName in nuclides)
 
     def getIntegratedMgFlux(self, adjoint=False, gamma=False):
         """

@@ -14,8 +14,8 @@
 
 """Generic ARMI utilities."""
 
-# ruff: noqa: F405
 import collections
+import contextlib
 import functools
 import getpass
 import hashlib
@@ -29,8 +29,29 @@ import time
 from armi import runLog
 from armi.context import PLATFORM, Platform
 from armi.utils import iterables
-from armi.utils.flags import Flag  # noqa: F401
-from armi.utils.mathematics import *  # noqa: F403
+from armi.utils.flags import Flag as Flag
+from armi.utils.mathematics import (
+    SCIPAT_SPECIAL as SCIPAT_SPECIAL,
+    average1DWithinTolerance as average1DWithinTolerance,
+    convertToSlice as convertToSlice,
+    efmt as efmt,
+    expandRepeatedFloats as expandRepeatedFloats,
+    findClosest as findClosest,
+    findNearestValue as findNearestValue,
+    findNearestValueAndIndex as findNearestValueAndIndex,
+    fixThreeDigitExp as fixThreeDigitExp,
+    getFloat as getFloat,
+    getStepsFromValues as getStepsFromValues,
+    isMonotonic as isMonotonic,
+    linearInterpolation as linearInterpolation,
+    minimizeScalarFunc as minimizeScalarFunc,
+    newtonsMethod as newtonsMethod,
+    parabolaFromPoints as parabolaFromPoints,
+    parabolicInterpolation as parabolicInterpolation,
+    relErr as relErr,
+    resampleStepwise as resampleStepwise,
+    rotateXY as rotateXY,
+)
 
 # Read in file 1 MB at a time to reduce memory burden of reading entire file at once
 _HASH_BUFFER_SIZE = 1024 * 1024
@@ -505,7 +526,7 @@ def capStrLen(s: str, length: int) -> str:
         The maximum length of the string s.
     """
     if length <= 2:
-        raise Exception("l must be at least 3 in utils.capStrLen")
+        raise ValueError("l must be at least 3 in utils.capStrLen")
 
     if len(s) <= length:
         return s
@@ -613,10 +634,8 @@ def plotMatrix(
 
     # a copy, so the caller's colormap (or the global default) is left as it was
     cmap = cmap.with_extremes(bad="w")
-    try:
+    with contextlib.suppress(Exception):
         matrix = matrix.todense()
-    except Exception:
-        pass
 
     if minV:
         norm = matplotlib.colors.Normalize(minV, maxV)

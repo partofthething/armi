@@ -109,8 +109,8 @@ class Query:
                             self.correction()
                             self.corrected = True
                         self._passed = True
-                    except RunLogPromptCancel:
-                        raise SystemExit("You have cancelled the submission.")
+                    except RunLogPromptCancel as ee:
+                        raise SystemExit("You have cancelled the submission.") from ee
                 else:
                     try:
                         continueSubmission = prompt(
@@ -121,8 +121,8 @@ class Query:
                         )
                         if not continueSubmission:
                             raise SystemExit("You have cancelled the submission.")
-                    except RunLogPromptCancel:
-                        raise SystemExit("You have cancelled the submission.")
+                    except RunLogPromptCancel as ee:
+                        raise SystemExit("You have cancelled the submission.") from ee
             except RunLogPromptUnresolvable:
                 self.autoResolved = False
                 self._passed = True

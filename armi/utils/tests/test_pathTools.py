@@ -108,7 +108,7 @@ class TestPathTools(unittest.TestCase):
             filePath0 = "test0_cleanPathNoMpi"
             pathlib.Path(filePath0).write_text("something")
             self.assertTrue(os.path.exists(filePath0))
-            with self.assertRaises(Exception):
+            with self.assertRaises(ValueError):
                 pathTools.cleanPath(filePath0, mpiRank=0)
 
             # TEST 1: Delete a single file under FAST_PATH

@@ -27,8 +27,7 @@ from unittest import TestCase, mock
 
 import numpy as np
 
-from armi.physics.fuelCycle import assemblyRotationAlgorithms as rotAlgos
-from armi.physics.fuelCycle import fuelHandlers
+from armi.physics.fuelCycle import assemblyRotationAlgorithms as rotAlgos, fuelHandlers
 from armi.physics.fuelCycle.hexAssemblyFuelMgmtUtils import (
     getOptimalAssemblyOrientation,
 )

@@ -121,7 +121,7 @@ class TestMassRedistribution(TestCase):
         """Ensure that a warning is logged if one component has pinNDens and the other does not."""
         testData = np.random.default_rng().uniform(low=0, high=1e-2, size=(10, 2)).astype(np.float32)
 
-        for case, (hasIt, missingIt) in (
+        for _case, (hasIt, missingIt) in (
             ("missingFrom", (self.toComp, self.fromComp)),
             ("missingTo", (self.fromComp, self.toComp)),
         ):

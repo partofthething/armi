@@ -81,7 +81,7 @@ class TestIterables(unittest.TestCase):
     def test_sequenceInit(self):
         # init an empty sequence
         s = iterables.Sequence()
-        for item in s:
+        for _item in s:
             self.assertTrue(False, "This shouldn't happen.")
 
         # init a sequence with another sequence
@@ -90,7 +90,7 @@ class TestIterables(unittest.TestCase):
         s3 = iterables.Sequence(s2)
 
         i = 0
-        for item in s3:
+        for _item in s3:
             i += 1
 
         self.assertEqual(i, len(example))

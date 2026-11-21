@@ -137,13 +137,13 @@ class AsciiMap:
 
         self.asciiLines = []
         self._asciiMaxCol = 0
-        for li, line in enumerate(text):
+        for line in text:
             columns = line.split()
             self.asciiLines.append(columns)
             if len(columns) > self._asciiMaxCol:
                 self._asciiMaxCol = len(columns)
 
-        self._asciiMaxLine = li + 1
+        self._asciiMaxLine = len(text)
         self._updateDimensionsFromAsciiLines()
         self._asciiLinesToIndices()
         self._makeOffsets()

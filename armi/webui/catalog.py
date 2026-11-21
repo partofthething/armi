@@ -9,8 +9,7 @@ work. It is all read straight out of the running ARMI application.
 import importlib
 import inspect
 
-from armi import materials as materialsPkg
-from armi import runLog
+from armi import materials as materialsPkg, runLog
 from armi.reactor import components, geometry
 from armi.reactor.flags import Flags
 

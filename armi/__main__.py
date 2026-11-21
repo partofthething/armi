@@ -34,7 +34,7 @@ def main():
         code = ArmiCLI().run()
         # sys exit interprets None as 0
         sys.exit(code)
-    except Exception:
+    except Exception as ee:
         # Make sure not to catch all BaseExceptions, lest we catch the expected SystemExit exception
         runLog.error(f"Unhandled exception in __main__, rank {context.MPI_RANK} on {context.MPI_NODENAME}.")
         runLog.error(traceback.format_exc())
@@ -47,7 +47,7 @@ def main():
             # .Abort will not allow for @atexit.register or except/finally code to be called
             context.MPI_COMM.Abort(errorcode=-1)
 
-        raise SystemExit(1)
+        raise SystemExit(1) from ee
 
 
 if __name__ == "__main__":

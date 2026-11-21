@@ -238,9 +238,9 @@ class HistoryTrackerInterface(interfaces.Interface):
         for name in self.detailAssemblyNames:
             try:
                 assems.append(self.r.core.getAssemblyByName(name))
-            except KeyError:
+            except KeyError as ee:
                 if name in {a.name for a in self.r.core}:
-                    raise Exception("Found it")
+                    raise Exception("Found it") from ee
                 runLog.extra(
                     f"Cannot find detail assembly {name} in assemblies-by-name lookup table, which has "
                     f"{len(self.r.core.assembliesByName)} entries"

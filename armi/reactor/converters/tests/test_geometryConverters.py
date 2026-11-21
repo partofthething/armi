@@ -311,12 +311,10 @@ class TestThirdCoreHexToFullCoreChanger(unittest.TestCase):
         numBlocksInFullCore = 0
         for a in self.r.core:
             if a.getLocation() == "001-001":
-                for b in a:
-                    numBlocksInFullCore += 1
+                numBlocksInFullCore += len(a)
             else:
-                for b in a:
-                    # account for the 1/3 symmetry
-                    numBlocksInFullCore += 3
+                # account for the 1/3 symmetry
+                numBlocksInFullCore += 3 * len(a)
         for a in self.r.core:
             if a.getLocation() == "001-001":
                 for b in a:

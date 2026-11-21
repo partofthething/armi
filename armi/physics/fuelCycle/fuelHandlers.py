@@ -24,9 +24,7 @@ the particular shuffling of a case.
 This module also handles repeat shuffles when doing a restart.
 """
 
-# ruff: noqa: F401
 import ast
-import inspect
 import math
 import os
 import re
@@ -39,8 +37,8 @@ from ruamel.yaml.constructor import DuplicateKeyError
 
 from armi import runLog
 from armi.physics.fuelCycle import assemblyRotationAlgorithms as rotAlgos
-from armi.physics.fuelCycle.fuelHandlerFactory import fuelHandlerFactory
-from armi.physics.fuelCycle.fuelHandlerInterface import FuelHandlerInterface
+from armi.physics.fuelCycle.fuelHandlerFactory import fuelHandlerFactory as fuelHandlerFactory
+from armi.physics.fuelCycle.fuelHandlerInterface import FuelHandlerInterface as FuelHandlerInterface
 from armi.physics.fuelCycle.settings import (
     CONF_ASSEMBLY_ROTATION_ALG,
     CONF_SHUFFLE_SEQUENCE_FILE,
@@ -636,14 +634,12 @@ class FuelHandler:
                     continue
 
                 # Check to see if this assembly is in the list of candidate locations. if not, skip it.
-                if mandatoryLocations:
-                    if a.getLocation() not in mandatoryLocations:
-                        continue
+                if mandatoryLocations and a.getLocation() not in mandatoryLocations:
+                    continue
 
-                if excludedLocations:
-                    if a.getLocation() in excludedLocations:
-                        # this assembly is in the excluded location list. skip it.
-                        continue
+                if excludedLocations and a.getLocation() in excludedLocations:
+                    # this assembly is in the excluded location list. skip it.
+                    continue
 
                 # only process of the Assembly is in a Zone
                 if not self.isAssemblyInAZone(zoneList, a):
@@ -716,16 +712,9 @@ class FuelHandler:
     def isAssemblyInAZone(zoneList, a):
         """Does the given assembly in one of these zones."""
         if zoneList:
-            # ruff: noqa: SIM110
-            for zone in zoneList:
-                if a.getLocation() in zone:
-                    # Success!
-                    return True
-
-            return False
-        else:
-            # A little counter-intuitively, if there are no zones, we return True.
-            return True
+            return any(a.getLocation() in zone for zone in zoneList)
+        # A little counter-intuitively, if there are no zones, we return True.
+        return True
 
     def _getAssembliesInRings(
         self,
@@ -887,15 +876,18 @@ class FuelHandler:
                 f"{assembly1} (Stationary Blocks: {a1StationaryBlocks}) and "
                 f"{assembly2} (Stationary Blocks: {a2StationaryBlocks})."
             )
-        if a1StationaryBlocks and a2StationaryBlocks:
-            if a1StationaryBlocks[-1][0].p.ztop != a2StationaryBlocks[-1][0].p.ztop:
-                runLog.warning(
-                    "Difference in top elevation of stationary blocks between "
-                    f"{assembly1} (Stationary Blocks: {a1StationaryBlocks}, "
-                    f"Elevation at top of stationary blocks {a1StationaryBlocks[-1][0].p.ztop}) and "
-                    f"{assembly2} (Stationary Blocks: {a2StationaryBlocks}, "
-                    f"Elevation at top of stationary blocks {a2StationaryBlocks[-1][0].p.ztop})"
-                )
+        if (
+            a1StationaryBlocks
+            and a2StationaryBlocks
+            and a1StationaryBlocks[-1][0].p.ztop != a2StationaryBlocks[-1][0].p.ztop
+        ):
+            runLog.warning(
+                "Difference in top elevation of stationary blocks between "
+                f"{assembly1} (Stationary Blocks: {a1StationaryBlocks}, "
+                f"Elevation at top of stationary blocks {a1StationaryBlocks[-1][0].p.ztop}) and "
+                f"{assembly2} (Stationary Blocks: {a2StationaryBlocks}, "
+                f"Elevation at top of stationary blocks {a2StationaryBlocks[-1][0].p.ztop})"
+            )
 
         # swap stationary blocks
         for (assem1Block, assem1BlockIndex), (assem2Block, assem2BlockIndex) in zip(
@@ -924,11 +916,11 @@ class FuelHandler:
 
         try:
             grids.locatorLabelToIndices(loc)
-        except Exception:
+        except Exception as ee:
             raise InputError(
                 f"Invalid location label {loc!r} in cycle {cycle} in shuffle YAML. "
                 "Location labels must be non-empty and contain integers."
-            )
+            ) from ee
 
     def dischargeSwap(self, incoming, outgoing, toSfp=False):
         """Removes one assembly from the core and replace it with another assembly.
@@ -992,11 +984,10 @@ class FuelHandler:
         # future, this mechanism may be used to handle symmetry in general.
         outgoing.p.multiplicity = len(loc.getSymmetricEquivalents()) + 1
 
-        if self.r.excore.get("sfp") is not None:
-            if incoming in self.r.excore["sfp"].getChildren():
-                # pull it out of the sfp if it's in there.
-                runLog.extra(f"removing {incoming} from the sfp")
-                self.r.excore["sfp"].remove(incoming)
+        if self.r.excore.get("sfp") is not None and incoming in self.r.excore["sfp"].getChildren():
+            # pull it out of the sfp if it's in there.
+            runLog.extra(f"removing {incoming} from the sfp")
+            self.r.excore["sfp"].remove(incoming)
 
         incoming.p.multiplicity = 1
         self.r.core.add(incoming, loc)
@@ -1131,46 +1122,48 @@ class FuelHandler:
         makeShuffleReport : writes the file that is read here.
         """
         try:
-            stream = open(fname)
-        except OSError:
-            raise RuntimeError(f"Could not find/open repeat shuffle file {fname} in working directory {os.getcwd()}")
+            with open(fname) as stream:
+                lines = stream.readlines()
+        except OSError as ee:
+            raise RuntimeError(
+                f"Could not find/open repeat shuffle file {fname} in working directory {os.getcwd()}"
+            ) from ee
 
         moves = {}
         numMoves = 0
-        with stream:
-            for line in stream:
-                if "ycle " in line:
-                    # Used to say "Cycle 1 at 0.0 years". Now says: "Before cycle 1 at 0.0 years" to be more specific.
-                    # This RE allows backwards compatibility.
-                    # Later, we removed the at x years
-                    m = re.search(r"ycle (\d+)", line)
-                    if m is None:
-                        raise InputError(f'Failed to parse line "{line}" in shuffle file')
-                    cycle = int(m.group(1))
-                    moves[cycle] = []
-                elif "assembly" in line:
-                    # this is the new load style where an actual assembly type is written to the shuffle logic
-                    # due to legacy reasons, the assembly type will be put into group 4
-                    pat = (
-                        r"([A-Za-z0-9!\-]+) moved to ([A-Za-z0-9!\-]+) with assembly type "
-                        + r"([A-Za-z0-9!\s]+)\s*(ringPosCycle=\[.*\])?\s*with enrich list: (.+)"
-                    )
-                    m = re.search(pat, line)
-                    if not m:
-                        raise InputError(f'Failed to parse line "{line}" in shuffle file')
-                    oldLoc = m.group(1)
-                    newLoc = m.group(2)
-                    assemType = m.group(3).strip()  # take off any possible trailing whitespace
-                    ringPosCycle = m.group(4)  # will be None for legacy shuffleLogic files. (pre 2013-08)
-                    if ringPosCycle:
-                        # extract the assembly ring, position and cycle.
-                        try:
-                            ringPosCycle = ast.literal_eval(ringPosCycle.split("=", 1)[1])
-                        except (ValueError, SyntaxError) as ee:
-                            raise InputError(f'Failed to parse ringPosCycle in shuffle file line "{line}"') from ee
-                    enrichList = [float(i) for i in m.group(5).split()]
-                    moves[cycle].append(AssemblyMove(oldLoc, newLoc, enrichList, assemType, ringPosCycle))
-                    numMoves += 1
+        for line in lines:
+            if "ycle " in line:
+                # Used to say "Cycle 1 at 0.0 years". Now says: "Before cycle 1 at 0.0 years" to be more specific.
+                # This RE allows backwards compatibility.
+                # Later, we removed the at x years
+                m = re.search(r"ycle (\d+)", line)
+                if m is None:
+                    raise InputError(f'Failed to parse line "{line}" in shuffle file')
+                cycle = int(m.group(1))
+                moves[cycle] = []
+            elif "assembly" in line:
+                # this is the new load style where an actual assembly type is written to the shuffle logic
+                # due to legacy reasons, the assembly type will be put into group 4
+                pat = (
+                    r"([A-Za-z0-9!\-]+) moved to ([A-Za-z0-9!\-]+) with assembly type "
+                    + r"([A-Za-z0-9!\s]+)\s*(ringPosCycle=\[.*\])?\s*with enrich list: (.+)"
+                )
+                m = re.search(pat, line)
+                if not m:
+                    raise InputError(f'Failed to parse line "{line}" in shuffle file')
+                oldLoc = m.group(1)
+                newLoc = m.group(2)
+                assemType = m.group(3).strip()  # take off any possible trailing whitespace
+                ringPosCycle = m.group(4)  # will be None for legacy shuffleLogic files. (pre 2013-08)
+                if ringPosCycle:
+                    # extract the assembly ring, position and cycle.
+                    try:
+                        ringPosCycle = ast.literal_eval(ringPosCycle.split("=", 1)[1])
+                    except (ValueError, SyntaxError) as ee:
+                        raise InputError(f'Failed to parse ringPosCycle in shuffle file line "{line}"') from ee
+                enrichList = [float(i) for i in m.group(5).split()]
+                moves[cycle].append(AssemblyMove(oldLoc, newLoc, enrichList, assemType, ringPosCycle))
+                numMoves += 1
 
         runLog.info(f"Read {numMoves} moves over {len(moves.keys())} cycles")
         return moves
@@ -1279,8 +1272,8 @@ class FuelHandler:
                     enrichList = action.get("fuelEnrichment", [])
                     try:
                         enrich = [float(e) for e in enrichList]
-                    except (TypeError, ValueError):
-                        raise InputError("fuelEnrichment values must be numeric. Got {enrichList}")
+                    except (TypeError, ValueError) as ee:
+                        raise InputError("fuelEnrichment values must be numeric. Got {enrichList}") from ee
                     if any(e < 0 or e > 1 for e in enrich):
                         raise InputError("fuelEnrichment values must be between 0 and 1. Got {enrich}")
 

@@ -13,6 +13,7 @@
 # limitations under the License.
 """Utility classes and functions for manipulating text files."""
 
+import contextlib
 import io
 import os
 import pathlib
@@ -393,11 +394,9 @@ class SequentialReader:
                 pass
 
         if self._stream is not None:
-            try:
+            # We really don't care if anything fails here, plus an exception in exit is ignored anyway
+            with contextlib.suppress(Exception):
                 self._stream.close()
-            except Exception:
-                # We really don't care if anything fails here, plus an exception in exit is ignored anyway
-                pass
         self._stream = None
 
     def searchForText(self, text):
@@ -557,7 +556,7 @@ class TextProcessor:
         f = None
         if fname is not None:
             if os.path.exists(fname):
-                f = open(fname)
+                f = open(fname)  # noqa: SIM115 - the reader holds it until close() or __exit__
             else:
                 # need this not to fail for detecting when RXSUM doesn't exist, etc.
                 # Note: Could make it check before instantiating...

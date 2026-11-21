@@ -368,5 +368,5 @@ class ExpansionData:
         c = filter(self.isTargetComponent, iterSolidComponents(b))
         try:
             return next(c)
-        except StopIteration:
-            raise RuntimeError(f"No target component found for {b} in {b.parent}!")
+        except StopIteration as ee:
+            raise RuntimeError(f"No target component found for {b} in {b.parent}!") from ee

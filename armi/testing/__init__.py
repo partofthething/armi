@@ -29,27 +29,27 @@ from armi import getPluginManagerOrFail, materials, operators, runLog, settings
 from armi.materials import uZr
 from armi.reactor import assemblies, blocks, geometry, grids, reactors
 from armi.reactor.components import Hexagon, Rectangle
-from armi.testing.singleAssemblies import (  # noqa: F401
-    BLOCK_DEFINITIONS_2PIN,
-    BLOCK_DEFINITIONS_3PIN,
-    GRID_DEFINITION,
-    REGULAR_ASSEMBLY_DEF,
-    buildEmptyHexAssembly,
-    buildHexAssemblyFiveUZrUTh,
-    buildHexAssemblyFourUZrUTh,
-    buildHexAssemblySingleUZr,
-    buildHexAssemblySingleUZrUTh,
-    buildMixedPinAssembly,
-    buildMixedThreePinAssembly,
+from armi.testing.singleAssemblies import (
+    BLOCK_DEFINITIONS_2PIN as BLOCK_DEFINITIONS_2PIN,
+    BLOCK_DEFINITIONS_3PIN as BLOCK_DEFINITIONS_3PIN,
+    GRID_DEFINITION as GRID_DEFINITION,
+    REGULAR_ASSEMBLY_DEF as REGULAR_ASSEMBLY_DEF,
+    buildEmptyHexAssembly as buildEmptyHexAssembly,
+    buildHexAssemblyFiveUZrUTh as buildHexAssemblyFiveUZrUTh,
+    buildHexAssemblyFourUZrUTh as buildHexAssemblyFourUZrUTh,
+    buildHexAssemblySingleUZr as buildHexAssemblySingleUZr,
+    buildHexAssemblySingleUZrUTh as buildHexAssemblySingleUZrUTh,
+    buildMixedPinAssembly as buildMixedPinAssembly,
+    buildMixedThreePinAssembly as buildMixedThreePinAssembly,
 )
-from armi.testing.singleBlocks import (  # noqa: F401
-    NUM_PINS_IN_COMPLEX_HEX_BLOCK,
-    applyDummyData,
-    buildComplexHexBlock,
-    buildLinkedFuelHexBlock,
-    buildLinkedFuelHexBlockNegativeArea,
-    buildSimpleFuelHexBlock,
-    buildSimpleFuelHexBlockNegativeArea,
+from armi.testing.singleBlocks import (
+    NUM_PINS_IN_COMPLEX_HEX_BLOCK as NUM_PINS_IN_COMPLEX_HEX_BLOCK,
+    applyDummyData as applyDummyData,
+    buildComplexHexBlock as buildComplexHexBlock,
+    buildLinkedFuelHexBlock as buildLinkedFuelHexBlock,
+    buildLinkedFuelHexBlockNegativeArea as buildLinkedFuelHexBlockNegativeArea,
+    buildSimpleFuelHexBlock as buildSimpleFuelHexBlock,
+    buildSimpleFuelHexBlockNegativeArea as buildSimpleFuelHexBlockNegativeArea,
 )
 
 TEST_ROOT = os.path.realpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "tests"))

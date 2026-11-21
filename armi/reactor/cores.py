@@ -1299,7 +1299,7 @@ class Core(composites.Composite):
             # now look 'em up
             return [locContents[str(loc)] for loc in locs]
         except KeyError as e:
-            raise KeyError(f"There is nothing in core location {e}.")
+            raise KeyError(f"There is nothing in core location {e}.") from e
 
     def makeLocationLookup(self, assemblyLevel=False):
         """
@@ -1457,9 +1457,8 @@ class Core(composites.Composite):
         nCycles = len(a.p.ringPosHist)
         if nCycles > cycleNum:  # requested cycleNum has data populated
             rp = a.p.ringPosHist[cycleNum]
-            if rp[0] not in a.NOT_IN_CORE:
-                if (int(rp[0]), int(rp[1])) == (ring, pos):
-                    return True
+            if rp[0] not in a.NOT_IN_CORE and (int(rp[0]), int(rp[1])) == (ring, pos):
+                return True
         return False
 
     def getAssemblyWithRingPosHist(self, ring, pos, cycleNum):

@@ -14,6 +14,7 @@
 
 """Tests assemblies.py."""
 
+import contextlib
 import math
 import os
 import pathlib
@@ -771,9 +772,7 @@ class TestAssembly(unittest.TestCase):
 
         for param in paramDict:
             cur = list(self.assembly.getChildParamValues(param))
-            ref = []
-            for i, b in enumerate(self.blockList):
-                ref.append(self.blockList[i].p[param])
+            ref = [b.p[param] for b in self.blockList]
             self.assertAlmostEqual(cur, ref, places=6)
 
     def test_getMaxParam(self):
@@ -845,10 +844,8 @@ class TestAssembly(unittest.TestCase):
         for param in self.blockParamsTemp:
             tot = 0.0
             for b in self.assembly:
-                try:
+                with contextlib.suppress(TypeError):
                     tot += b.p[param]
-                except TypeError:
-                    pass
             ref = tot
 
             try:

@@ -74,8 +74,7 @@ class NeutronicsPlugin(plugins.ArmiPlugin):
     @plugins.HOOKIMPL
     def defineSettings():
         """Define settings for the plugin."""
-        from armi.physics.neutronics import crossSectionSettings
-        from armi.physics.neutronics import settings as neutronicsSettings
+        from armi.physics.neutronics import crossSectionSettings, settings as neutronicsSettings
         from armi.physics.neutronics.fissionProductModel import (
             fissionProductModelSettings,
         )
@@ -109,14 +108,6 @@ class NeutronicsPlugin(plugins.ArmiPlugin):
         """Called whenever a Core object is newly built."""
         applyEffectiveDelayedNeutronFractionToCore(core, cs)
 
-    @staticmethod
-    @plugins.HOOKIMPL
-    def getReportContents(r, cs, report, stage, blueprint):
-        """Generates the Report Content for the Neutronics Report."""
-        from armi.physics.neutronics import reports
-
-        return reports.insertNeutronicsReport(r, cs, report, stage)
-
 
 def applyEffectiveDelayedNeutronFractionToCore(core, cs):
     """Process the settings for the delayed neutron fraction and precursor decay constants."""
@@ -146,7 +137,7 @@ def applyEffectiveDelayedNeutronFractionToCore(core, cs):
         for i, betaComponent in enumerate(core.p.betaComponents):
             reportTableData.append((f"Group {i} Delayed Neutron Fractions", betaComponent))
         for i, decayConstant in enumerate(core.p.betaDecayConstants):
-            reportTableData.append(("Group {i} Precursor Decay Constants", decayConstant))
+            reportTableData.append((f"Group {i} Precursor Decay Constants", decayConstant))
 
     # Report to the user the values were not applied.
     if not reportTableData and (beta is not None or decayConstants is not None):

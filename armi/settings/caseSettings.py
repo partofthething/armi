@@ -399,7 +399,7 @@ class Settings:
         userSettingsNames = list(userSettings.keys())
         return userSettingsNames
 
-    def writeToYamlStream(self, stream, style="short", settingsSetByUser=[]):
+    def writeToYamlStream(self, stream, style="short", settingsSetByUser=None):
         """
         Write settings in yaml format to an arbitrary stream.
 

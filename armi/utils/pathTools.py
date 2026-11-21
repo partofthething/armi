@@ -195,7 +195,7 @@ def cleanPath(path, mpiRank=0, forceClean=False):
         valid = True
 
     if not valid:
-        raise Exception(f"You tried to delete {path}, but it does not seem safe to do so.")
+        raise ValueError(f"You tried to delete {path}, but it does not seem safe to do so.")
 
     # Delete the file/directory from only one process
     if mpiRank == context.MPI_RANK:

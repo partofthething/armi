@@ -28,11 +28,7 @@ from ruamel import yaml
 
 from armi import runLog
 from armi.settings.caseSettings import Settings
-from armi.settings.setting import (
-    Default,  # noqa: F401
-    Option,  # noqa: F401
-    Setting,
-)
+from armi.settings.setting import Default as Default, Option as Option, Setting
 from armi.utils.customExceptions import InvalidSettingsFileError
 
 NOT_ENABLED = ""  # An empty setting value implies that the feature

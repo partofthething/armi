@@ -73,7 +73,7 @@ assemblies:
             C, D, D,
             A, A
         ]
-"""  # noqa: E501
+"""
 
 
 @dataclass

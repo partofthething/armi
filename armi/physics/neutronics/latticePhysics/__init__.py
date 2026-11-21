@@ -14,11 +14,6 @@
 
 """Initialization of the interfaces for running lattice physics calculations."""
 
-# ruff: noqa: F401
-import os
-
-from armi import interfaces, settings
-from armi.physics import neutronics
-from armi.utils import pathTools
+from armi import interfaces
 
 ORDER = interfaces.STACK_ORDER.CROSS_SECTIONS

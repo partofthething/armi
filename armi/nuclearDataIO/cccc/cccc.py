@@ -152,7 +152,7 @@ class IORecord:
                 f"Failed to close record, {self}.\n{ee}\n"
                 "It is possible too much data was read from the "
                 "record, and the end of the stream was reached.\n"
-            )
+            ) from ee
 
     def open(self):
         """Abstract method for opening the stream."""

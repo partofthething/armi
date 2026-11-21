@@ -30,7 +30,7 @@ The fuel handler plugin moves fuel around in a reactor.
 """
 
 from armi import interfaces, operators, plugins
-from armi.operators import RunTypes
+from armi.operators.runTypes import RunTypes
 from armi.physics.fuelCycle import fuelHandlers, settings
 
 ORDER = interfaces.STACK_ORDER.FUEL_MANAGEMENT

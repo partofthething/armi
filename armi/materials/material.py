@@ -337,7 +337,7 @@ class Material(MatPropsMaterial):
             raise TypeError(
                 f"Error in converting the mass fraction of {massFrac} for nuclide {nucName} in {self} to a float. "
                 f"Exception: {ee}"
-            )
+            ) from ee
 
         if massFrac < 0.0 or massFrac > 1.0:
             raise ValueError(f"Mass fraction of {massFrac} for {nucName} is not between 0 and 1.")

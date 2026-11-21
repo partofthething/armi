@@ -388,7 +388,7 @@ class Field:
             raise YamlSchemaError(
                 f"Cannot read `{value}` as the {self.type.__name__} that `{self.key}` requires: {ee}",
                 location,
-            )
+            ) from ee
 
         if converted != value:
             raise YamlSchemaError(
@@ -950,10 +950,13 @@ class Sequence:
         return self
 
     def toData(self):
-        if self._doc is not None and len(self._doc) == len(self._items):
-            if all(_sameItem(d, i) for d, i in zip(self._doc, self._items)):
-                # nothing changed; hand back the original, styles and comments intact
-                return self._doc
+        if (
+            self._doc is not None
+            and len(self._doc) == len(self._items)
+            and all(_sameItem(d, i) for d, i in zip(self._doc, self._items))
+        ):
+            # nothing changed; hand back the original, styles and comments intact
+            return self._doc
 
         out = CommentedSeq([_writeValue(item) for item in self._items])
         if self._doc is not None:
@@ -975,7 +978,7 @@ class Sequence:
             raise YamlSchemaError(
                 f"Cannot read `{item}` as the {self.itemType.__name__} that {type(self).__name__} holds: {ee}",
                 _location(item),
-            )
+            ) from ee
 
         if converted != item:
             raise YamlSchemaError(
@@ -1205,7 +1208,7 @@ def _coerceTo(type_, value, location=None):
     try:
         converted = type_(value)
     except Exception as ee:
-        raise YamlSchemaError(f"Cannot read `{value}` as a {type_.__name__}: {ee}", location)
+        raise YamlSchemaError(f"Cannot read `{value}` as a {type_.__name__}: {ee}", location) from ee
 
     if converted != value:
         raise YamlSchemaError(f"Reading `{value}` as a {type_.__name__} would change it to `{converted}`", location)

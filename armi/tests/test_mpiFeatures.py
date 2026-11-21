@@ -143,7 +143,7 @@ class TestMpiOperator(unittest.TestCase):
         self.o.addInterface(failer)
 
         if context.MPI_RANK == 0:
-            self.assertRaises(Exception, self.o.operate)
+            self.assertRaises(RuntimeError, self.o.operate)
         else:
             self.o.operate()
 
@@ -302,7 +302,7 @@ class TestMpiPathTools(unittest.TestCase):
             filePath0 = "test0_cleanPathNoMpi"
             pathlib.Path(filePath0).write_text("something")
             self.assertTrue(os.path.exists(filePath0))
-            with self.assertRaises(Exception):
+            with self.assertRaises(ValueError):
                 pathTools.cleanPath(filePath0, mpiRank=context.MPI_RANK)
             MPI_COMM.barrier()
 

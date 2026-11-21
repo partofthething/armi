@@ -84,9 +84,8 @@ class TestFPMLumpedFP(unittest.TestCase):
         fpModel.interactBOL()
         allNucsInProblem = set(r.blueprints.allNuclidesInProblem)
         for b in r.core.iterBlocks():
-            if isDepletable(b):
-                if len(allNucsInProblem - set(b.getNuclides())) > 0:
-                    break
+            if isDepletable(b) and len(allNucsInProblem - set(b.getNuclides())) > 0:
+                break
         else:
             self.assertTrue(False, "All blocks have all nuclides!")
 

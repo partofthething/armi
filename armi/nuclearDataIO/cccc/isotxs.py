@@ -305,8 +305,8 @@ class IsotxsIO(cccc.Stream):
                     self._lib[nucLabel] = nuc
                 nuclideIO = self._getNuclideIO()(nuc, self, self._lib)
                 nuclideIO.rwNuclide()
-        except Exception:
-            raise OSError(f"Failed to read/write {self} \n\n\n{traceback.format_exc()}")
+        except Exception as ee:
+            raise OSError(f"Failed to read/write {self} \n\n\n{traceback.format_exc()}") from ee
         finally:
             properties.lockImmutableProperties(self._lib)
 

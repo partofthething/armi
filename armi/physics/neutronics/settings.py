@@ -309,11 +309,10 @@ def defineSettings():
 
 def _blueprintsHasOldXSInput(inspector):
     path = inspector.cs[CONF_LOADING_FILE]
-    with directoryChangers.DirectoryChanger(inspector.cs.inputDirectory):
-        with open(os.path.expandvars(path)) as f:
-            for line in f:
-                if line.startswith("cross sections:"):
-                    return True
+    with directoryChangers.DirectoryChanger(inspector.cs.inputDirectory), open(os.path.expandvars(path)) as f:
+        for line in f:
+            if line.startswith("cross sections:"):
+                return True
 
     return False
 

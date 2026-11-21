@@ -20,4 +20,4 @@ of related files from this package is useful. Also, these are organized like thi
 prevent having to import the world just to get something like a list of strings.
 """
 
-from armi.bookkeeping.tests._constants import *  # noqa: F403
+from armi.bookkeeping.tests._constants import TUTORIAL_FILES as TUTORIAL_FILES

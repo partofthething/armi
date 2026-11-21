@@ -13,4 +13,4 @@
 # limitations under the License.
 """Thermal Hydraulics package."""
 
-from armi.physics.thermalHydraulics.plugin import ThermalHydraulicsPlugin  # noqa: F401
+from armi.physics.thermalHydraulics.plugin import ThermalHydraulicsPlugin as ThermalHydraulicsPlugin

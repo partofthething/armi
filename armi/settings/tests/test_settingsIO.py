@@ -61,8 +61,8 @@ class TestSettingsReader(unittest.TestCase):
         self.assertEqual(reader["nTasks"], 1)
         self.assertEqual(reader["nCycles"], 1)
 
-        self.assertFalse(getattr(reader, "filelessBP"))
-        self.assertEqual(getattr(reader, "path"), "")
+        self.assertFalse(reader.filelessBP)
+        self.assertEqual(reader.path, "")
 
     def test_readFromFile(self):
         """Read settings from a (human-readable) YAML file.

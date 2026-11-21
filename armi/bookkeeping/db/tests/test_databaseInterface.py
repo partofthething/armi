@@ -21,8 +21,7 @@ import h5py
 import numpy as np
 from numpy.testing import assert_allclose, assert_equal
 
-from armi import __version__ as version
-from armi import interfaces, runLog, settings
+from armi import __version__ as version, interfaces, runLog, settings
 from armi.bookkeeping.db.database import Database
 from armi.bookkeeping.db.databaseInterface import DatabaseInterface
 from armi.cases import case
@@ -401,13 +400,12 @@ class TestDatabaseWriter(unittest.TestCase):
     def test_metaDataEndFail(self):
         def failMethod(cycle, node):
             if cycle == 0 and node == 1:
-                raise Exception("forcing failure")
+                raise RuntimeError("forcing failure")
 
         self.o.interfaces.append(MockInterface(self.o.r, self.o.cs, failMethod))
 
-        with self.assertRaises(Exception):
-            with self.o:
-                self.o.operate()
+        with self.assertRaises(RuntimeError), self.o:
+            self.o.operate()
 
         self.assertEqual(0, self.r.p.cycle)
         self.assertEqual(1, self.r.p.timeNode)

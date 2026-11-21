@@ -112,7 +112,7 @@ class TestHexCore(unittest.TestCase):
             actual = self.core.iterBlocks(spec)
             self.assertAllIs(actual, expected)
             # Fake the flag check with hasFlags as predicate
-            actual = self.core.iterBlocks(predicate=lambda b: b.hasFlags(spec))
+            actual = self.core.iterBlocks(predicate=lambda b, spec=spec: b.hasFlags(spec))
             self.assertAllIs(actual, expected)
 
     def test_traverseBlocksWithPredicate(self):

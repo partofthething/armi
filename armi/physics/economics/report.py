@@ -646,7 +646,7 @@ def _cashFlowPage(page, lc):
     colors = (MUTED, "#6f9ad8", "#9dbbe6", ACCENT)
     steps = [(name, start, end, color, note) for (name, start, end, note), color in zip(summary.waterfall(lc), colors)]
     ax = page.axes(MARGIN + 1.75, y - 1.55, CONTENT_WIDTH - 1.75, 1.25)
-    for i, (name, start, end, color, note) in enumerate(steps):
+    for i, (_name, start, end, color, note) in enumerate(steps):
         ax.barh(i, end - start, left=start, height=0.52, color=color, linewidth=0)
         change = end - start
         text = f"${end:.2f}" if start == 0.0 else f"+${change:.2f}"

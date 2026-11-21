@@ -18,6 +18,7 @@ See :doc:`/developer/entrypoints`.
 # limitations under the License.
 
 import argparse
+import contextlib
 
 from armi import context, runLog, settings
 
@@ -229,7 +230,9 @@ class EntryPoint(metaclass=_EntryPointEnforcer):
 
             isListType = settingsInstance.underlyingType is list
 
-            try:
+            # Ignore the argument error raised when a duplicate option is added. Checking the parser's `_actions` list
+            # would also work, but this avoids accessing a private attribute.
+            with contextlib.suppress(argparse.ArgumentError):
                 self.parser.add_argument(
                     *aliases,
                     type=str,  # types are properly converted by _SetSettingAction
@@ -239,11 +242,6 @@ class EntryPoint(metaclass=_EntryPointEnforcer):
                     choices=choices,
                     help=helpMessage,
                 )
-            # Capture an argument error here to prevent errors when duplicate options are attempting
-            # to be added. This may also be captured by exploring the parser's `_actions` list as well
-            # but this avoid accessing a private attribute.
-            except argparse.ArgumentError:
-                pass
 
     def _createToggleFromSetting(self, settingName, helpMessage, additionalAlias=None):
         aliases = ["--" + settingName]

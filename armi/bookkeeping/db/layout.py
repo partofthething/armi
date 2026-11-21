@@ -331,9 +331,7 @@ class Layout:
 
             if issubclass(Klass, Reactor):
                 comp = Klass(caseTitle, bp)
-            elif issubclass(Klass, Core):
-                comp = Klass(name)
-            elif issubclass(Klass, ExcoreStructure):
+            elif issubclass(Klass, Core) or issubclass(Klass, ExcoreStructure):
                 comp = Klass(name)
             elif issubclass(Klass, Component):
                 # init all dimensions to 0, they will be loaded and assigned after load
@@ -585,9 +583,7 @@ def _packLocationsV2(
         locationType = LOCATION_TYPE_LABELS[type(loc)]
         if loc is None:
             locDatum = [(0.0, 0.0, 0.0)]
-        elif loc.__class__ is grids.CoordinateLocation:
-            locDatum = [loc.indices]
-        elif loc.__class__ is grids.IndexLocation:
+        elif loc.__class__ is grids.CoordinateLocation or loc.__class__ is grids.IndexLocation:
             locDatum = [loc.indices]
         elif loc.__class__ is grids.MultiIndexLocation:
             # encode number of sub-locations to allow in-line unpacking.
@@ -778,12 +774,12 @@ def replaceNonesWithNonsense(data: np.ndarray, paramName: str, nones: np.ndarray
         raise TypeError(
             f"Could not determine None replacement for {paramName} with type {realType}, val {val}, default "
             f"{defaultValue}"
-        )
+        ) from ee
 
     try:
         data = data.astype(realType)
-    except Exception:
-        raise ValueError(f"Could not coerce data for {paramName} to {realType}, data:\n{data}")
+    except Exception as ee:
+        raise ValueError(f"Could not coerce data for {paramName} to {realType}, data:\n{data}") from ee
 
     if data.dtype.kind == "O":
         raise TypeError(f"Failed to convert data to valid HDF5 type {paramName}, data:{data}")

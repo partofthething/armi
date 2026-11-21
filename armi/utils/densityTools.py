@@ -136,13 +136,13 @@ def calculateNumberDensity(nucName, mass, volume):
     A = nucDir.getAtomicWeight(nucName)
     try:
         return units.MOLES_PER_CC_TO_ATOMS_PER_BARN_CM * mass / (volume * A)
-    except ZeroDivisionError:
+    except ZeroDivisionError as ee:
         if mass == 0 and volume == 0:
             return 0
 
         raise ValueError(
             f"Could not calculate number density with input.\nmass : {mass}\nvolume : {volume}\natomic weight : {A}\n"
-        )
+        ) from ee
 
 
 def getMassInGrams(nucName: str, volume: float, numberDensity: float | None = None) -> float:

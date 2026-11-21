@@ -34,8 +34,7 @@ import matplotlib.projections.polar
 import matplotlib.pyplot as plt
 import matplotlib.spines
 import numpy as np
-from matplotlib import colormaps
-from matplotlib import colors as mpltcolors
+from matplotlib import colormaps, colors as mpltcolors
 
 from armi import runLog, settings
 from armi.bookkeeping import report
@@ -399,7 +398,7 @@ def _radarFactory(numVars, frame="circle"):
         def fill(self, *args, **kwargs):
             """Override fill so that line is closed by default."""
             closed = kwargs.pop("closed", True)
-            return super().fill(closed=closed, *args, **kwargs)
+            return super().fill(*args, closed=closed, **kwargs)
 
         def plot(self, *args, **kwargs):
             """Override plot so that line is closed by default."""

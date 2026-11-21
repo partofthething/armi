@@ -29,7 +29,7 @@ Warning
 from armi.nucDirectory import nuclideBases
 from armi.nuclearDataIO import nuclearFileMetadata, xsCollections, xsLibraries
 from armi.utils.customExceptions import warn_when_root
-from armi.utils.plotting import plotScatterMatrix  # noqa: F401
+from armi.utils.plotting import plotScatterMatrix as plotScatterMatrix
 
 
 @warn_when_root
@@ -92,8 +92,8 @@ class XSNuclide(nuclideBases.NuclideWrapper):
         if interaction in self.micros.__dict__:
             try:
                 return self.micros[interaction][group]
-            except IndexError:
-                raise IndexError(f"Group {group} not found in interaction {interaction} of nuclide {self.name}")
+            except IndexError as ee:
+                raise IndexError(f"Group {group} not found in interaction {interaction} of nuclide {self.name}") from ee
         else:
             return 0
 

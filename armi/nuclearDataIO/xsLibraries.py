@@ -480,10 +480,9 @@ class IsotxsLibrary(_XSLibrary):
         # nucName is U235IA, etc.. nuc.name is U235, etc
         for nucLabel, nuc in self.items():
             # `in` used below for support of >26 xs groups
-            if not suffix or suffix in getSuffixFromNuclideLabel(nucLabel):
-                # accept things with the suffix if one is given
-                if nuc not in nucs:
-                    nucs.append(nuc)
+            # accept things with the suffix if one is given
+            if (not suffix or suffix in getSuffixFromNuclideLabel(nucLabel)) and nuc not in nucs:
+                nucs.append(nuc)
         return nucs
 
     def merge(self, other):

@@ -166,12 +166,11 @@ class ReportInterface(interfaces.Interface):
             return
 
         runLog.important("Count:")
-        totCount = 0
         thisTimeCount = 0
         a = sfp[0]
         lastTime = a.getAge() / units.DAYS_PER_YEAR + a.p.chargeTime
 
-        for a in sfp:
+        for totCount, a in enumerate(sfp):
             thisTime = a.getAge() / units.DAYS_PER_YEAR + a.p.chargeTime
 
             if thisTime != lastTime:
@@ -180,5 +179,4 @@ class ReportInterface(interfaces.Interface):
                 )
                 lastTime = thisTime
                 thisTimeCount = 0
-            totCount += 1  # noqa: SIM113
             thisTimeCount += 1

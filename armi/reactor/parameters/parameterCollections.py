@@ -326,8 +326,8 @@ class ParameterCollection(metaclass=_ParameterCollectionType):
             return getattr(self, name)
         except TypeError:  # allows for history parameter tuples
             return self._hist[name]
-        except AttributeError:
-            raise exceptions.UnknownParameterError(f"Parameter {name} is not defined for {type(self)}")
+        except AttributeError as ee:
+            raise exceptions.UnknownParameterError(f"Parameter {name} is not defined for {type(self)}") from ee
 
     def __setitem__(self, name, value):
         try:
@@ -337,8 +337,10 @@ class ParameterCollection(metaclass=_ParameterCollectionType):
                 self._hist[name] = value
             else:
                 raise
-        except AttributeError:  # for clarity
-            raise exceptions.UnknownParameterError(f"Cannot locate definition for parameter {name} in {type(self)}")
+        except AttributeError as ee:  # for clarity
+            raise exceptions.UnknownParameterError(
+                f"Cannot locate definition for parameter {name} in {type(self)}"
+            ) from ee
 
     def __delitem__(self, name):
         if isinstance(name, str):

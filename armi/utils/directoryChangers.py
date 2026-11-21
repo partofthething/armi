@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import contextlib
 import glob
 import os
 import pathlib
@@ -274,11 +275,9 @@ class TemporaryDirectoryChanger(DirectoryChanger):
 
         # make the tmp dir, if necessary
         if not os.path.exists(root):
-            try:
+            # ignore the obvious race condition
+            with contextlib.suppress(FileExistsError):
                 os.makedirs(root)
-            except FileExistsError:
-                # ignore the obvious race condition
-                pass
 
         # init the important path attributes
         self.initial = os.path.abspath(os.getcwd())

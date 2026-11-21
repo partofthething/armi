@@ -172,10 +172,10 @@ def _fromString(cls, typeSpec):
     def updateMethod(typeSpec):
         try:
             return cls[typeSpec]
-        except KeyError:
+        except KeyError as ee:
             raise InvalidFlagsError(
                 f"The requested type specification `{typeSpec}` is invalid. See armi.reactor.flags documentation."
-            )
+            ) from ee
 
     return __fromStringGeneral(cls, typeSpec, updateMethod)
 

@@ -113,6 +113,8 @@ from armi.utils.customExceptions import InputError
 from armi.utils.mathematics import isMonotonic
 from armi.utils.yamlSchema import Field, KeyedList, YamlObject
 
+_THIRD_CORE_PERIODIC = str(geometry.SymmetryType(geometry.DomainType.THIRD_CORE, geometry.BoundaryType.PERIODIC))
+
 
 class Triplet(YamlObject):
     """A x, y, z triplet for coordinates or lattice pitch."""
@@ -262,7 +264,7 @@ class GridBlueprint(YamlObject):
         name=None,
         geom=geometry.HEX,
         latticeMap=None,
-        symmetry=str(geometry.SymmetryType(geometry.DomainType.THIRD_CORE, geometry.BoundaryType.PERIODIC)),
+        symmetry=_THIRD_CORE_PERIODIC,
         gridContents=None,
         orientationBOL=None,
         gridBounds=None,
@@ -440,7 +442,7 @@ class GridBlueprint(YamlObject):
 
         newOrientations = copy.copy(self.orientationBOL)
 
-        for idx, contents in self.gridContents.items():
+        for idx, _contents in self.gridContents.items():
             equivs = grid.getSymmetricEquivalents(idx)
             angle = 360.0 / (len(equivs) + 1)
             for count, idx2 in enumerate(equivs):
@@ -615,13 +617,12 @@ def _filterOutsideDomain(gridBp):
     for idx in contentsToRemove:
         symmetrics = grid.getSymmetricEquivalents(idx)
         for symmetric in symmetrics:
-            if symmetric in gridBp.gridContents:
-                if gridBp.gridContents[symmetric] != gridBp.gridContents[idx]:
-                    raise ValueError(
-                        f"The contents at `{idx}` (`{gridBp.gridContents[idx]}`) in grid `{gridBp.name}` is not the "
-                        f"same as it's symmetric equivalent at `{symmetric}` (`{gridBp.gridContents[symmetric]}`). "
-                        "Check your grid blueprints for symmetry."
-                    )
+            if symmetric in gridBp.gridContents and gridBp.gridContents[symmetric] != gridBp.gridContents[idx]:
+                raise ValueError(
+                    f"The contents at `{idx}` (`{gridBp.gridContents[idx]}`) in grid `{gridBp.name}` is not the "
+                    f"same as it's symmetric equivalent at `{symmetric}` (`{gridBp.gridContents[symmetric]}`). "
+                    "Check your grid blueprints for symmetry."
+                )
 
         del gridBp.gridContents[idx]
 

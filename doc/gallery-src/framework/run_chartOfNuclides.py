@@ -26,7 +26,7 @@ from armi.nucDirectory.nuclideBases import NuclideBases
 configure(permissive=True)
 
 xyc = []
-for name, base in NuclideBases().byName.items():
+for _name, base in NuclideBases().byName.items():
     if not base.a:
         continue
     xyc.append((base.a - base.z, base.z, base.abundance or 0.5))

@@ -43,8 +43,7 @@ from copy import deepcopy
 
 from armi import runLog
 from armi.materials.material import Material
-from armi.matProps import MatPropsMaterial
-from armi.matProps import getPaths as getYamlPaths
+from armi.matProps import MatPropsMaterial, getPaths as getYamlPaths
 
 # This can be updated by the CONF_MATERIAL_NAMESPACE_ORDER setting during reactor construction (see
 # armi.reactor.reactors.factory).
@@ -245,9 +244,8 @@ def iterAllMaterialClassesInNamespace(namespace):
     Useful for testing.
     """
     for obj in namespace.__dict__.values():
-        if inspect.isclass(obj):
-            if issubclass(obj, Material):
-                yield obj
+        if inspect.isclass(obj) and issubclass(obj, Material):
+            yield obj
 
 
 def createMaterialByName(name: str, namespaceOrder: list[str] = None):

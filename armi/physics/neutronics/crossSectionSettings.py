@@ -304,12 +304,11 @@ class XSSettings(dict):
         # Only check since the state of the underlying cross section dictionary does not
         # get broadcasted to worker nodes. This check is only relevant for the first time
         # this is called and when called by the head node.
-        if context.MPI_RANK == 0:
-            if self._blockRepresentation is None:
-                raise ValueError(
-                    f"The defaults of {self} have not been set. Call ``setDefaults`` first "
-                    "before attempting to add a new XS ID."
-                )
+        if context.MPI_RANK == 0 and self._blockRepresentation is None:
+            raise ValueError(
+                f"The defaults of {self} have not been set. Call ``setDefaults`` first "
+                "before attempting to add a new XS ID."
+            )
 
         xsOpt = XSModelingOptions(xsID, geometry=XSGeometryTypes.getStr(XSGeometryTypes.ZERO_DIMENSIONAL))
         xsOpt.setDefaults(self._blockRepresentation, self._validBlockTypes)
@@ -562,17 +561,15 @@ class XSModelingOptions:
             are provided or when neither are provided.
         """
         # Check for valid inputs when the file location is supplied.
-        if self.xsFileLocation:
-            if self.geometry is not None:
-                runLog.warning(
-                    f"Either file location or geometry inputs in {self} should be given, but not both. "
-                    "The file location setting will take precedence over the geometry inputs. "
-                    "Remove one or the other in the `crossSectionSettings` input to fix this warning."
-                )
+        if self.xsFileLocation and self.geometry is not None:
+            runLog.warning(
+                f"Either file location or geometry inputs in {self} should be given, but not both. "
+                "The file location setting will take precedence over the geometry inputs. "
+                "Remove one or the other in the `crossSectionSettings` input to fix this warning."
+            )
 
-        if self.xsFileLocation is None or self.fluxFileLocation is not None:
-            if self.geometry is None:
-                raise ValueError(f"{self} is missing a geometry input or a file location.")
+        if (self.xsFileLocation is None or self.fluxFileLocation is not None) and self.geometry is None:
+            raise ValueError(f"{self} is missing a geometry input or a file location.")
 
         invalids = []
         if self.xsFileLocation is not None:
@@ -727,13 +724,12 @@ class XSModelingOptions:
             if currentValue is None:
                 setattr(self, attrName, defaultValue)
             else:
-                if attrName == CONF_BLOCK_REPRESENTATION:
-                    if currentValue not in allowableBlockCollections:
-                        raise ValueError(
-                            f"Invalid block collection type `{currentValue}` assigned "
-                            f"for {self.xsID}. Expected one of the "
-                            f"following: {allowableBlockCollections}"
-                        )
+                if attrName == CONF_BLOCK_REPRESENTATION and currentValue not in allowableBlockCollections:
+                    raise ValueError(
+                        f"Invalid block collection type `{currentValue}` assigned "
+                        f"for {self.xsID}. Expected one of the "
+                        f"following: {allowableBlockCollections}"
+                    )
 
         self.validate()
 

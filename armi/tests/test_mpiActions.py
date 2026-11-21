@@ -65,7 +65,8 @@ class TestMpiIter(unittest.TestCase):
     def _distributeObjects(self, allObjs, numProcs):
         context.MPI_SIZE = numProcs
         objs = []
-        for context.MPI_RANK in range(context.MPI_SIZE):
+        for rank in range(context.MPI_SIZE):
+            context.MPI_RANK = rank
             objs.append(list(self.action.mpiIter(allObjs)))
         return objs
 

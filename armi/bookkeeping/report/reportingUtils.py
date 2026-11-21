@@ -28,7 +28,7 @@ import numpy as np
 
 from armi import context, interfaces, runLog
 from armi.bookkeeping import report
-from armi.operators import RunTypes
+from armi.operators.runTypes import RunTypes
 from armi.reactor.components import ComponentType
 from armi.reactor.flags import Flags
 from armi.utils import (

@@ -21,9 +21,8 @@ useful, such as hexagonal or cartesian blocks.
 ARMI encourages you to build your own subclass of an ARMI Block type, to simplify your reactor blueprints.
 """
 
-# ruff: noqa: F401
-from armi.reactor.blocks.block import PIN_COMPONENTS, Block
-from armi.reactor.blocks.cartesianBlock import CartesianBlock
-from armi.reactor.blocks.hexBlock import HexBlock
-from armi.reactor.blocks.sphericalBlock import SphericalBlock
-from armi.reactor.blocks.thRZBlock import ThRZBlock
+from armi.reactor.blocks.block import PIN_COMPONENTS as PIN_COMPONENTS, Block as Block
+from armi.reactor.blocks.cartesianBlock import CartesianBlock as CartesianBlock
+from armi.reactor.blocks.hexBlock import HexBlock as HexBlock
+from armi.reactor.blocks.sphericalBlock import SphericalBlock as SphericalBlock
+from armi.reactor.blocks.thRZBlock import ThRZBlock as ThRZBlock

@@ -212,15 +212,15 @@ def getAtomicWeight(lab=None, z=None, a=None):
 def isHeavyMetal(name):
     try:
         return getNuclide(name).isHeavyMetal()
-    except AttributeError:
-        raise AttributeError(f"The nuclide {name} is not found in the nuclide directory")
+    except AttributeError as ee:
+        raise AttributeError(f"The nuclide {name} is not found in the nuclide directory") from ee
 
 
 def isFissile(name):
     try:
         return getNuclide(name).isFissile()
-    except AttributeError:
-        raise AttributeError(f"The nuclide {name} is not found in the nuclide directory")
+    except AttributeError as ee:
+        raise AttributeError(f"The nuclide {name} is not found in the nuclide directory") from ee
 
 
 def getThresholdDisplacementEnergy(nuc):

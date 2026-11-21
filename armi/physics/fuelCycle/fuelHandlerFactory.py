@@ -69,11 +69,11 @@ def fuelHandlerFactory(operator):
                 # The __get__ pulls the actual function out from the descriptor.
                 fuelHandler.getFactorList = staticmethod(module.getFactorList).__get__(fuelHandlerCls)
 
-        except (OSError, ImportError):
+        except (OSError, ImportError) as ee:
             raise ValueError(
                 f"Either the file specified in the `shuffleLogic` setting ({fuelHandlerModulePath}) or the "
                 f"fuel handler class name specified in the `fuelHandlerName` setting ({fuelHandlerClassName}) "
                 f"cannot be found. CWD is: {cs.inputDirectory}. Update input."
-            )
+            ) from ee
 
     return fuelHandler

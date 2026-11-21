@@ -175,11 +175,10 @@ class DatabaseInterface(interfaces.Interface):
         DB is created and managed by the primary node only but we can still connect to it
         from workers to enable things like history tracking.
         """
-        if context.MPI_RANK > 0:
-            # DB may not exist if distribute state is called early.
-            if self._dbPath is not None and os.path.exists(self._dbPath):
-                self._db = Database(self._dbPath, "r")
-                self._db.open()
+        # DB may not exist if distribute state is called early.
+        if context.MPI_RANK > 0 and self._dbPath is not None and os.path.exists(self._dbPath):
+            self._db = Database(self._dbPath, "r")
+            self._db.open()
 
     def distributable(self):
         return self.Distribute.SKIP

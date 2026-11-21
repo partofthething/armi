@@ -41,8 +41,7 @@ from armi.testing import (
     buildOperatorOfEmptyCartesianBlocks,
     loadTestReactor,
     mockRunLogs,
-)  # noqa: F401
-from armi.tests import TEST_ROOT  # noqa: F401
+)
 from armi.utils import directoryChangers
 
 _THIS_DIR = os.path.dirname(__file__)
@@ -546,10 +545,10 @@ class TestHexReactor(TestReactor):
         self.r.core.spatialGrid = None
 
         with self.assertRaises(ValueError):
-            self.r.core.symmetry
+            _ = self.r.core.symmetry
 
         with self.assertRaises(ValueError):
-            self.r.core.geomType
+            _ = self.r.core.geomType
 
     def test_pinCoordsAllBlocks(self):
         """Make sure all blocks can get pin coords."""

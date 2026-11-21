@@ -15,14 +15,13 @@
 """Tools for common tasks in parsing in python strings into non-string values."""
 
 import ast
+import contextlib
 import copy
 
 
 def tryLiteralEval(source):
-    try:
+    with contextlib.suppress(ValueError, SyntaxError):
         source = ast.literal_eval(source)
-    except (ValueError, SyntaxError):
-        pass
 
     return source
 

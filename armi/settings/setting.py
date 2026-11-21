@@ -195,14 +195,14 @@ class Setting:
         """Extend this Setting's options with extra options."""
         try:
             self.options.extend([o.option for o in options])
-        except AttributeError:
+        except AttributeError as ee:
             if self.options is None:
                 msg = (
                     f"The Setting {self.name} has no default options, it looks like you want to add that to the "
                     + "definition."
                 )
                 runLog.error(msg)
-                raise AttributeError(msg)
+                raise AttributeError(msg) from ee
             else:
                 raise
 

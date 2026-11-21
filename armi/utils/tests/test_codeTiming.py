@@ -97,9 +97,8 @@ class CodeTimingTest(unittest.TestCase):
         self.assertEqual(timer2.overStart, 0)
 
         # use the timers as context managers
-        with timer2:
-            with timer:
-                pass
+        with timer2, timer:
+            pass
 
         # There should be one start/stop each, leaving the over start count the same
         self.assertEqual(timer.overStart, 0)

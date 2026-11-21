@@ -7,8 +7,7 @@ and the report is written at the end of the run.
 """
 
 from armi import interfaces, runLog
-from armi.physics.economics import fuelCost, summary
-from armi.physics.economics import settings as econSettings
+from armi.physics.economics import fuelCost, settings as econSettings, summary
 from armi.physics.fuelCycle.settings import CONF_FUEL_HANDLER_NAME
 from armi.utils import tabulate
 

@@ -361,20 +361,18 @@ class TestTightCoupling(unittest.TestCase):
     def test_performTightCoupling_WriteDB(self):
         """Ensure a tight coupling iteration accours and that a DB WILL be written if requested."""
         hasCouplingInteraction = 1
-        with directoryChangers.TemporaryDirectoryChanger():
-            with mockRunLogs.BufferLog() as mock:
-                self.dbWriteForCoupling(writeDB=True)
-                self.assertIn("Writing to database for statepoint:", mock.getStdout())
-                self.assertEqual(self.o.r.core.p.coupledIteration, hasCouplingInteraction)
+        with directoryChangers.TemporaryDirectoryChanger(), mockRunLogs.BufferLog() as mock:
+            self.dbWriteForCoupling(writeDB=True)
+            self.assertIn("Writing to database for statepoint:", mock.getStdout())
+            self.assertEqual(self.o.r.core.p.coupledIteration, hasCouplingInteraction)
 
     def test_performTightCoupling_NoWriteDB(self):
         """Ensure a tight coupling iteration accours and that a DB WILL NOT be written if requested."""
         hasCouplingInteraction = 1
-        with directoryChangers.TemporaryDirectoryChanger():
-            with mockRunLogs.BufferLog() as mock:
-                self.dbWriteForCoupling(writeDB=False)
-                self.assertNotIn("Writing to database for statepoint:", mock.getStdout())
-                self.assertEqual(self.o.r.core.p.coupledIteration, hasCouplingInteraction)
+        with directoryChangers.TemporaryDirectoryChanger(), mockRunLogs.BufferLog() as mock:
+            self.dbWriteForCoupling(writeDB=False)
+            self.assertNotIn("Writing to database for statepoint:", mock.getStdout())
+            self.assertEqual(self.o.r.core.p.coupledIteration, hasCouplingInteraction)
 
     def dbWriteForCoupling(self, writeDB: bool):
         self.o.removeAllInterfaces()

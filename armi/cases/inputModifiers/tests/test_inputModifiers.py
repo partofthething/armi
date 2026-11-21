@@ -187,11 +187,8 @@ class TestsuiteBuilderIntegrations(unittest.TestCase):
 
             self.assertTrue(os.path.exists("case-suite-testBPBM"))
 
-            yamlfile = open(
-                f"case-suite-testBPBM/000{case_nbr}/armi-000{case_nbr}-blueprints.yaml",
-            )
-            bp_dict = yaml.YAML().load(yamlfile)
-            yamlfile.close()
+            with open(f"case-suite-testBPBM/000{case_nbr}/armi-000{case_nbr}-blueprints.yaml") as yamlfile:
+                bp_dict = yaml.YAML().load(yamlfile)
 
             self.assertEqual(bp_dict["blocks"]["fuel 1"]["clad"]["od"], 3.14)
             self.assertEqual(bp_dict["blocks"]["block 5"]["clad"]["od"], 3.14159)

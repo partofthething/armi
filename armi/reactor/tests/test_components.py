@@ -22,6 +22,7 @@ import unittest
 import numpy as np
 from numpy.testing import assert_allclose, assert_equal
 
+from armi import materials
 from armi.materials import Air, Alloy200
 from armi.materials.material import Material
 from armi.reactor import components, flags
@@ -49,7 +50,6 @@ from armi.reactor.components import (
     Triangle,
     UnshapedComponent,
     UnshapedVolumetricComponent,
-    materials,
 )
 from armi.reactor.reactors import Reactor
 from armi.testing import TESTING_ROOT, buildSimpleFuelHexBlock, loadTestReactor
@@ -514,9 +514,7 @@ class TestShapedComponent(TestGeneralComponents):
         c = self.component
 
         # no volume defined
-        if isinstance(c, (DerivedShape, UnshapedVolumetricComponent)):
-            return
-        elif isinstance(c, Component):
+        if isinstance(c, (DerivedShape, UnshapedVolumetricComponent, Component)):
             return
 
         # basic density sanity test

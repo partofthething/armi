@@ -18,4 +18,4 @@
 # The burn chain is not applied at this point, but only after input is read. Nuclides need to be built super early
 # because some import-time code needs them to function. Namely, Block parameter collection uses them to create number
 # density params.
-from armi.nucDirectory import nuclideBases  # noqa: E402, F401
+from armi.nucDirectory import nuclideBases  # noqa: F401

@@ -59,7 +59,7 @@ candidateAssems = reactor.core.getAssemblies(Flags.FUEL)
 criterion = lambda a: a.getMaxParam("percentBu")
 candidateAssems.sort(key=criterion)
 
-for num in range(12):
+for _num in range(12):
     # swap the 12 highest burnup assemblies with the 12 lowest burnup ones
     high = candidateAssems.pop()
     low = candidateAssems.pop(0)
@@ -67,7 +67,7 @@ for num in range(12):
 
 # re-filter the remaining candidates for more complex selections
 candidateAssems = [a for a in candidateAssems if a.getMaxParam("percentBu") < 4.0]
-for num in range(8):
+for _num in range(8):
     high = candidateAssems.pop()
     low = candidateAssems.pop(0)
     fuelHandler.swapAssemblies(high, low)

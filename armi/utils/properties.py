@@ -27,9 +27,8 @@ def areEqual(val1, val2, relativeTolerance=0.0):
 def numpyHackForEqual(val1, val2):
     """Checks lots of types for equality like strings and dicts."""
     # when doing this with numpy arrays you get an array of booleans which causes the value error
-    if isinstance(val1, np.ndarray) and isinstance(val2, np.ndarray):
-        if val1.size != val2.size:
-            return False
+    if isinstance(val1, np.ndarray) and isinstance(val2, np.ndarray) and val1.size != val2.size:
+        return False
 
     notEqual = val1 != val2
     try:
@@ -94,12 +93,12 @@ def createImmutableProperty(name, dependencyAction, doc):
     def _getter(self):
         try:
             return getattr(self, privateName)
-        except AttributeError:
+        except AttributeError as ee:
             if getattr(self, "-unlocked", False):
                 return None
             raise ImmutablePropertyError(
                 f"Attribute {name} on {self} has not been set, must read {dependencyAction} file first."
-            )
+            ) from ee
 
     def _setter(self, value):
         if hasattr(self, privateName):

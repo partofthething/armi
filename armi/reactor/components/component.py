@@ -19,6 +19,7 @@ Components represent geometric objects within an assembly such as fuel, bond, co
 This module contains the abstract definition of a Component.
 """
 
+import contextlib
 import copy
 import re
 from collections.abc import Iterable
@@ -28,8 +29,7 @@ import numpy as np
 from armi import materials, runLog
 from armi.bookkeeping import report
 from armi.materials import Void, custom, material
-from armi.nucDirectory import elements as _nucDirElements
-from armi.nucDirectory import nuclideBases as _nucDirNuclideBases
+from armi.nucDirectory import elements as _nucDirElements, nuclideBases as _nucDirNuclideBases
 from armi.reactor import composites, flags, parameters
 from armi.reactor.components import componentParameters
 from armi.utils import densityTools
@@ -264,12 +264,14 @@ class Component(composites.Composite, metaclass=ComponentType):
                 return thisOD < thatOD
         except (NotImplementedError, Exception) as e:
             if isinstance(e, NotImplementedError):
-                raise NotImplementedError(f"getCircleInnerDiameter not implemented for at least one of {self}, {other}")
+                raise NotImplementedError(
+                    f"getCircleInnerDiameter not implemented for at least one of {self}, {other}"
+                ) from e
             else:
                 raise ValueError(
                     f"Components 1 ({self} with OD {thisOD}) and 2 ({other} and OD {thatOD}) cannot be ordered because "
                     "their bounding circle outer diameters are not comparable."
-                )
+                ) from e
 
     def __setstate__(self, state):
         composites.Composite.__setstate__(self, state)
@@ -308,14 +310,14 @@ class Component(composites.Composite, metaclass=ComponentType):
                     comp = components[name]
                     linkedKey = match.group(2)
                     self.p[dimName] = _DimensionLink((comp, linkedKey))
-                except Exception:
+                except Exception as ee:
                     if value.count(".") > 1:
                         raise ValueError(
                             f"Name of {self} has a period in it. "
                             f"Components cannot not have periods in their names: `{value}`"
-                        )
+                        ) from ee
                     else:
-                        raise KeyError(f"Bad component link `{dimName}` defined as `{value}` in {self}")
+                        raise KeyError(f"Bad component link `{dimName}` defined as `{value}` in {self}") from ee
 
     def setLink(self, key, otherComp, otherCompKey):
         """Set the dimension link."""
@@ -432,12 +434,9 @@ class Component(composites.Composite, metaclass=ComponentType):
 
     def setLumpedFissionProducts(self, lfpCollection):
         """Sets lumped fission product collection on a lfp compatible material if possible."""
-        try:
+        # A regular material, not a lumpedFissionProductCompatable one, has no setLumpedFissionProducts.
+        with contextlib.suppress(AttributeError):
             self.getProperties().setLumpedFissionProducts(lfpCollection)
-        except AttributeError:
-            # This material doesn't setLumpedFissionProducts because it is a regular material, not a
-            # lumpedFissionProductCompatable material
-            pass
 
     def getArea(self, cold=False, Tc=None):
         """
@@ -543,13 +542,12 @@ class Component(composites.Composite, metaclass=ComponentType):
         if np.isnan(area):
             return
 
-        if area < 0.0:
-            if (cold and not self.containsVoidMaterial()) or self.containsSolidMaterial():
-                negAreaFailure = (
-                    f"Component {self} with {self.material} has cold negative area of {area} cm^2. "
-                    "This can be caused by component overlap with component dimension linking or by invalid inputs."
-                )
-                raise ArithmeticError(negAreaFailure)
+        if area < 0.0 and ((cold and not self.containsVoidMaterial()) or self.containsSolidMaterial()):
+            negAreaFailure = (
+                f"Component {self} with {self.material} has cold negative area of {area} cm^2. "
+                "This can be caused by component overlap with component dimension linking or by invalid inputs."
+            )
+            raise ArithmeticError(negAreaFailure)
 
     def _checkNegativeVolume(self, volume):
         """Check for negative volume.
@@ -1223,10 +1221,10 @@ class Component(composites.Composite, metaclass=ComponentType):
             # p.__getitem__
             try:
                 val = self.p[dimName]
-            except Exception:
+            except Exception as ee:
                 raise RuntimeError(
                     f"Could not find parameter {dimName} defined for {self}. Is the desired Component class?"
-                )
+                ) from ee
             if isinstance(val, _DimensionLink):
                 linkedDims.append((self.p.paramDefs[dimName].fieldName, val))
                 del self.p[dimName]

@@ -20,8 +20,7 @@ The fuel is weighed the way the plugin weighs it:
 import numpy as np
 
 from armi import runLog
-from armi.physics.economics import economicsInterface, fuelCost, summary
-from armi.physics.economics import settings as econSettings
+from armi.physics.economics import economicsInterface, fuelCost, settings as econSettings, summary
 from armi.webui.results import ResultsError, jaggedOwners
 
 #: Settings the browser may change, with how to show them: label, units, and the kind of control.

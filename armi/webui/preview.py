@@ -57,7 +57,7 @@ def resolveDimensions(componentDefs: dict) -> dict:
     # Bound the passes by the component count; anything left after that is a cycle.
     for _pass in range(len(resolved) + 1):
         progressed = False
-        for name, defn in resolved.items():
+        for _name, defn in resolved.items():
             for key, value in list(defn.items()):
                 if not isinstance(value, str):
                     continue
@@ -74,7 +74,7 @@ def resolveDimensions(componentDefs: dict) -> dict:
         if not progressed:
             break
 
-    for name, defn in resolved.items():
+    for _name, defn in resolved.items():
         stuck = [key for key, value in defn.items() if isinstance(value, str) and _LINK.match(value)]
         if stuck:
             defn["_unresolved"] = sorted(stuck)

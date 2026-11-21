@@ -17,8 +17,7 @@ from collections.abc import Iterable
 from dataclasses import dataclass, field, replace
 
 from armi import runLog
-from armi.physics.economics import enrichment, levelized
-from armi.physics.economics import settings as econSettings
+from armi.physics.economics import enrichment, levelized, settings as econSettings
 
 #: Oxygen over heavy metal, by mass, above which a fuel is an oxide (UO2 is 0.134; carbides and metals are 0).
 OXIDE_O_TO_HM = 0.05

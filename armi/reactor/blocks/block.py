@@ -21,6 +21,7 @@ number densities. Blocks are further divided into components.
 """
 
 import collections
+import contextlib
 import copy
 import math
 import operator
@@ -504,11 +505,10 @@ class Block(composites.Composite):
             raise ValueError(f"Cannot set height of block {self} to height of {modifiedHeight} cm")
         self.p.height = modifiedHeight
         self.clearCache()
-        if conserveMass:
-            if originalHeight != modifiedHeight:
-                if not adjustList:
-                    raise ValueError("Nuclides in ``adjustList`` must be provided to conserve mass.")
-                self.adjustDensity(originalHeight / modifiedHeight, adjustList)
+        if conserveMass and originalHeight != modifiedHeight:
+            if not adjustList:
+                raise ValueError("Nuclides in ``adjustList`` must be provided to conserve mass.")
+            self.adjustDensity(originalHeight / modifiedHeight, adjustList)
         if self.parent:
             self.parent.calculateZCoords()
 
@@ -529,11 +529,11 @@ class Block(composites.Composite):
         numPins = self.getNumPins()
         try:
             return self.getComponent(Flags.COOLANT, exact=True).getArea() / numPins
-        except ZeroDivisionError:
+        except ZeroDivisionError as ee:
             raise ZeroDivisionError(
                 f"Block {self} has 0 pins (fuel, clad, control, shield, etc.). Thus, its flow area "
                 "per pin is undefined."
-            )
+            ) from ee
 
     def getHydraulicDiameter(self):
         raise NotImplementedError
@@ -807,11 +807,9 @@ class Block(composites.Composite):
         self.p.molesHmBOL = self.getHMMoles()
         self.p.puFrac = self.getPuMoles() / self.p.molesHmBOL if self.p.molesHmBOL > 0.0 else 0.0
 
-        try:
-            # non-pinned reactors (or ones without cladding) will not use smear density
+        # non-pinned reactors (or ones without cladding) will not use smear density
+        with contextlib.suppress(ValueError):
             self.p.smearDensity = self.getSmearDensity()
-        except ValueError:
-            pass
 
         self.p.enrichmentBOL = self.getFissileMassEnrich()
         massHmBOL = 0.0
@@ -898,7 +896,7 @@ class Block(composites.Composite):
         self.clearCache()
 
     @staticmethod
-    def plotFlux(core, fName=None, bList=None, peak=False, adjoint=False, bList2=[]):
+    def plotFlux(core, fName=None, bList=None, peak=False, adjoint=False, bList2=None):
         """A simple pass-through method to a utils plotting function. This is here to preserve the API."""
         plotBlockFlux(core, fName, bList, peak, adjoint, bList2)
 

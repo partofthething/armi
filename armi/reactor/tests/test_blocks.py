@@ -2288,14 +2288,14 @@ class TestHexBlock(unittest.TestCase):
         locs = set(self.hexBlock.getPinLocations())
         nPins = self.hexBlock.getNumPins()
         self.assertEqual(len(locs), nPins)
-        for l in locs:
-            self.assertIs(l.grid, self.hexBlock.spatialGrid)
+        for loc in locs:
+            self.assertIs(loc.grid, self.hexBlock.spatialGrid)
 
         # Check all clad components are represented
         for c in self.hexBlock.getChildrenWithFlags(Flags.CLAD):
             if isinstance(c.spatialLocator, grids.MultiIndexLocation):
-                for l in c.spatialLocator:
-                    locs.remove(l)
+                for loc in c.spatialLocator:
+                    locs.remove(loc)
             else:
                 locs.remove(c.spatialLocator)
         self.assertFalse(

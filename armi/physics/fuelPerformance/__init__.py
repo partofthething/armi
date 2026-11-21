@@ -37,4 +37,4 @@ irradiation can influence neutronics as well (e.g. sodium thermal bond being squ
 Finally,  fuel temperatures impact the Doppler reactivity coefficient.
 """
 
-from armi.physics.fuelPerformance.plugin import FuelPerformancePlugin  # noqa: F401
+from armi.physics.fuelPerformance.plugin import FuelPerformancePlugin as FuelPerformancePlugin

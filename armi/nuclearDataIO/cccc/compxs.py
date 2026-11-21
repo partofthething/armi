@@ -232,8 +232,10 @@ class _CompxsIO(cccc.Stream):
                 regionIO = _getRegionIO()(region, self, self._lib)
                 regionIO.rwRegionData()
             self._rw5DRecord()
-        except Exception:
-            raise OSError("Failed to {} {} \n\n\n{}".format("read" if self._isReading else "write", self, format_exc()))
+        except Exception as ee:
+            raise OSError(
+                "Failed to {} {} \n\n\n{}".format("read" if self._isReading else "write", self, format_exc())
+            ) from ee
         finally:
             lockImmutableProperties(self._lib)
 

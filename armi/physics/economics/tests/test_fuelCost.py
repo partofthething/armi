@@ -5,8 +5,7 @@ import os
 import unittest
 from types import SimpleNamespace
 
-from armi.physics.economics import economicsInterface, enrichment, fuelCost, report, summary
-from armi.physics.economics import settings as econSettings
+from armi.physics.economics import economicsInterface, enrichment, fuelCost, report, settings as econSettings, summary
 from armi.testing import loadTestReactor
 from armi.utils import directoryChangers
 

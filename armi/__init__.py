@@ -40,16 +40,11 @@ If using the ``run`` entry point, additional work is done:
 * Quit
 """
 
-# ruff: noqa: F401
 import atexit
-import datetime
-import importlib
 import os
 import signal
-import subprocess
 import sys
 import traceback
-import warnings
 from collections.abc import Iterable
 
 import __main__ as main
@@ -59,29 +54,29 @@ import __main__ as main
 # - configure the MPI environment
 # - detect the nature of interaction with the user (terminal UI, GUI, unsupervized, etc)
 # - Initialize the nuclide database
-import armi._bootstrap
+import armi._bootstrap  # noqa: F401 - imported for its side effects
 from armi import apps, cli, context, pluginManager, plugins, runLog
 from armi.context import (
-    APP_DATA,
-    CURRENT_MODE,
-    DOC,
-    MPI_COMM,
-    MPI_DISTRIBUTABLE,
-    MPI_NODENAME,
-    MPI_NODENAMES,
-    MPI_RANK,
-    MPI_SIZE,
+    APP_DATA as APP_DATA,
+    CURRENT_MODE as CURRENT_MODE,
+    DOC as DOC,
+    MPI_COMM as MPI_COMM,
+    MPI_DISTRIBUTABLE as MPI_DISTRIBUTABLE,
+    MPI_NODENAME as MPI_NODENAME,
+    MPI_NODENAMES as MPI_NODENAMES,
+    MPI_RANK as MPI_RANK,
+    MPI_SIZE as MPI_SIZE,
     PLATFORM,
-    RES,
-    ROOT,
-    START_TIME,
-    USER,
-    Mode,
+    RES as RES,
+    ROOT as ROOT,
+    START_TIME as START_TIME,
+    USER as USER,
+    Mode as Mode,
     Platform,
 )
 from armi.meta import __version__
-from armi.nucDirectory import nuclideBases
-from armi.reactor import flags, parameters
+from armi.nucDirectory import nuclideBases as nuclideBases
+from armi.reactor import flags as flags, parameters
 
 # ARMI does not configure its own application by default. This is mostly to catch issues involving calling code that
 # requires the framework to be configured before that has explicitly taken place. An application should call

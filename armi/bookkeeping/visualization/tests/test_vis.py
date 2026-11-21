@@ -94,9 +94,8 @@ class TestVisDump(unittest.TestCase):
         data = vtk._collectObjectData(blocks_, includeParams={"fuelCladLocked"})
         self.assertEqual(data["fuelCladLocked"].dtype, np.uint8)
         self.assertEqual(data["fuelCladLocked"][0], 1)
-        with TemporaryDirectoryChanger(dumpOnException=False):
-            with vtk.VtkDumper("testVtk", inputName=None) as dumper:
-                dumper.dumpState(self.r, includeParams={"fuelCladLocked"})
+        with TemporaryDirectoryChanger(dumpOnException=False), vtk.VtkDumper("testVtk", inputName=None) as dumper:
+            dumper.dumpState(self.r, includeParams={"fuelCladLocked"})
 
     def test_dumpReactorXdmf(self):
         # This does a lot, and is hard to verify. at least make sure it doesn't crash

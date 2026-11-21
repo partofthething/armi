@@ -558,16 +558,15 @@ class GlobalFluxExecuter(executers.DefaultExecuter):
             )
         neutronicsReactor = self.r
         converter = self.geomConverters.get("axial")
-        if not converter:
-            if self.options.detailedAxialExpansion or self.options.hasNonUniformAssems:
-                converter = uniformMesh.converterFactory(self.options)
-                converter.convert(self.r)
-                neutronicsReactor = converter.convReactor
+        if not converter and (self.options.detailedAxialExpansion or self.options.hasNonUniformAssems):
+            converter = uniformMesh.converterFactory(self.options)
+            converter.convert(self.r)
+            neutronicsReactor = converter.convReactor
 
-                if makePlots:
-                    converter.plotConvertedReactor()
+            if makePlots:
+                converter.plotConvertedReactor()
 
-                self.geomConverters["axial"] = converter
+            self.geomConverters["axial"] = converter
 
         if self.edgeAssembliesAreNeeded():
             converter = self.geomConverters.get("edgeAssems", geometryConverters.EdgeAssemblyChanger())
@@ -735,8 +734,8 @@ class GlobalFluxResultMapper(interfaces.OutputReader):
 
         try:
             return constants.DPA_CROSS_SECTIONS[dpaXsSetName]
-        except KeyError:
-            raise KeyError(f"DPA cross section set {dpaXsSetName} does not exist")
+        except KeyError as ee:
+            raise KeyError(f"DPA cross section set {dpaXsSetName} does not exist") from ee
 
     def getBurnupPeakingFactor(self, b: Block):
         """

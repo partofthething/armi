@@ -604,11 +604,11 @@ class TestTabulateInternal(unittest.TestCase):
         self.assertEqual(res[2], 0)
 
         @dataclass
-        class row:
+        class Row:
             a: int
             b: int
 
-        rows = [row(1, 2), row(3, 4)]
+        rows = [Row(1, 2), Row(3, 4)]
         res = _normalizeTabularData(rows, "keys", "default")
         self.assertEqual(res[0], [[1, 2], [3, 4]])
         self.assertEqual(res[1], ["a", "b"])

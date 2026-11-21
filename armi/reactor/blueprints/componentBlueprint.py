@@ -44,9 +44,8 @@ class ComponentDimension:
 
     def __init__(self, value):
         self.value = value
-        if isinstance(value, str):
-            if not components.COMPONENT_LINK_REGEX.search(value):
-                raise ValueError(f"Bad component link `{value}`, must be in form `name.dimension`")
+        if isinstance(value, str) and not components.COMPONENT_LINK_REGEX.search(value):
+            raise ValueError(f"Bad component link `{value}`, must be in form `name.dimension`")
 
     def __repr__(self):
         return f"<ComponentDimension value: {self.value}>"
@@ -206,11 +205,11 @@ class ComponentBlueprint(YamlObject):
             inputHeightsConsideredHot,
         )
 
-        if hasattr(constructedObject, "material") and "Custom" in str(constructedObject.material):
-            if len(constructedObject.material.massFrac) == 0:
-                msg = f"Custom material does not have isotopics: {self}"
-                runLog.error(msg, single=True)
-                raise OSError(msg)
+        material = getattr(constructedObject, "material", None)
+        if material is not None and "Custom" in str(material) and len(material.massFrac) == 0:
+            msg = f"Custom material does not have isotopics: {self}"
+            runLog.error(msg, single=True)
+            raise OSError(msg)
 
         return constructedObject
 
@@ -373,7 +372,7 @@ class ComponentBlueprint(YamlObject):
                     raise ValueError(
                         f"Something went wrong in applying the material modifications {matMods} "
                         f"to component {self.name}.\nError message is: \n{errorMessage}."
-                    )
+                    ) from ee
 
         expandElementals(mat, blueprint)
 

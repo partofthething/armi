@@ -307,13 +307,15 @@ class BlockBlueprint(KeyedList):
 
     def _checkByComponentMaterialInput(self, materialInput):
         for component in materialInput:
-            if component != "byBlock":
-                if component not in [componentDesign.name for componentDesign in self]:
-                    if materialInput[component]:  # ensure it is not empty
-                        raise ValueError(
-                            f"The component '{component}' used to specify a by-component"
-                            f" material modification is not in block '{self.name}'."
-                        )
+            if (
+                component != "byBlock"
+                and component not in [componentDesign.name for componentDesign in self]
+                and materialInput[component]  # ensure it is not empty
+            ):
+                raise ValueError(
+                    f"The component '{component}' used to specify a by-component"
+                    f" material modification is not in block '{self.name}'."
+                )
 
     @staticmethod
     def _filterMaterialInput(materialInput, componentDesign):

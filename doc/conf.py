@@ -50,8 +50,9 @@ os.environ["PYTHONPATH"] = PYTHONPATH
 # Add dochelpers.py and automateScr.py from doc/.static/ directory
 sys.path.insert(0, ".static")
 
-from armi import apps, context, disableFutureConfigures, meta
-from armi import configure as armi_configure
+import contextlib
+
+from armi import apps, configure as armi_configure, context, disableFutureConfigures, meta
 from armi.bookkeeping import tests as bookkeepingTests
 from armi.utils import safeCopy
 
@@ -117,7 +118,7 @@ class ExecDirective(Directive):
             return [para]
         except Exception as e:
             docname = self.state.document.settings.env.docname
-            raise self.error(f"Unable to execute embedded doc code at {docname}:{self.lineno}\n{str(e)}")
+            raise self.error(f"Unable to execute embedded doc code at {docname}:{self.lineno}\n{str(e)}") from e
 
 
 class PyReverse(Directive):
@@ -157,10 +158,8 @@ class PyReverse(Directive):
             env["PYTHONPATH"] = os.pathsep.join(sys.path)
             subprocess.check_call(command + args, env=env)
 
-            try:
+            with contextlib.suppress(OSError):
                 os.remove(os.path.join(APIDOC_REL, fig_name))
-            except OSError:
-                pass
 
             shutil.move(fig_name, APIDOC_REL)
             # add .gitignore helper prefix
@@ -171,10 +170,8 @@ class PyReverse(Directive):
             new_content = [f".. figure:: /{APIDOC_REL}/pyr_{fig_name}"]
 
             # assume we don't need the packages, and delete.
-            try:
+            with contextlib.suppress(OSError):
                 os.remove(f"packages_{args[0]}.png")
-            except OSError:
-                pass
 
             # pass the other args through (figure args like align)
             for opt, val in self.options.items():
@@ -197,7 +194,7 @@ class PyReverse(Directive):
             raise self.error(
                 f"Unable to execute embedded doc code at {docname}:{self.lineno} ... "
                 f"{datetime.datetime.now()}\n{str(e)}"
-            )
+            ) from e
 
 
 def autodoc_skip_member_handler(app, what, name, obj, skip, options):

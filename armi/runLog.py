@@ -326,9 +326,9 @@ class _RunLog:
         """Return integer verbosity rank given the string verbosity name."""
         try:
             return self.logLevels[level][0]
-        except KeyError:
+        except KeyError as ee:
             log_strs = list(self.logLevels.keys())
-            raise KeyError(f"{level} is not a valid verbosity level: {log_strs}")
+            raise KeyError(f"{level} is not a valid verbosity level: {log_strs}") from ee
 
     def setVerbosity(self, level):
         """
@@ -420,7 +420,8 @@ class _RunLog:
         if self._mpiRank != 0:
             # send anything written to stderr (like tracebacks) to a file
             self.restoreStandardStreams()
-            self._stderrFile = open(self._logFilePath(name, "stderr"), "a", buffering=1)
+            # stays open as sys.stderr until close()
+            self._stderrFile = open(self._logFilePath(name, "stderr"), "a", buffering=1)  # noqa: SIM115
             self.initialErr = sys.stderr
             sys.stderr = self._stderrFile
 

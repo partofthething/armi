@@ -143,26 +143,25 @@ class HexBlock(Block):
         b.add(hexComponent)
 
         b.p.nPins = self.p.nPins
-        if pinSpatialLocators:
-            # create a null component with cladding flags and spatialLocator from source block's
-            # clad components in case pin locations need to be known for physics solver
-            if self.hasComponents(Flags.CLAD):
-                cladComponents = self.getComponents(Flags.CLAD)
-                for i, clad in enumerate(cladComponents):
-                    pinComponent = Circle(
-                        f"pin{i}",
-                        "Material",
-                        self.getAverageTempInC(),
-                        self.getAverageTempInC(),
-                        0.0,
-                    )
-                    pinComponent.setType("pin", Flags.CLAD)
-                    pinComponent.spatialLocator = copy.deepcopy(clad.spatialLocator)
-                    if isinstance(pinComponent.spatialLocator, grids.MultiIndexLocation):
-                        for i1, i2 in zip(list(pinComponent.spatialLocator), list(clad.spatialLocator)):
-                            i1.associate(i2.grid)
-                    pinComponent.setDimension("mult", clad.getDimension("mult"))
-                    b.add(pinComponent)
+        # create a null component with cladding flags and spatialLocator from source block's
+        # clad components in case pin locations need to be known for physics solver
+        if pinSpatialLocators and self.hasComponents(Flags.CLAD):
+            cladComponents = self.getComponents(Flags.CLAD)
+            for i, clad in enumerate(cladComponents):
+                pinComponent = Circle(
+                    f"pin{i}",
+                    "Material",
+                    self.getAverageTempInC(),
+                    self.getAverageTempInC(),
+                    0.0,
+                )
+                pinComponent.setType("pin", Flags.CLAD)
+                pinComponent.spatialLocator = copy.deepcopy(clad.spatialLocator)
+                if isinstance(pinComponent.spatialLocator, grids.MultiIndexLocation):
+                    for i1, i2 in zip(list(pinComponent.spatialLocator), list(clad.spatialLocator)):
+                        i1.associate(i2.grid)
+                pinComponent.setDimension("mult", clad.getDimension("mult"))
+                b.add(pinComponent)
 
         if self.spatialGrid is not None:
             b.spatialGrid = self.spatialGrid
@@ -584,8 +583,10 @@ class HexBlock(Block):
         try:
             clad = self.getComponent(Flags.CLAD, quiet=True)  # Quiet because None case is checked for below
             wire = self.getComponent(Flags.WIRE, quiet=True)  # Quiet because None case is checked for below
-        except ValueError:
-            raise ValueError(f"Block {self} has multiple clad and wire components, so pin pitch is not well-defined.")
+        except ValueError as ee:
+            raise ValueError(
+                f"Block {self} has multiple clad and wire components, so pin pitch is not well-defined."
+            ) from ee
 
         if wire and clad:
             return clad.getDimension("od", cold=cold) + wire.getDimension("od", cold=cold)

@@ -18,16 +18,15 @@ Primary class for performing axial expansion, thermal or otherwise, is
 
 """
 
-# ruff: noqa: F401
 from armi.reactor.converters.axialExpansionChanger.assemblyAxialLinkage import (
-    AssemblyAxialLinkage,
+    AssemblyAxialLinkage as AssemblyAxialLinkage,
 )
 from armi.reactor.converters.axialExpansionChanger.axialExpansionChanger import (
-    AxialExpansionChanger,
-    makeAssemsAbleToSnapToUniformMesh,
+    AxialExpansionChanger as AxialExpansionChanger,
+    makeAssemsAbleToSnapToUniformMesh as makeAssemsAbleToSnapToUniformMesh,
 )
 from armi.reactor.converters.axialExpansionChanger.expansionData import (
-    ExpansionData,
-    getSolidComponents,
-    iterSolidComponents,
+    ExpansionData as ExpansionData,
+    getSolidComponents as getSolidComponents,
+    iterSolidComponents as iterSolidComponents,
 )

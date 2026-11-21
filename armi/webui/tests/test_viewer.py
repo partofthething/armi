@@ -250,33 +250,31 @@ class TestFuelCycleFromResults(_WithDatabase):
 class TestHelpers(unittest.TestCase):
     def test_jaggedOwnersSkipEmptyObjects(self):
         """Offsets only cover objects with values, so object 1 here owns nothing."""
-        with tempfile.TemporaryDirectory() as scratch:
-            with h5py.File(os.path.join(scratch, "j.h5"), "w") as h5:
-                dataset = h5.create_dataset("x", data=np.arange(5.0))
-                dataset.attrs["offsets"] = np.array([0, 2])
-                dataset.attrs["noneLocations"] = np.array([1])
-                np.testing.assert_array_equal(results.jaggedOwners(dataset), [0, 0, 2, 2, 2])
+        with tempfile.TemporaryDirectory() as scratch, h5py.File(os.path.join(scratch, "j.h5"), "w") as h5:
+            dataset = h5.create_dataset("x", data=np.arange(5.0))
+            dataset.attrs["offsets"] = np.array([0, 2])
+            dataset.attrs["noneLocations"] = np.array([1])
+            np.testing.assert_array_equal(results.jaggedOwners(dataset), [0, 0, 2, 2, 2])
 
     def test_perInstanceValuesOfAJaggedParameter(self):
         """One value per instance, stored ragged: each component's values, None for one without any."""
-        with tempfile.TemporaryDirectory() as scratch:
-            with h5py.File(os.path.join(scratch, "instances.h5"), "w") as h5:
-                group = h5.create_group("Circle")
-                group.create_dataset("mult", data=np.array([3.0, 1.0, 2.0]))
-                dataset = group.create_dataset("pdens", data=np.array([1.0, 2.0, 3.0, 10.0, 20.0]))
-                dataset.attrs["jagged"] = True
-                dataset.attrs["offsets"] = np.array([0, 3])
-                dataset.attrs["shapes"] = np.array([[3], [2]])
-                dataset.attrs["noneLocations"] = np.array([1])
-                values = results.perObject(dataset)
-                self.assertEqual(len(values), 3)
-                np.testing.assert_array_equal(values[0], [1.0, 2.0, 3.0])
-                self.assertIsNone(values[1])
-                np.testing.assert_array_equal(values[2], [10.0, 20.0])
-                self.assertTrue(results.isPerInstance("pdens", group))
-                # The same values with lengths that are not the multiplicities are something else.
-                group["mult"][...] = [3.0, 1.0, 5.0]
-                self.assertFalse(results.isPerInstance("pdens", group))
+        with tempfile.TemporaryDirectory() as scratch, h5py.File(os.path.join(scratch, "instances.h5"), "w") as h5:
+            group = h5.create_group("Circle")
+            group.create_dataset("mult", data=np.array([3.0, 1.0, 2.0]))
+            dataset = group.create_dataset("pdens", data=np.array([1.0, 2.0, 3.0, 10.0, 20.0]))
+            dataset.attrs["jagged"] = True
+            dataset.attrs["offsets"] = np.array([0, 3])
+            dataset.attrs["shapes"] = np.array([[3], [2]])
+            dataset.attrs["noneLocations"] = np.array([1])
+            values = results.perObject(dataset)
+            self.assertEqual(len(values), 3)
+            np.testing.assert_array_equal(values[0], [1.0, 2.0, 3.0])
+            self.assertIsNone(values[1])
+            np.testing.assert_array_equal(values[2], [10.0, 20.0])
+            self.assertTrue(results.isPerInstance("pdens", group))
+            # The same values with lengths that are not the multiplicities are something else.
+            group["mult"][...] = [3.0, 1.0, 5.0]
+            self.assertFalse(results.isPerInstance("pdens", group))
 
     def test_decodeFlags(self):
         packed = np.array([[0b101, 0], [0b010, 1]], dtype=np.uint8)

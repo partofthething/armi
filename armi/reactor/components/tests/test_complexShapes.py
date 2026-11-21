@@ -43,8 +43,8 @@ class TestComplexShapes(unittest.TestCase):
         return math.sqrt(3.0) / 2.0 * op**2
 
     @staticmethod
-    def rectArea(l, w):
-        return l * w
+    def rectArea(length, width):
+        return length * width
 
     def test_holedHexagon(self):
         op = 2.0

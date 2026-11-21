@@ -85,9 +85,8 @@ class TestReadMovesYamlErrors(unittest.TestCase):
             ("sequence:\n  1:\n    - cascade: ['outer fuel', 1]\n", "cascade"),
         ]
         for yaml_text, msg in cases:
-            with self.subTest(yaml_text=yaml_text):
-                with self.assertRaisesRegex(InputError, msg):
-                    self._run(yaml_text)
+            with self.subTest(yaml_text=yaml_text), self.assertRaisesRegex(InputError, msg):
+                self._run(yaml_text)
 
     def test_badSwap(self):
         yaml_text = "sequence:\n  1:\n    - swap: ['009-045']\n"
@@ -110,9 +109,8 @@ class TestReadMovesYamlErrors(unittest.TestCase):
             ),
         ]
         for yaml_text, msg in cases:
-            with self.subTest(yaml_text=yaml_text):
-                with self.assertRaisesRegex(InputError, msg):
-                    self._run(yaml_text)
+            with self.subTest(yaml_text=yaml_text), self.assertRaisesRegex(InputError, msg):
+                self._run(yaml_text)
 
     def test_rotationInvalidLocation(self):
         yaml_text = "sequence:\n  1:\n    - extraRotations: {'badLoc': 30}\n"

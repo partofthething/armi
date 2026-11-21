@@ -13,23 +13,22 @@
 # limitations under the License.
 
 """Read and/or write data files associated with nuclear data and reactor physics data."""
-# ruff: noqa: F401
 
 # Export the cccc modules here for backward compatibility, though prefer full imports in new code.
 from armi.nuclearDataIO.cccc import (
-    compxs,
-    dif3d,
-    dlayxs,
-    fixsrc,
-    gamiso,
-    geodst,
-    isotxs,
-    labels,
-    nhflux,
-    pmatrx,
-    pwdint,
-    rtflux,
-    rzflux,
+    compxs as compxs,
+    dif3d as dif3d,
+    dlayxs as dlayxs,
+    fixsrc as fixsrc,
+    gamiso as gamiso,
+    geodst as geodst,
+    isotxs as isotxs,
+    labels as labels,
+    nhflux as nhflux,
+    pmatrx as pmatrx,
+    pwdint as pwdint,
+    rtflux as rtflux,
+    rzflux as rzflux,
 )
 from armi.physics import neutronics
 

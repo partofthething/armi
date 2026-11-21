@@ -495,9 +495,8 @@ class TestDatabaseSmaller(unittest.TestCase):
 
         # check edge case: major vesion is not 3
         db3 = Database("restartDBedgeCase1.h5", "w")
-        with patch.object(db3, "_versionMajor", 2), self.assertRaises(ValueError):
-            with db3:
-                db3.mergeHistory(self.db, 2, 2)
+        with patch.object(db3, "_versionMajor", 2), self.assertRaises(ValueError), db3:
+            db3.mergeHistory(self.db, 2, 2)
 
     def test_splitDatabase(self):
         self.makeHistory()
@@ -961,9 +960,8 @@ grids:
             del circleGroup["massHmBOL"]
             circleGroup.create_dataset("massHmBOL", data=badData)
 
-        with self.assertRaises(ValueError):
-            with Database(self.db.fileName, "r") as db:
-                _r = db.load(0, 0, allowMissing=True)
+        with self.assertRaises(ValueError), Database(self.db.fileName, "r") as db:
+            _r = db.load(0, 0, allowMissing=True)
 
 
 class TestSimplestDatabaseItems(unittest.TestCase):

@@ -50,10 +50,10 @@ class TestNuclideBases(unittest.TestCase):
     def test_fromName(self):
         self.assertIs(self.nuclideBases.fromName("U235"), self.nuclideBases.byName["U235"])
         self.assertIs(self.nuclideBases.fromName("AM242G"), self.nuclideBases.byName["AM242G"])
-        with self.assertRaises(Exception):
+        with self.assertRaises(KeyError):
             self.nuclideBases.fromName("Cat")
         # AM242 is only an alias in byName; no nuclide carries that name
-        with self.assertRaises(Exception):
+        with self.assertRaises(KeyError):
             self.nuclideBases.fromName("AM242")
 
     def test_nucBase_AllAbundancesAddToOne(self):
@@ -79,11 +79,11 @@ class TestNuclideBases(unittest.TestCase):
 
     def test_nucBases_NegativeZRaisesException(self):
         for _ in range(0, 5):
-            with self.assertRaises(Exception):
+            with self.assertRaises(AttributeError):
                 self.nuclideBases.isotopes(random.randint(-1000, -1))
 
     def test_nucBases_Z295RaisesException(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(AttributeError):
             self.nuclideBases.isotopes(295)
 
     def test_nucBases_Mc2Elementals(self):
@@ -114,11 +114,11 @@ class TestNuclideBases(unittest.TestCase):
             self.assertGreaterEqual(len(nuc.element.nuclides) - 1, numNaturals)
 
     def test_nucBases_singleFailsWithMultipleMatches(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(IndexError):
             self.nuclideBases.single(lambda nuc: nuc.z == 92)
 
     def test_nucBases_singleFailsWithNoMatches(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(IndexError):
             self.nuclideBases.single(lambda nuc: nuc.z == 1000)
 
     def test_nucBases_singleIsPrettySpecific(self):
@@ -345,11 +345,11 @@ class TestNuclideBases(unittest.TestCase):
                 self.assertAlmostEqual((refDecayConstant - decayConstantNb) / refDecayConstant, 0, 6)
             except ZeroDivisionError:
                 self.assertEqual(refDecayConstant, decayConstantNb)
-            except AssertionError:
+            except AssertionError as ee:
                 errorMessage = (
                     f"{nucName} reference decay constant {refDecayConstant} ARMI decay constant {decayConstantNb}"
                 )
-                raise AssertionError(errorMessage)
+                raise AssertionError(errorMessage) from ee
 
         for nucName in ["XE134", "XE136", "EU151"]:
             nb = self.nuclideBases.byName[nucName]

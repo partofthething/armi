@@ -143,12 +143,11 @@ class BlockConverter:
             raise ValueError(
                 f"Components are not of compatible shape to be merged solute: {solute}, solvent: {solvent}"
             )
-        if solute.getArea() < 0:
-            # allow negative-area gap
-            if not solute.hasFlags(Flags.GAP):
-                raise ValueError(
-                    f"Cannot merge solute with negative area into a solvent. {solute} area: {solute.getArea()}"
-                )
+        # allow negative-area gap
+        if solute.getArea() < 0 and not solute.hasFlags(Flags.GAP):
+            raise ValueError(
+                f"Cannot merge solute with negative area into a solvent. {solute} area: {solute.getArea()}"
+            )
         if solvent.getArea() <= 0:
             raise ValueError(
                 f"Cannot merge into a solvent with negative or 0 area. {solvent} area: {solvent.getArea()}"
@@ -554,11 +553,10 @@ class HexComponentsToCylConverter(BlockAvgToCylConverter):
                 f"the block conversion with {self.__class__.__name__} cannot proceed."
             )
 
-        if driverFuelBlock is not None:
-            if not isinstance(driverFuelBlock, blocks.HexBlock):
-                raise TypeError(
-                    f"Block {driverFuelBlock} is not hexagonal and cannot be converted to an equivalent cylinder"
-                )
+        if driverFuelBlock is not None and not isinstance(driverFuelBlock, blocks.HexBlock):
+            raise TypeError(
+                f"Block {driverFuelBlock} is not hexagonal and cannot be converted to an equivalent cylinder"
+            )
         self.pinPitch = sourceBlock.getPinPitch()
         self.mergeIntoClad = mergeIntoClad or []
         self.mergeIntoFuel = mergeIntoFuel or []

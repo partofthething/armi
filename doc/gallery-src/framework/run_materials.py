@@ -23,6 +23,8 @@ your own proprietary material properties via a plugin.
 More info about the materials here: :py:mod:`armi.materials`.
 """
 
+import contextlib
+
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -46,11 +48,9 @@ for mi, matCls in enumerate(mats):
     for nucName, frac in m.massFrac.items():
         nb = nuclideBases.byName[nucName]
         idx = mi, nb.z - 1
-        try:
+        # respect the MAX_Z bounds
+        with contextlib.suppress(IndexError):
             zVals[idx] += frac
-        except IndexError:
-            # respect the MAX_Z bounds
-            pass
 
 fig, ax = plt.subplots(figsize=(16, 12))
 im = ax.imshow(zVals, cmap="YlGn")

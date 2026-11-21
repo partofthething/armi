@@ -155,7 +155,7 @@ class SettingsReader:
             try:
                 self.readFromStream(f, handleInvalids)
             except Exception as ee:
-                raise InvalidSettingsFileError(path, str(ee))
+                raise InvalidSettingsFileError(path, str(ee)) from ee
 
     def readFromStream(self, stream, handleInvalids=True):
         """Read from a file-like stream."""
@@ -237,13 +237,13 @@ class SettingsWriter:
         all setting values regardless of default status
     """
 
-    def __init__(self, settings_instance, style="short", settingsSetByUser=[]):
+    def __init__(self, settings_instance, style="short", settingsSetByUser=None):
         self.cs = settings_instance
         self.style = style
         if style not in {WRITE_SHORT, WRITE_MEDIUM, WRITE_FULL}:
             raise ValueError(f"Invalid supplied setting writing style {style}")
         # The writer should know about the old settings it is overwriting, but only sometimes (when the style is medium)
-        self.settingsSetByUser = settingsSetByUser
+        self.settingsSetByUser = settingsSetByUser if settingsSetByUser is not None else []
 
     @staticmethod
     def _getTag():

@@ -19,19 +19,18 @@ Neutronics encompasses the modeling of nuclear chain reactions and their associa
 and decay.
 """
 
-# ruff: noqa: F401
 from enum import IntEnum
 
 from armi.physics.neutronics.const import (
-    ALL,
-    FLUXFILES,
+    ALL as ALL,
+    FLUXFILES as FLUXFILES,
     GAMMA,
-    INPUTOUTPUT,
-    NEUTRON,
-    NEUTRONGAMMA,
-    RESTARTFILES,
+    INPUTOUTPUT as INPUTOUTPUT,
+    NEUTRON as NEUTRON,
+    NEUTRONGAMMA as NEUTRONGAMMA,
+    RESTARTFILES as RESTARTFILES,
 )
-from armi.physics.neutronics.plugin import NeutronicsPlugin
+from armi.physics.neutronics.plugin import NeutronicsPlugin as NeutronicsPlugin
 
 # ARC and CCCC cross section file format names
 COMPXS = "COMPXS"

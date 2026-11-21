@@ -82,9 +82,8 @@ class TestDirectoryChangers(unittest.TestCase):
 
     def test_change_to_nonexisting_fails(self):
         """Fail if destination doesn't exist."""
-        with self.assertRaises(OSError):
-            with directoryChangers.DirectoryChanger(self.temp_directory):
-                pass
+        with self.assertRaises(OSError), directoryChangers.DirectoryChanger(self.temp_directory):
+            pass
 
     def test_change_to_nonexisting_works_forced(self):
         """Succeed with forced creation even when destination doesn't exist."""

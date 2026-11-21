@@ -63,7 +63,7 @@ class JaggedArray:
                         shapes.append(numpyArray.shape)
                         offset += numpyArray.size
                         flattenedArray.extend(numpyArray.flatten())
-                    except:  # noqa: E722
+                    except Exception:
                         # numpy might fail if it's jagged
                         flattenedList = self.flatten(arr)
                         shapes.append(
@@ -91,7 +91,7 @@ class JaggedArray:
                 "array; it might be jagged."
             )
             runLog.error(shapes)
-            raise ValueError(ee)
+            raise ValueError(ee) from ee
         self.nones = np.array(nones)
         self.dtype = self.flattenedArray.dtype
         self.paramName = paramName

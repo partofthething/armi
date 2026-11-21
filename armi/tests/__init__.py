@@ -24,13 +24,13 @@ import os
 import unittest
 
 from armi import runLog
-from armi.testing import (  # noqa: F401
-    ARMI_RUN_PATH,
-    COMPXS_PATH,
-    ISOAA_PATH,
-    getEmptyCartesianReactor,
-    getEmptyHexReactor,
-    mockRunLogs,
+from armi.testing import (
+    ARMI_RUN_PATH as ARMI_RUN_PATH,
+    COMPXS_PATH as COMPXS_PATH,
+    ISOAA_PATH as ISOAA_PATH,
+    getEmptyCartesianReactor as getEmptyCartesianReactor,
+    getEmptyHexReactor as getEmptyHexReactor,
+    mockRunLogs as mockRunLogs,
 )
 
 TEST_ROOT = os.path.dirname(os.path.abspath(__file__))

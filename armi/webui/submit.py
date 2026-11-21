@@ -121,8 +121,7 @@ class Submission:
 
     def __init__(self, settingsPath, target: dict, rerun: bool = False):
         from armi import settings
-        from armi.cases import case as armicase
-        from armi.cases import suite as armisuite
+        from armi.cases import case as armicase, suite as armisuite
 
         self.settingsPath = pathlib.Path(settingsPath).resolve()
         self.directory = self.settingsPath.parent

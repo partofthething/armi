@@ -212,9 +212,9 @@ class XSCollection:
         A library may instead carry only the total scattering matrix (DRAGON's ISOTXS does, in its ``totalScatter``
         block). With no component matrices at all, that matrix is the answer.
         """
-        if all(m is None for m in (self.elasticScatter, self.inelasticScatter, self.n2nScatter)):
-            if self.totalScatter is not None:
-                return self.totalScatter
+        partials = (self.elasticScatter, self.inelasticScatter, self.n2nScatter)
+        if all(m is None for m in partials) and self.totalScatter is not None:
+            return self.totalScatter
         scatters = []
         totalScatterComponents = {
             "elastic": self.elasticScatter,
@@ -521,7 +521,6 @@ class MacroscopicCrossSectionCreator:
         self.macros.removal += columnSum - diags
 
 
-# ruff: noqa: E501
 def computeBlockAverageChi(b, isotxsLib):
     r"""
     Return the block average total chi vector based on isotope chi vectors.
@@ -550,7 +549,7 @@ def computeBlockAverageChi(b, isotxsLib):
     -----
     This methodology is based on option 1 in the HMG4C utility (named total
     fission source weighting).
-    """
+    """  # noqa: E501 - LaTeX
     numGroups = isotxsLib.numGroups
     numerator = np.zeros(numGroups)
     denominator = 0.0

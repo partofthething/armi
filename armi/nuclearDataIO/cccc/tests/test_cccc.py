@@ -93,9 +93,8 @@ class TestCcccBinaryRecord(unittest.TestCase):
             writer.rwInt(value)
 
         self.assertEqual(8, writer.numBytes)
-        with self.assertRaises(BufferError):
-            with self.readerClass(self.streamCls(stream.getvalue())) as reader:
-                self.assertEqual(value, reader.rwInt(None))
+        with self.assertRaises(BufferError), self.readerClass(self.streamCls(stream.getvalue())) as reader:
+            self.assertEqual(value, reader.rwInt(None))
 
     def test_readingBeyondRecordRaisesException(self):
         # I'm going to create a record with two pieces of data, and only read one...
@@ -105,10 +104,9 @@ class TestCcccBinaryRecord(unittest.TestCase):
             writer.rwInt(value)
 
         self.assertEqual(4, writer.numBytes)
-        with self.assertRaises(BufferError):
-            with self.readerClass(self.streamCls(stream.getvalue())) as reader:
-                self.assertEqual(value, reader.rwInt(None))
-                self.assertEqual(4, reader.rwInt(None))
+        with self.assertRaises(BufferError), self.readerClass(self.streamCls(stream.getvalue())) as reader:
+            self.assertEqual(value, reader.rwInt(None))
+            self.assertEqual(4, reader.rwInt(None))
 
     def test_writeAndReadMatrices(self):
         for methodName, typeCode in MATRIX_TYPES:

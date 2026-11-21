@@ -30,7 +30,8 @@ PRPROJECT = "pyproject.toml"
 
 def main():
     # parse the data files out of the pyproject.toml
-    txt = open(PRPROJECT).read()
+    with open(PRPROJECT) as f:
+        txt = f.read()
     data = toml.loads(txt)
     fileChunks = data["tool"]["setuptools"]["package-data"]["armi"]
 

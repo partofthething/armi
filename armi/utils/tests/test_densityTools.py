@@ -118,11 +118,11 @@ class TestDensityTools(unittest.TestCase):
             :tests: R_ARMI_UTIL_MASS2N_DENS
         """
         nucs, nDens = densityTools.getNDensFromMasses(1, {"O": 1, "H": 2})
-        O = np.where(nucs == b"O")[0]
-        H = np.where(nucs == b"H")[0]
+        oxygen = np.where(nucs == b"O")[0]
+        hydrogen = np.where(nucs == b"H")[0]
 
-        self.assertAlmostEqual(nDens[O][0], 0.03764, 5)
-        self.assertAlmostEqual(nDens[H][0], 1.19490, 5)
+        self.assertAlmostEqual(nDens[oxygen][0], 0.03764, 5)
+        self.assertAlmostEqual(nDens[hydrogen][0], 1.19490, 5)
 
     def test_getMassFractions(self):
         """Number densities to mass fraction."""

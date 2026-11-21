@@ -80,10 +80,13 @@ class Migration(abc.ABC):
         """
         skip = False
         # Compare self.toVersion to the version of the DB.
-        if version is not None and version != "uncontrolled":
-            if versionToNumber(version) > versionToNumber(self.toVersion):
-                # this migration is not necessary, because the DB is newer than that.
-                skip = True
+        if (
+            version is not None
+            and version != "uncontrolled"
+            and versionToNumber(version) > versionToNumber(self.toVersion)
+        ):
+            # this migration is not necessary, because the DB is newer than that.
+            skip = True
 
         if self.path:
             self._loadStreamFromPath()
@@ -136,7 +139,7 @@ class BlueprintsMigration(Migration):
         super()._loadStreamFromPath()
         cs = caseSettings.Settings(fName=self.path)
         self.path = cs[CONF_LOADING_FILE]
-        self.stream = open(self.path)
+        self.stream = open(self.path)  # noqa: SIM115 - the migration reads and closes it later
 
 
 class SettingsMigration(Migration):
@@ -144,7 +147,7 @@ class SettingsMigration(Migration):
 
     def _loadStreamFromPath(self):
         super()._loadStreamFromPath()
-        self.stream = open(self.path)
+        self.stream = open(self.path)  # noqa: SIM115 - the migration reads and closes it later
 
 
 class DatabaseMigration(Migration):

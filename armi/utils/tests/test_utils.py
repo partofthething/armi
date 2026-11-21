@@ -109,7 +109,7 @@ class TestGeneralUtils(unittest.TestCase):
         self.assertEqual("pot...", str1)
         str1 = utils.capStrLen("rubidium", 7)
         self.assertEqual("rubi...", str1)
-        with self.assertRaises(Exception):
+        with self.assertRaises(ValueError):
             str1 = utils.capStrLen("sodium", 2)
 
     def test_list2str(self):
@@ -187,8 +187,8 @@ class TestGeneralUtils(unittest.TestCase):
             """Test function docstring."""
             pass
 
-        self.assertEqual(getattr(testFunc, "__doc__"), "Test function docstring.")
-        self.assertEqual(getattr(testFunc, "__name__"), "testFunc")
+        self.assertEqual(testFunc.__doc__, "Test function docstring.")
+        self.assertEqual(testFunc.__name__, "testFunc")
 
     def test_safeCopy(self):
         with directoryChangers.TemporaryDirectoryChanger():

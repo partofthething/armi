@@ -39,7 +39,7 @@ from logging import DEBUG
 # >>>     import h5py
 #
 # >>> atexit.register(willSegFault)
-import h5py  # noqa: F401
+import h5py  # noqa: F401 - imported early on purpose; see the note above
 
 BLUEPRINTS_IMPORTED = False
 BLUEPRINTS_IMPORT_CONTEXT = ""

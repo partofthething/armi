@@ -211,6 +211,7 @@ single line, tabulate can help automate word wrapping long fields for you. Use t
 Header column width can be specified in a similar way using `maxheadercolwidth`.
 """
 
+import contextlib
 import dataclasses
 import math
 import re
@@ -502,10 +503,8 @@ def _isnumberWithThousandsSeparator(string):
     >>> _isnumberWithThousandsSeparator("-1,000.1234")
     True
     """
-    try:
+    with contextlib.suppress(UnicodeDecodeError, AttributeError):
         string = string.decode()
-    except (UnicodeDecodeError, AttributeError):
-        pass
 
     return bool(re.match(_floatWithThousandsSeparators, string))
 
@@ -878,7 +877,7 @@ def _format(val, valtype, floatFmt, intFmt, missingVal="", hasInvisible=True):
             tabulate(tbl, headers=hrow) == good_result
         True
 
-    """  # noqa
+    """  # noqa: E501
     if val is None:
         return missingVal
 
@@ -1018,7 +1017,7 @@ def _normalizeTabularData(data, headers, showIndex="default"):
         if headers == "keys" and not rows:
             # an empty table
             headers = []
-        elif headers == "keys" and hasattr(data, "dtype") and getattr(data.dtype, "names"):
+        elif headers == "keys" and hasattr(data, "dtype") and data.dtype.names:
             # numpy record array
             headers = data.dtype.names
         elif headers == "keys" and len(rows) > 0 and isinstance(rows[0], tuple) and hasattr(rows[0], "_fields"):
@@ -1459,7 +1458,7 @@ def _buildRow(paddedCells, colwidths, colAligns, rowfmt):
     """Return a string which represents a row of data cells."""
     if not rowfmt:
         return None
-    if hasattr(rowfmt, "__call__"):
+    if callable(rowfmt):
         return rowfmt(paddedCells, colwidths, colAligns)
     else:
         return _buildSimpleRow(paddedCells, rowfmt)
@@ -1502,7 +1501,7 @@ def _buildLine(colwidths, colAligns, linefmt):
     """Return a string which represents a horizontal line."""
     if not linefmt:
         return None
-    if hasattr(linefmt, "__call__"):
+    if callable(linefmt):
         return linefmt(colwidths, colAligns)
     else:
         begin, fill, sep, end = linefmt

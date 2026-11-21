@@ -147,30 +147,29 @@ class FuelHandlerInterface(interfaces.Interface):
         readMoves : reads this file and parses it.
         """
         fname = self.cs.caseTitle + "-SHUFFLES.txt"
-        out = open(fname, "w")
-        for cycle in range(self.cs["nCycles"]):
-            # do cycle+1 because cycle 0 at t=0 isn't usually interesting
-            # remember, we put cycle 0 in so we could do BOL branch searches.
-            # This also syncs cycles up with external physics kernel cycles.
-            out.write(f"Before cycle {cycle}:\n")
-            movesThisCycle = self.r.core.moves.get(cycle)
-            if movesThisCycle is not None:
-                for move in movesThisCycle:
-                    enrichLine = " ".join([f"{enrich:.8f}" for enrich in move.enrichList])
-                    if move.fromLoc in fuelHandlers.FuelHandler.DISCHARGE_LOCS:
-                        # this is a re-entering assembly. Give extra info so repeat shuffles can handle it
-                        out.write(
-                            f"{move.fromLoc} moved to {move.toLoc} with assembly type {move.assemType} "
-                            f"ringPosCycle={move.ringPosCycle} with enrich list: {enrichLine}\n"
-                        )
-                    else:
-                        # skip extra info. regular expression in readMoves will handle it just fine.
-                        out.write(
-                            f"{move.fromLoc} moved to {move.toLoc} with assembly type {move.assemType} with "
-                            f"enrich list: {enrichLine}\n"
-                        )
-            out.write("\n")
-        out.close()
+        with open(fname, "w") as out:
+            for cycle in range(self.cs["nCycles"]):
+                # do cycle+1 because cycle 0 at t=0 isn't usually interesting
+                # remember, we put cycle 0 in so we could do BOL branch searches.
+                # This also syncs cycles up with external physics kernel cycles.
+                out.write(f"Before cycle {cycle}:\n")
+                movesThisCycle = self.r.core.moves.get(cycle)
+                if movesThisCycle is not None:
+                    for move in movesThisCycle:
+                        enrichLine = " ".join([f"{enrich:.8f}" for enrich in move.enrichList])
+                        if move.fromLoc in fuelHandlers.FuelHandler.DISCHARGE_LOCS:
+                            # this is a re-entering assembly. Give extra info so repeat shuffles can handle it
+                            out.write(
+                                f"{move.fromLoc} moved to {move.toLoc} with assembly type {move.assemType} "
+                                f"ringPosCycle={move.ringPosCycle} with enrich list: {enrichLine}\n"
+                            )
+                        else:
+                            # skip extra info. regular expression in readMoves will handle it just fine.
+                            out.write(
+                                f"{move.fromLoc} moved to {move.toLoc} with assembly type {move.assemType} with "
+                                f"enrich list: {enrichLine}\n"
+                            )
+                out.write("\n")
 
     def workerOperate(self, cmd):
         """Delegate mpi command to the fuel handler object."""

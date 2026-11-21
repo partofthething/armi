@@ -388,13 +388,12 @@ class INuclide(NuclideInterface):
                 # Check for user-defined value of nuSF within the burn-chain data. If this is updated then prefer the
                 # user change and then note this to the user. Otherwise, maintain the default loaded from the nuclide
                 # bases.
-                if userSpontaneousFissionYield:
-                    if userSpontaneousFissionYield != self.nuSF:
-                        runLog.info(
-                            f"nuSF provided for {self} will be updated from {self.nuSF:<8.6e} to "
-                            f"{userSpontaneousFissionYield:<8.6e} based on user provided burn-chain data."
-                        )
-                        self.nuSF = userSpontaneousFissionYield
+                if userSpontaneousFissionYield and userSpontaneousFissionYield != self.nuSF:
+                    runLog.info(
+                        f"nuSF provided for {self} will be updated from {self.nuSF:<8.6e} to "
+                        f"{userSpontaneousFissionYield:<8.6e} based on user provided burn-chain data."
+                    )
+                    self.nuSF = userSpontaneousFissionYield
             else:
                 raise Exception(
                     f"Undefined Burn Data {nuclideBurnType} for {self}. Expected {self.TRANSMUTATION}, {self.DECAY}, "
@@ -1304,7 +1303,7 @@ class NuclideBases:
         # byName also holds aliases (e.g. AM242 -> AM242M), so require the nuclide to really have this name
         nuc = self.byName.get(name)
         if nuc is None or nuc.name != name:
-            raise Exception(f"No nuclide is named {name}")
+            raise KeyError(f"No nuclide is named {name}")
 
         return nuc
 
@@ -1463,9 +1462,8 @@ class NuclideBases:
     def __addNaturalNuclideBases(self):
         """Generates a complete set of nuclide bases for each naturally occurring element."""
         for element in self.elements.byZ.values():
-            if element.symbol not in self.byName:
-                if element.isNaturallyOccurring():
-                    self.addNuclide(NaturalNuclideBase(element.symbol, element))
+            if element.symbol not in self.byName and element.isNaturallyOccurring():
+                self.addNuclide(NaturalNuclideBase(element.symbol, element))
 
     def __addDummyNuclideBases(self):
         """

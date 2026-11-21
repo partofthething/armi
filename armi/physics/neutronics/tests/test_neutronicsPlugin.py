@@ -14,6 +14,7 @@
 
 """Unit tests for the neutronics plugin."""
 
+import contextlib
 import io
 import pathlib
 import unittest
@@ -201,11 +202,9 @@ class TestNeutronicsReactor(unittest.TestCase):
     def __autoCorrectAllQueries(settingsValidator):
         """Force-Correct (resolve() to "YES") all queries in a Settings Validator."""
         for query in settingsValidator:
-            try:
+            # to make testing easier, let's ignore settings that require input files
+            with contextlib.suppress(FileNotFoundError):
                 query.correction()
-            except FileNotFoundError:
-                # to make testing easier, let's ignore settings that require input files
-                pass
 
     def test_neutronicsSettingsValidators(self):
         # grab the neutronics validators

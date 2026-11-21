@@ -215,15 +215,14 @@ class DecayMode(Transmutable):
         # updated then prefer the user change and then note this to the user. Otherwise,
         # maintain the default loaded from the nuclide bases.
         userHalfLife = dataDict.get("halfLifeInSeconds", None)
-        if userHalfLife:
-            if userHalfLife != parent.halflife:
-                runLog.info(
-                    f"Half-life provided for {self} will be updated from "
-                    f"{parent.halflife:<15.11e} to {userHalfLife:<15.11e} seconds based on "
-                    "user provided burn-chain data."
-                )
+        if userHalfLife and userHalfLife != parent.halflife:
+            runLog.info(
+                f"Half-life provided for {self} will be updated from "
+                f"{parent.halflife:<15.11e} to {userHalfLife:<15.11e} seconds based on "
+                "user provided burn-chain data."
+            )
 
-                self.halfLifeInSeconds = userHalfLife
+            self.halfLifeInSeconds = userHalfLife
         self.decay = LN2 / self.halfLifeInSeconds * self.branch  # decay constant, reduced by branch to make it accurate
 
         if self.type not in DECAY_MODES:

@@ -69,7 +69,7 @@ class TestMath(unittest.TestCase):
         self.assertEqual(slice1, slice(2, 3, None))
         slice1 = convertToSlice(np.array([1, 2, 3]))
         self.assertTrue(np.allclose(slice1, np.array([1, 2, 3])))
-        with self.assertRaises(Exception):
+        with self.assertRaises(TypeError):
             slice1 = convertToSlice("slice")
 
     def test_efmt(self):
@@ -171,7 +171,7 @@ class TestMath(unittest.TestCase):
         self.assertEqual(b, 0.0)
         self.assertEqual(c, 1.0)
 
-        with self.assertRaises(Exception):
+        with self.assertRaises(np.linalg.LinAlgError):
             a, b, c = parabolaFromPoints((0, 1), (0, 1), (-1, 2))
 
     def test_parabolicInterpolation(self):

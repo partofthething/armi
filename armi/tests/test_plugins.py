@@ -108,7 +108,7 @@ class TestPluginRegistration(unittest.TestCase):
 
         # show the flag doesn't exist yet
         with self.assertRaises(AttributeError):
-            Flags.SUPER_FLAG
+            _ = Flags.SUPER_FLAG
 
         # load the plugin
         app.pluginManager.register(PluginFlags1)
@@ -168,7 +168,7 @@ class TestPluginRegistration(unittest.TestCase):
                 with self.assertRaisesRegex(
                     AttributeError, "'Settings' object has no attribute 'beforeReactorConstructionFlag'"
                 ):
-                    o2.cs.beforeReactorConstructionFlag
+                    _ = o2.cs.beforeReactorConstructionFlag
                 # Reset the decorator wrapper, and run `loadOperator` a third time
                 BeforeReactorPlugin.beforeReactorConstruction.reset_onlyRunOnce()
                 o3 = loadOperator(self._testMethodName + ".h5", 0, 0)
@@ -190,7 +190,7 @@ class TestPluginBasics(unittest.TestCase):
 
         # unless a plugin has registered a param, it doesn't exist
         with self.assertRaises(AttributeError):
-            b.p.fakeParam
+            _ = b.p.fakeParam
 
         # Check the default values of parameters defined by the neutronics plugin
         self.assertIsNone(b.p.axMesh)

@@ -147,8 +147,7 @@ def runTask(directory: str) -> int:
             return 0 if branches.runSnapshotBranch(directory, job)["status"] == "ok" else 1
 
         from armi import settings
-        from armi.cases import case as armicase
-        from armi.cases import tasks
+        from armi.cases import case as armicase, tasks
 
         case = armicase.Case(settings.Settings(os.path.join(directory, job["settings"])))
         dependencies = {

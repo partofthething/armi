@@ -33,7 +33,8 @@ def cleanup_test_results(filePath: str):
     filePath : str
         Path to junit pytest test results XML file.
     """
-    txt = open(filePath).read()
+    with open(filePath) as f:
+        txt = f.read()
     bits = txt.split(CLASS_NAME)
 
     newTxt = bits[0]

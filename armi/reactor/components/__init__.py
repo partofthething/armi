@@ -27,17 +27,46 @@ These objects hold the dimensions, temperatures, composition, and shape of react
     Class inheritance diagram for :py:mod:`armi.reactor.components`.
 """
 
-# ruff: noqa: F405, I001
 import math
 
 import numpy as np
 
 from armi import runLog
-from armi.reactor.components.component import *  # noqa: F403
-from armi.reactor.components.basicShapes import *  # noqa: F403
-from armi.reactor.components.complexShapes import *  # noqa: F403
-from armi.reactor.components.volumetricShapes import *  # noqa: F403
-from armi.reactor.components.particles import *  # noqa: F403
+from armi.reactor.components import componentParameters
+from armi.reactor.components.basicShapes import (
+    Circle as Circle,
+    Hexagon as Hexagon,
+    Rectangle as Rectangle,
+    SolidRectangle as SolidRectangle,
+    Square as Square,
+    Triangle as Triangle,
+)
+from armi.reactor.components.complexShapes import (
+    CircleHoledCircle as CircleHoledCircle,
+    FilletedHexagon as FilletedHexagon,
+    Helix as Helix,
+    HexHoledCircle as HexHoledCircle,
+    HoledHexagon as HoledHexagon,
+    HoledRectangle as HoledRectangle,
+    HoledSquare as HoledSquare,
+)
+from armi.reactor.components.component import (
+    COMPONENT_LINK_REGEX as COMPONENT_LINK_REGEX,
+    Component as Component,
+    ComponentType as ComponentType,
+    ShapedComponent as ShapedComponent,
+)
+from armi.reactor.components.particles import (
+    ParticleLayer as ParticleLayer,
+    attachParticleLayers as attachParticleLayers,
+    sphereVolume as sphereVolume,
+)
+from armi.reactor.components.volumetricShapes import (
+    Cube as Cube,
+    DifferentialRadialSegment as DifferentialRadialSegment,
+    RadialSegment as RadialSegment,
+    Sphere as Sphere,
+)
 
 
 def factory(shape, bcomps, kwargs):
@@ -56,12 +85,12 @@ def factory(shape, bcomps, kwargs):
     """
     try:
         class_ = ComponentType.TYPES[shape]
-    except KeyError:
+    except KeyError as ee:
         raise ValueError(
             "Unrecognized component shape: '{}'\nValid component names are {}".format(
                 shape, ", ".join(ComponentType.TYPES.keys())
             )
-        )
+        ) from ee
 
     _removeDimensionNameSpaces(kwargs)
 

@@ -147,7 +147,7 @@ def convertToSlice(x, increment=0):
     elif isinstance(x, np.ndarray):
         return np.array([i + increment for i in x])
     else:
-        raise Exception(f"It is not known how to handle x type: {type(x)} in utils.convertToSlice")
+        raise TypeError(f"It is not known how to handle x type: {type(x)} in utils.convertToSlice")
 
 
 def efmt(a: str) -> str:
@@ -313,8 +313,8 @@ def isMonotonic(inputIter, relation):
     }
     try:
         op = operatorDict[relation]
-    except KeyError:
-        raise ValueError(f"Valid relation not specified: {relation}")
+    except KeyError as ee:
+        raise ValueError(f"Valid relation not specified: {relation}") from ee
 
     return all([op(x, y) for x, y in zip(inputIter, inputIter[1:])])
 

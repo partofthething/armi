@@ -591,8 +591,8 @@ class DepthSlider(Slider):
         rectangleBot = 0
         textYCoord = 0.5
         # startBoundaries go from zero to just below 1.
-        leftBoundary = [i / numDepths for i, _depths in enumerate(depths)]
-        for leftBoundary, depth in zip(leftBoundary, depths):
+        leftBoundaries = [i / numDepths for i in range(len(depths))]
+        for leftBoundary, depth in zip(leftBoundaries, depths):
             # First depth (leftBoundary==0) is on, rest are off.
             if leftBoundary == 0:
                 color = self.selectedDepthColor
@@ -835,12 +835,12 @@ def _plotBlocksInAssembly(
         else:
             try:
                 blockHeight = b.getInputHeight()
-            except AttributeError:
+            except AttributeError as ee:
                 raise ValueError(
                     f"Cannot plot cold height for block {b} in assembly {assem} because it does not have access to a "
                     "blueprints through any of its parents. Either make sure that a blueprints is accessible or plot "
                     "the hot heights instead."
-                )
+                ) from ee
 
         # Get the basic text label for the block
         try:
@@ -931,7 +931,7 @@ def plotRadialReactorLayouts(reactor):
     return figs
 
 
-def plotBlockFlux(core, fName=None, bList=None, peak=False, adjoint=False, bList2=[]):
+def plotBlockFlux(core, fName=None, bList=None, peak=False, adjoint=False, bList2=None):
     """
     Produce energy spectrum plot of real and/or adjoint flux in one or more blocks.
 
@@ -954,9 +954,9 @@ def plotBlockFlux(core, fName=None, bList=None, peak=False, adjoint=False, bList
     """
 
     class BlockListFlux:
-        def __init__(self, nGroup, blockList=[], adjoint=False, peak=False, primary=False):
+        def __init__(self, nGroup, blockList=None, adjoint=False, peak=False, primary=False):
             self.nGroup = nGroup
-            self.blockList = blockList
+            self.blockList = blockList if blockList is not None else []
             self.adjoint = adjoint
             self.peak = peak
             self.avgHistogram = None
@@ -1625,10 +1625,12 @@ def _getBlockAtMeshPoint(reactor, innerTheta, outerTheta, innerRadius, outerRadi
     """A helper for plotConvertedRZTReactor."""
     for b in reactor.core.iterBlocks():
         blockMidTh, blockMidR, blockMidZ = b.spatialLocator.getGlobalCoordinates(nativeCoords=True)
-        if (blockMidTh >= innerTheta) and (blockMidTh <= outerTheta):
-            if (blockMidR >= innerRadius) and (blockMidR <= outerRadius):
-                if (blockMidZ >= innerAxial) and (blockMidZ <= outerAxial):
-                    return b
+        if (
+            innerTheta <= blockMidTh <= outerTheta
+            and innerRadius <= blockMidR <= outerRadius
+            and innerAxial <= blockMidZ <= outerAxial
+        ):
+            return b
 
     raise ValueError(
         f"No block found between ({innerTheta}, {outerTheta}), ({innerRadius}, {outerRadius}), ({innerAxial}, "
@@ -1642,9 +1644,7 @@ def _getBlockColor(colConverter, colGenerator, blockColors, blockType):
     if blockType not in blockColors:
         if "fuel" in blockType:
             nextColor = "tomato"
-        elif "structure" in blockType:
-            nextColor = "lightgrey"
-        elif "radial shield" in blockType:
+        elif "structure" in blockType or "radial shield" in blockType:
             nextColor = "lightgrey"
         elif "duct" in blockType:
             nextColor = "grey"

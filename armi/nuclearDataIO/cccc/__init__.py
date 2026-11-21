@@ -116,4 +116,15 @@ This was originally inspired by Prof. James Paul Holloway's alpha
 release of ccccutils written in c++ from 2001.
 """
 
-from armi.nuclearDataIO.cccc.cccc import *  # noqa: F403
+from armi.nuclearDataIO.cccc.cccc import (
+    IMPLICIT_INT as IMPLICIT_INT,
+    AsciiRecordReader as AsciiRecordReader,
+    AsciiRecordWriter as AsciiRecordWriter,
+    BinaryRecordReader as BinaryRecordReader,
+    BinaryRecordWriter as BinaryRecordWriter,
+    DataContainer as DataContainer,
+    IORecord as IORecord,
+    Stream as Stream,
+    StreamWithDataContainer as StreamWithDataContainer,
+    getBlockBandwidth as getBlockBandwidth,
+)

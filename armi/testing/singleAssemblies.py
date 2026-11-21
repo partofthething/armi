@@ -564,7 +564,7 @@ grids:
 """
 
 
-def buildEmptyHexAssembly(numBlocks, assemNum, spatialGrid=grids.HexGrid.fromPitch(1.0), r=None):
+def buildEmptyHexAssembly(numBlocks, assemNum, spatialGrid=None, r=None):
     """Builds an empty hex assembly.
 
     Parameters
@@ -585,7 +585,10 @@ def buildEmptyHexAssembly(numBlocks, assemNum, spatialGrid=grids.HexGrid.fromPit
     """
     from armi.reactor.assemblies import HexAssembly
 
-    coreGrid = r.core.spatialGrid if r is not None else spatialGrid
+    if r is not None:
+        coreGrid = r.core.spatialGrid
+    else:
+        coreGrid = spatialGrid if spatialGrid is not None else grids.HexGrid.fromPitch(1.0)
     a = HexAssembly("TestAssem", assemNum=assemNum)
     a.spatialGrid = grids.AxialGrid.fromNCells(numBlocks)
     a.spatialGrid.armiObject = a

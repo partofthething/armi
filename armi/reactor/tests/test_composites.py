@@ -739,11 +739,11 @@ class TestCompositeTree(unittest.TestCase):
         # test some edge cases
         otherBlock.spatialLocator._grid = None
         with self.assertRaises(ValueError):
-            otherBlock < self.block
+            _ = otherBlock < self.block
 
         otherBlock.spatialLocator = None
         with self.assertRaises(ValueError):
-            otherBlock < self.block
+            _ = otherBlock < self.block
 
     def test_clearCache(self):
         """Test that clearCache clears the volume parameter."""

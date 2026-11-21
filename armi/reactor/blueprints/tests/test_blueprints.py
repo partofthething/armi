@@ -21,6 +21,7 @@ import shutil
 import unittest
 
 from ruamel.yaml import YAML
+from ruamel.yaml.scanner import ScannerError
 
 from armi import settings
 from armi.nucDirectory.nuclideBases import NuclideBases
@@ -309,7 +310,7 @@ grids:
             yamlString = yamlString[:i] + section + yamlString[i : i + lenSection]
 
             # validate that this is now an invalid YAML blueprint
-            with self.assertRaises(Exception):
+            with self.assertRaises(ScannerError):
                 _design = blueprints.Blueprints.load(yamlString)
 
     def test_assemblyParameters(self):

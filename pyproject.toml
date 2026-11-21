@@ -128,78 +128,47 @@ required-version = "0.17.3"
 # Setting line-length to 120
 line-length = 120
 
-# Exclude a variety of commonly ignored directories.
-exclude = [
-    ".bzr",
-    ".direnv",
-    ".eggs",
-    ".git",
-    ".git-rewrite",
-    ".hg",
-    ".mypy_cache",
-    ".nox",
-    ".pants.d",
-    ".pytype",
-    ".ruff_cache",
-    ".svn",
-    ".tox",
-    ".venv",
-    "__pycache__",
-    "__pypackages__",
-    "_build",
-    "buck-out",
-    "build",
-    "dist",
-    "doc/tutorials/armi-example-app",
-    "node_modules",
-    "venv",
-]
+# Ruff already skips .git, .venv, build, dist, node_modules and the like.
+extend-exclude = ["doc/tutorials/armi-example-app"]
 
 [tool.ruff.lint]
-# Enable pycodestyle (E) and Pyflakes (F) codes by default.
-# D - NumPy docstring rules
-# I - Sorting imports
-# N801 - Class name should use CapWords convention
-# SIM - code simplification rules
+# B - flake8-bugbear: likely bugs and design problems
+# D - pydocstyle, numpy convention
+# E, F - pycodestyle errors and Pyflakes
+# I - import sorting
+# N801 - class names use CapWords
+# RUF100 - no unused noqa directives
+# SIM - code simplification
 # TID - tidy imports
 # UP - pyupgrade: modern syntax for the oldest supported Python (from requires-python)
-select = ["D", "E", "F", "I", "N801", "SIM", "TID", "UP"]
+select = ["B", "D", "E", "F", "I", "N801", "RUF100", "SIM", "TID", "UP"]
 
-# Ruff rules we ignore (for now) because they are not 100% automatable
+# Not (yet) enforced, because they need hand-written content rather than mechanical fixes:
 #
-# D100 - Missing docstring in public module
-# D101 - Missing docstring in public class
-# D102 - Missing docstring in public method
-# D103 - Missing docstring in public function
-# D106 - Missing docstring in public nested class
-# D401 - First line of docstring should be in imperative mood
-# SIM102 - Use a single if statement instead of nested if statements
-# SIM105 - Use contextlib.suppress({exception}) instead of try-except-pass
-# SIM108 - Use ternary operator {contents} instead of if-else-block
-# SIM114 - Combine if branches using logical or operator
-# SIM115 - Use context handler for opening files
-# SIM117 - Use a single with statement with multiple contexts instead of nested with statements
-
-# Ruff rules we ignore because we don't want them
+# D100, D101, D102, D103, D106 - missing docstrings in public modules, classes, methods, functions, nested classes
+# D401 - first line of a docstring in the imperative mood
 #
-# D105 - we don't need to document well-known magic methods
-# D205 - 1 blank line required between summary line and description
-# E731 - we can use lambdas however we want
-# RUF100 - no unused noqa statements (not consistent enough yet)
-# SIM118 - this does not work where we overload the .keys() method
+# Deliberate style choices:
 #
-ignore = ["D100", "D101", "D102", "D103", "D105", "D106", "D205", "D401", "E731", "RUF100", "SIM102", "SIM105", "SIM108", "SIM114", "SIM115", "SIM117", "SIM118"]
+# B905 - zip() without strict=: most zips here pair sequences of known equal length
+# D105 - well-known magic methods need no docstring
+# D205 - a blank line between summary and description
+# E731 - assigning lambdas is fine
+# SIM108 - if/else blocks need not become ternaries
+# SIM118 - `in d.keys()` is required where classes overload keys()
+ignore = ["B905", "D100", "D101", "D102", "D103", "D105", "D106", "D205", "D401", "E731", "SIM108", "SIM118"]
 
 [tool.ruff.lint.per-file-ignores]
-# D1XX - enforces writing docstrings
-# E741 - ambiguous variable name
-# N - We have our own naming conventions for unit tests.
-# SLF001 - private member access
-"*/tests/*" = ["D1", "E741", "N", "SLF001"]
+# Tests need no docstrings
+"*/tests/*" = ["D1"]
 "doc/gallery-src/*" = ["D400"]
 
 [tool.ruff.lint.flake8-tidy-imports]
 ban-relative-imports = "all"
+
+[tool.ruff.lint.isort]
+# Explicit re-exports (`from x import Y as Y`) stay in one statement per module
+combine-as-imports = true
 
 [tool.ruff.lint.pydocstyle]
 convention = "numpy"
