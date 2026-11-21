@@ -939,7 +939,8 @@ class TestInputHeightsConsideredHot(unittest.TestCase):
             self.assertAlmostEqual(
                 aStd.getTotalHeight(),
                 aExp.getTotalHeight(),
-                msg=f"Std Assem {aStd} ({aStd.getTotalHeight()}) and Exp Assem {aExp} ({aExp.getTotalHeight()}) are not the same height!",
+                msg=f"Std Assem {aStd} ({aStd.getTotalHeight()}) and Exp Assem {aExp} ({aExp.getTotalHeight()}) "
+                "are not the same height!",
             )
             for bStd, bExp in zip(aStd, aExp):
                 if any(isinstance(c.material, custom.Custom) for c in bStd):
@@ -999,7 +1000,8 @@ def checkColdBlockHeight(bStd: HexBlock, bExp: HexBlock, assertType: Callable, s
     assertType(
         bStd.getHeight(),
         bExp.getHeight(),
-        msg=f"Assembly: {bStd.parent} -- Std Block {bStd} ({bStd.getHeight()}) and Exp Block {bExp} ({bExp.getHeight()}) should have {strForAssertion:s} heights!",
+        msg=f"Assembly: {bStd.parent} -- Std Block {bStd} ({bStd.getHeight()}) and Exp Block {bExp} "
+        f"({bExp.getHeight()}) should have {strForAssertion:s} heights!",
     )
 
 

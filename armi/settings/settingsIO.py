@@ -70,7 +70,8 @@ class SettingRenamer:
                 else:
                     if oldName in self._activeRenames:
                         raise SettingException(
-                            f"The setting rename from {oldName}->{name} collides with another rename {oldName}->{self._activeRenames[oldName]}"
+                            f"The setting rename from {oldName}->{name} collides with another rename "
+                            f"{oldName}->{self._activeRenames[oldName]}"
                         )
                     self._activeRenames[oldName] = name
 

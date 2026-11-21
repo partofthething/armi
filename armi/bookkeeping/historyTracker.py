@@ -242,7 +242,8 @@ class HistoryTrackerInterface(interfaces.Interface):
                 if name in {a.name for a in self.r.core}:
                     raise Exception("Found it")
                 runLog.extra(
-                    f"Cannot find detail assembly {name} in assemblies-by-name lookup table, which has {len(self.r.core.assembliesByName)} entries"
+                    f"Cannot find detail assembly {name} in assemblies-by-name lookup table, which has "
+                    f"{len(self.r.core.assembliesByName)} entries"
                 )
         return assems
 

@@ -182,7 +182,8 @@ def _collectObjectData(
             if data.dtype.kind == "O":
                 # Didn't work
                 runLog.warning(
-                    f"The parameter data for  `{pDef.name}` could not be coerced into a native type for output; skipping."
+                    f"The parameter data for  `{pDef.name}` could not be coerced into a native type for "
+                    "output; skipping."
                 )
                 continue
         if len(data.shape) != 1:

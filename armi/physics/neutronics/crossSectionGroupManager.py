@@ -214,7 +214,8 @@ class BlockCollection(list):
             zeros = [block for block in self if not block.p[self.weightingParam]]
             runLog.error(f"Blocks with zero `{self.weightingParam}` include: {zeros}")
             raise ValueError(
-                f"{self} has a mixture of zero and non-zero weighting factors (`{self.weightingParam}`)\nSee stdout for details"
+                f"{self} has a mixture of zero and non-zero weighting factors (`{self.weightingParam}`)\nSee "
+                "stdout for details"
             )
 
     def calcAvgNuclideTemperatures(self):
@@ -1169,7 +1170,8 @@ class CrossSectionGroupManager(interfaces.Interface):
         fluxFileLocation, fluxFileName = self._getPregeneratedFluxFileLocationData(xsID)
         dest = os.path.join(os.getcwd(), fluxFileName)
         runLog.extra(
-            f"Copying pre-generated flux solution file {fluxFileName} from {os.path.dirname(fluxFileLocation)} for XS ID {xsID}"
+            f"Copying pre-generated flux solution file {fluxFileName} from "
+            f"{os.path.dirname(fluxFileLocation)} for XS ID {xsID}"
         )
         # Prevent copy error if the path and destination are the same.
         if fluxFileLocation != dest:
@@ -1415,7 +1417,8 @@ class CrossSectionGroupManager(interfaces.Interface):
         availableXsTypes = sorted(list(set(_ALLOWABLE_XS_TYPE_LIST).difference(allocatedXSTypes)))
         if len(availableXsTypes) < howMany:
             raise ValueError(
-                f"There are not enough available xs types. {len(allocatedXSTypes)} have been allocated, {len(availableXsTypes)} are available, and "
+                f"There are not enough available xs types. {len(allocatedXSTypes)} have been allocated, "
+                f"{len(availableXsTypes)} are available, and "
                 f"{howMany} have been requested."
             )
 
@@ -1593,7 +1596,8 @@ class CrossSectionGroupManager(interfaces.Interface):
         self.avgNucTemperatures = {}
         blockCollectionsByXsGroup = blockCollectionByXsGroup or self.makeCrossSectionGroups()
         runLog.info(
-            f"Updating representative block average nuclide temperatures for the following XS IDs: {blockCollectionsByXsGroup.keys()}"
+            "Updating representative block average nuclide temperatures for the following XS IDs: "
+            f"{blockCollectionsByXsGroup.keys()}"
         )
         for xsID, collection in blockCollectionsByXsGroup.items():
             collection.calcAvgNuclideTemperatures()

@@ -385,7 +385,7 @@ class BinaryRecordReader(IORecord):
     def rwString(self, val, length):
         """Reads a string of specified length from the binary stream."""
         self.byteCount += length
-        (s,) = struct.unpack("%ds" % length, self._stream.read(length))
+        (s,) = struct.unpack(f"{length}s", self._stream.read(length))
         return s.rstrip().decode()  # convert bytes to string on reading.
 
     def rwMatrix(self, contents, *shape):
@@ -473,7 +473,7 @@ class BinaryRecordWriter(IORecord):
 
     def rwString(self, val, length):
         self.numBytes += length * self._characterSize
-        self.data.append(struct.pack("%ds" % length, val.ljust(length).encode("utf-8")))
+        self.data.append(struct.pack(f"{length}s", val.ljust(length).encode()))
         return val
 
 

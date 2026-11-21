@@ -372,7 +372,8 @@ class Assembly(composites.Composite):
                 continue
             elif refB.getHeight() > b.getHeight():
                 raise RuntimeError(
-                    f"can't split {b} ({b.getHeight()}cm) into larger blocks to match ref block {refB} ({refB.getHeight()}cm)"
+                    f"can't split {b} ({b.getHeight()}cm) into larger blocks to match ref block {refB} "
+                    f"({refB.getHeight()}cm)"
                 )
             else:
                 # b is larger than refB. Split b up by splitting it into several smaller blocks of

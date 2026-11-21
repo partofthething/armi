@@ -32,7 +32,6 @@ import os
 import re
 from collections import defaultdict
 from dataclasses import dataclass, field
-from typing import List, Optional, Tuple
 
 import numpy as np
 from ruamel.yaml import YAML
@@ -167,7 +166,8 @@ class FuelHandler:
         if self.cs[CONF_SHUFFLE_SEQUENCE_FILE]:
             if not os.path.exists(self.cs[CONF_SHUFFLE_SEQUENCE_FILE]):
                 raise FileNotFoundError(
-                    f"Requested shuffle sequence file {self.cs[CONF_SHUFFLE_SEQUENCE_FILE]} does not exist. Cannot perform shuffling. "
+                    f"Requested shuffle sequence file {self.cs[CONF_SHUFFLE_SEQUENCE_FILE]} does not exist. "
+                    "Cannot perform shuffling. "
                 )
             runLog.important(f"Applying shuffle sequence from {self.cs[CONF_SHUFFLE_SEQUENCE_FILE]}")
             # location hist params updated within performShuffle
@@ -176,11 +176,10 @@ class FuelHandler:
             # repeated shuffle
             if not os.path.exists(self.cs["explicitRepeatShuffles"]):
                 raise RuntimeError(
-                    "Requested repeat shuffle file {0} does not exist. Cannot perform shuffling. ".format(
-                        self.cs["explicitRepeatShuffles"]
-                    )
+                    f"Requested repeat shuffle file {self.cs['explicitRepeatShuffles']} does not exist. "
+                    "Cannot perform shuffling."
                 )
-            runLog.important("Repeating a shuffling pattern from {}".format(self.cs["explicitRepeatShuffles"]))
+            runLog.important(f"Repeating a shuffling pattern from {self.cs['explicitRepeatShuffles']}")
             # location hist params updated within performShuffle
             self.performShuffle(self.cs["explicitRepeatShuffles"])
         else:
@@ -197,7 +196,8 @@ class FuelHandler:
                 rotationMethod(self)
             else:
                 raise RuntimeError(
-                    f"FuelHandler {rotAlgos} does not have a rotation algorithm called {self.cs[CONF_ASSEMBLY_ROTATION_ALG]}.\nChange your {CONF_ASSEMBLY_ROTATION_ALG} setting"
+                    f"FuelHandler {rotAlgos} does not have a rotation algorithm called "
+                    f"{self.cs[CONF_ASSEMBLY_ROTATION_ALG]}.\nChange your {CONF_ASSEMBLY_ROTATION_ALG} setting"
                 )
 
         for loc, deg in self.pendingRotations:
@@ -883,15 +883,18 @@ class FuelHandler:
         # check for any inconsistencies in stationary blocks and ensure alignment
         if [block[1] for block in a1StationaryBlocks] != [block[1] for block in a2StationaryBlocks]:
             raise ValueError(
-                f"""Different number and/or locations of stationary blocks 
-                 between {assembly1} (Stationary Blocks: {a1StationaryBlocks}) and {assembly2} (Stationary Blocks: {a2StationaryBlocks})."""
+                "Different number and/or locations of stationary blocks between "
+                f"{assembly1} (Stationary Blocks: {a1StationaryBlocks}) and "
+                f"{assembly2} (Stationary Blocks: {a2StationaryBlocks})."
             )
         if a1StationaryBlocks and a2StationaryBlocks:
             if a1StationaryBlocks[-1][0].p.ztop != a2StationaryBlocks[-1][0].p.ztop:
                 runLog.warning(
-                    f"""Difference in top elevation of stationary blocks 
-                     between {assembly1} (Stationary Blocks: {a1StationaryBlocks}, Elevation at top of stationary blocks {a1StationaryBlocks[-1][0].p.ztop}) 
-                     and {assembly2} (Stationary Blocks: {a2StationaryBlocks}, Elevation at top of stationary blocks {a2StationaryBlocks[-1][0].p.ztop}))"""
+                    "Difference in top elevation of stationary blocks between "
+                    f"{assembly1} (Stationary Blocks: {a1StationaryBlocks}, "
+                    f"Elevation at top of stationary blocks {a1StationaryBlocks[-1][0].p.ztop}) and "
+                    f"{assembly2} (Stationary Blocks: {a2StationaryBlocks}, "
+                    f"Elevation at top of stationary blocks {a2StationaryBlocks[-1][0].p.ztop})"
                 )
 
         # swap stationary blocks
@@ -1453,9 +1456,9 @@ class FuelHandler:
                 Moves without discharges.
             enriches : list[list[float]]
                 Axial enrichment distribution for each load assembly.
-            loadChargeTypes : list[Optional[str]]
+            loadChargeTypes : list[str | None]
                 Assembly types for each load chain.
-            loadNames : list[Optional[str]]
+            loadNames : list[str | None]
                 Assembly names of loads (e.g., from SFP).
             dischargeDests : list[str]
                 Final destinations for discharged assemblies (e.g., ``SFP`` or ``Delete``).

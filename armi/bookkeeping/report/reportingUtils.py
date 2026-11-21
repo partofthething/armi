@@ -66,7 +66,7 @@ def writeWelcomeHeaders(o, cs):
             (Operator_CaseTitle, cs.caseTitle),
             (
                 Operator_CaseDescription,
-                "{0}".format(textwrap.fill(cs["comment"], break_long_words=False)),
+                textwrap.fill(cs["comment"], break_long_words=False),
             ),
             (
                 Operator_TypeOfRun,
@@ -522,7 +522,7 @@ def _makeBOLAssemblyMassSummary(massSum):
     str_ = ["--- BOL Assembly Mass Summary (kg) ---"]
     dataLabels = ["wetMass", "dryMass", "fissileMass", "hmMass", "count"]
     # print header for the printout of each assembly type
-    str_.append(" " * 12 + "".join(["{0:25s}".format(s["type"]) for s in massSum]))
+    str_.append(" " * 12 + "".join([f"{s['type']:25s}" for s in massSum]))
     for val in dataLabels:
         line = ""
         for s in massSum:
@@ -534,7 +534,7 @@ def _makeBOLAssemblyMassSummary(massSum):
         line = " " * 12
         for s in massSum:
             try:
-                line += "{0:25s}".format(s["components"][i])
+                line += f"{s['components'][i]:25s}"
             except IndexError:
                 line += " " * 25
         if re.search(r"\S", line):  # \S matches any non-whitespace character.

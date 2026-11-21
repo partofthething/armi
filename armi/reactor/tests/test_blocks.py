@@ -3399,7 +3399,8 @@ class TestMassConservation(unittest.TestCase):
             massCold,
             massHot,
             10,
-            f"Cold mass of fuel ({massCold}) != hot mass {massHot}. Mass conservation violated during thermal expansion",
+            f"Cold mass of fuel ({massCold}) != hot mass {massHot}. Mass conservation violated during thermal "
+            "expansion",
         )
 
     def test_massCladHeatup(self):
@@ -3412,7 +3413,8 @@ class TestMassConservation(unittest.TestCase):
             massCold,
             massHot,
             10,
-            f"Cold mass of clad ({massCold}) != hot mass {massHot}. Mass conservation violated during thermal expansion",
+            f"Cold mass of clad ({massCold}) != hot mass {massHot}. Mass conservation violated during thermal "
+            "expansion",
         )
 
     def test_massDuctHeatup(self):
@@ -3425,7 +3427,8 @@ class TestMassConservation(unittest.TestCase):
             massCold,
             massHot,
             10,
-            f"Cold mass of duct ({massCold}) != hot mass {massHot}. Mass conservation violated during thermal expansion",
+            f"Cold mass of duct ({massCold}) != hot mass {massHot}. Mass conservation violated during thermal "
+            "expansion",
         )
 
     def test_massCoolHeatup(self):
@@ -3486,7 +3489,8 @@ class TestMassConservation(unittest.TestCase):
             massCold,
             theoreticalMass,
             7,
-            msg=f"Cold mass of fuel ({massCold}) != theoretical mass {theoreticalMass}.  Check calculation of cold mass",
+            msg=f"Cold mass of fuel ({massCold}) != theoretical mass {theoreticalMass}.  Check calculation of "
+            "cold mass",
         )
 
     def test_massConsistency(self):

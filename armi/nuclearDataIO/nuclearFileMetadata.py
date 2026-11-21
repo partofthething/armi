@@ -158,7 +158,8 @@ class _Metadata:
             otherVal = other[propName]
             if not properties.areEqual(selfVal, otherVal, tolerance):
                 runLog.important(
-                    f"{selfContainer} and {otherContainer} {self.__class__.__name__} have different {propName}:\n{selfVal}\n{otherVal}"
+                    f"{selfContainer} and {otherContainer} {self.__class__.__name__} have different "
+                    f"{propName}:\n{selfVal}\n{otherVal}"
                 )
                 equal = False
         return equal

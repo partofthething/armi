@@ -368,7 +368,8 @@ class BlockBlueprint(KeyedList):
 
         if solventNamesToMergeInto:
             runLog.warning(
-                f"Component(s) {solventNamesToMergeInto} in block {b.name} has merged components inside it. The merge was valid at hot "
+                f"Component(s) {solventNamesToMergeInto} in block {b.name} has merged components inside it. "
+                "The merge was valid at hot "
                 "temperature, but the merged component only has the basic thermal expansion factors "
                 "of the component(s) merged into. Expansion properties or dimensions of non hot  "
                 "temperature may not be representative of how the original components would have acted had "

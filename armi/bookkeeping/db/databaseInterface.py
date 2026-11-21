@@ -310,7 +310,8 @@ class DatabaseInterface(interfaces.Interface):
             # reactor was never set so fail
             if fileName:
                 raise RuntimeError(
-                    f"Cannot load state from specified file {fileName} @ {getH5GroupName(cycle, timeNode, timeStepName)}"
+                    f"Cannot load state from specified file {fileName} @ "
+                    f"{getH5GroupName(cycle, timeNode, timeStepName)}"
                 )
             raise RuntimeError(
                 f"Cannot load state from <unspecified file> @ {getH5GroupName(cycle, timeNode, timeStepName)}"

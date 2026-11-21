@@ -482,7 +482,10 @@ class TestShapedComponent(TestGeneralComponents):
             self.component.setTemperature(ht)
             mass = self.component.getMass()
             masses.append(mass)
-            report += f"{ht:10.1f}, {mass:7.5e}, {self.component.getVolume():7.5e}, {self.component.getThermalExpansionFactor():7.5e}\n"
+            report += (
+                f"{ht:10.1f}, {mass:7.5e}, {self.component.getVolume():7.5e}, "
+                f"{self.component.getThermalExpansionFactor():7.5e}\n"
+            )
 
         for mass in masses:
             self.assertNotAlmostEqual(mass, 0.0)

@@ -160,12 +160,10 @@ class OperatorMPI(Operator):
                 if not handled:
                     if context.MPI_RANK == 0:
                         print("Interfaces" + str(self.interfaces))
+                    available = "\n  ".join(f"name:{i.name} typeName:{i.purpose} {i}" for i in self.interfaces)
                     runLog.error(
-                        "No interface understood worker command {0}\n check stdout for err\n"
-                        "available interfaces:\n  {1}".format(
-                            cmd,
-                            "\n  ".join(f"name:{i.name} typeName:{i.purpose} {i}" for i in self.interfaces),
-                        )
+                        f"No interface understood worker command {cmd}\n check stdout for err\n"
+                        f"available interfaces:\n  {available}"
                     )
                     raise RuntimeError(f"Failed to delegate worker command {cmd} to an interface.")
 

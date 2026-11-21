@@ -140,7 +140,8 @@ class GlobalFluxInterface(interfaces.Interface):
 
         if not math.isclose(powerGenerated, specifiedPower, rel_tol=self._ENERGY_BALANCE_REL_TOL):
             raise ValueError(
-                f"The power generated in {self.r.core} is {powerGenerated} MW, but the user specified power is {specifiedPower} MW.\n"
+                f"The power generated in {self.r.core} is {powerGenerated} MW, but the user specified power "
+                f"is {specifiedPower} MW.\n"
                 "This indicates a software bug. Please report to the developers."
             )
 

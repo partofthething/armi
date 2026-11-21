@@ -116,7 +116,8 @@ class RZThetaReactorMeshConverter(MeshConverter):
         binCombinations = self.numRingBins * self.numAxialMeshBins * self.numThetaMeshBins
         runLog.info(f"Total mesh bins (r, z, theta): {binCombinations}")
         runLog.info(
-            f"  Radial bins: {self.numRingBins}\n  Axial bins:  {self.numAxialMeshBins}\n  Theta bins:  {self.numThetaMeshBins}"
+            f"  Radial bins: {self.numRingBins}\n  Axial bins:  {self.numAxialMeshBins}\n  Theta bins:  "
+            f"{self.numThetaMeshBins}"
         )
         self._writeMeshLogData()
 
@@ -168,7 +169,8 @@ class RZThetaReactorMeshConverter(MeshConverter):
     def _combineLastTwoRadialBins(self):
         if (self.radialMesh[-1] - self.radialMesh[-2]) == 1:
             runLog.extra(
-                f"Outermost ring of the core {self.radialMesh[-1]} is not fully filled and will be homogenized with the "
+                f"Outermost ring of the core {self.radialMesh[-1]} is not fully filled and will be "
+                "homogenized with the "
                 f"previous ring {self.radialMesh[-2]}"
             )
             # remove the boundary between the last two bins, merging them into one

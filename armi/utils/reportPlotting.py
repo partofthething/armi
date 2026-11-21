@@ -381,7 +381,7 @@ def _radarFactory(numVars, frame="circle"):
 
     patchDict = {"polygon": drawPolyPatch, "circle": drawCirclePatch}
     if frame not in patchDict:
-        raise ValueError("unknown value for `frame`: %s" % frame)
+        raise ValueError(f"unknown value for `frame`: {frame}")
 
     class _RadarAxes(matplotlib.projections.polar.PolarAxes):
         """

@@ -62,7 +62,6 @@ current grid.
 """
 
 # ruff: noqa: F401
-from typing import Optional, Tuple
 
 from armi.reactor.grids.axial import AxialGrid
 from armi.reactor.grids.cartesian import CartesianGrid

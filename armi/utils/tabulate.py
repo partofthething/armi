@@ -643,8 +643,7 @@ def _padleft(width, s):
     True
 
     """
-    fmt = "{0:>%ds}" % width
-    return fmt.format(s)
+    return f"{s:>{width}s}"
 
 
 def _padright(width, s):
@@ -654,8 +653,7 @@ def _padright(width, s):
     True
 
     """
-    fmt = "{0:<%ds}" % width
-    return fmt.format(s)
+    return f"{s:<{width}s}"
 
 
 def _padboth(width, s):
@@ -665,8 +663,7 @@ def _padboth(width, s):
     True
 
     """
-    fmt = "{0:^%ds}" % width
-    return fmt.format(s)
+    return f"{s:^{width}s}"
 
 
 def _padnone(ignoreWidth, s):

@@ -120,7 +120,8 @@ def getGroupStructureType(neutronEnergyBoundsInEv):
         if np.allclose(refNeutronEnergyBoundsInEv, neutronEnergyBoundsInEv, 1e-5):
             return groupStructureType
     raise ValueError(
-        f"Neutron energy group structure type does not exist for the given neutron energy bounds: {neutronEnergyBoundsInEv}"
+        "Neutron energy group structure type does not exist for the given neutron energy bounds: "
+        f"{neutronEnergyBoundsInEv}"
     )
 
 

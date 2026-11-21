@@ -1045,7 +1045,7 @@ def plotBlockFlux(core, fName=None, bList=None, peak=False, adjoint=False, bList
         # write a little flux text file
         txtFileName = os.path.splitext(fName)[0] + ".txt"
         with open(txtFileName, "w") as f:
-            f.write("{0:16s} {1:16s} {2:16s}\n".format("Energy_Group", "Average_Flux", "Peak_Flux"))
+            f.write(f"{'Energy_Group':16s} {'Average_Flux':16s} {'Peak_Flux':16s}\n")
             for _, (eMax, avgFlux, peakFlux) in bf1.getTable():
                 f.write(f"{eMax:12E} {avgFlux:12E} {peakFlux:12E}\n")
 
@@ -1580,7 +1580,8 @@ def plotConvertedRZTReactor(reactor, fNameBase=None):
                 innerAxial = outerAxial
             innerRadius = outerRadius
         ax.set_title(
-            f"{str(reactor.core.geomType).upper()} Core Map from {innerTheta * units.RAD_TO_REV} to {outerTheta * units.RAD_TO_REV:.4f} revolutions",
+            f"{str(reactor.core.geomType).upper()} Core Map from {innerTheta * units.RAD_TO_REV} to "
+            f"{outerTheta * units.RAD_TO_REV:.4f} revolutions",
             y=1.03,
         )
         ax.set_xticks([0.0] + radialMesh)
@@ -1630,7 +1631,8 @@ def _getBlockAtMeshPoint(reactor, innerTheta, outerTheta, innerRadius, outerRadi
                     return b
 
     raise ValueError(
-        f"No block found between ({innerTheta}, {outerTheta}), ({innerRadius}, {outerRadius}), ({innerAxial}, {outerAxial})\nLast block had TRZ= {blockMidTh} {blockMidR} {blockMidZ}"
+        f"No block found between ({innerTheta}, {outerTheta}), ({innerRadius}, {outerRadius}), ({innerAxial}, "
+        f"{outerAxial})\nLast block had TRZ= {blockMidTh} {blockMidR} {blockMidZ}"
     )
 
 

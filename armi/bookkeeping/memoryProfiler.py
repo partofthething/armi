@@ -245,7 +245,8 @@ class MemoryProfiler(interfaces.Interface):
 
         for counter in sorted(instanceCounters.counters.values()):
             runLog.info(
-                f"UNIQUE_INSTANCE_COUNT: {counter.classType.__name__:60s} {counter.count:10d}     {counter.memSize / (1024**2.0):10.1f} MB"
+                f"UNIQUE_INSTANCE_COUNT: {counter.classType.__name__:60s} {counter.count:10d}     "
+                f"{counter.memSize / (1024**2.0):10.1f} MB"
             )
             if printReferrers and counter.memSize / (1024**2.0) > 100:
                 referrers = gc.get_referrers(counter.first)

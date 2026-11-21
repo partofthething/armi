@@ -42,7 +42,6 @@ armi : Fundamental entry point that calls this package.
 import argparse
 import re
 import textwrap
-from typing import Optional
 
 from armi import context, meta, plugins, runLog
 
@@ -113,7 +112,8 @@ class ArmiCLI:
             for entryPoint in pluginEntryPoints:
                 if entryPoint.name in self._entryPoints:
                     raise KeyError(
-                        f"Duplicate entry points defined for `{entryPoint.name}`: {self._entryPoints[entryPoint.name]} and {entryPoint}"
+                        f"Duplicate entry points defined for `{entryPoint.name}`: "
+                        f"{self._entryPoints[entryPoint.name]} and {entryPoint}"
                     )
                 self._entryPoints[entryPoint.name] = entryPoint
 

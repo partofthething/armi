@@ -283,7 +283,8 @@ class LatticePhysicsWriter(interfaces.InputWriter):
 
         if self._unusedNuclides:
             runLog.debug(
-                f"The following unused nuclides (defined in the loading file) are being added to {subjectObject} at {self._getFuelTemperature()} C: {list(self._unusedNuclides)}"
+                "The following unused nuclides (defined in the loading file) are being added to "
+                f"{subjectObject} at {self._getFuelTemperature()} C: {list(self._unusedNuclides)}"
             )
 
         # the sortFunc makes orders the nucideDensities and fissionProductDensities by name.

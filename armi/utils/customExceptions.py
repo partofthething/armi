@@ -109,7 +109,8 @@ class InvalidSettingsStopProcess(SettingException):
         msg = f"Input settings file {reader.inputPath}"
         if reader.liveVersion != reader.inputVersion:
             msg += (
-                f'\n\twas made with version "{reader.inputVersion}" which differs from the current version "{reader.liveVersion}." '
+                f'\n\twas made with version "{reader.inputVersion}" which differs from the current version '
+                f'"{reader.liveVersion}." '
                 f'Either create the input file with the "{reader.liveVersion}", or switch to a development version '
                 "of ARMI."
             )

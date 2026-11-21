@@ -182,7 +182,10 @@ class Transmutation(Transmutable):
             raise KeyError(f"{self.type} not in {TRANSMUTATION_TYPES}")
 
     def __repr__(self):
-        return f"<Transmutation by {self.type} from {self.parent.name:7s} to {self.productNuclides} with branching ratio of {self.branch:12.5E}>"
+        return (
+            f"<Transmutation by {self.type} from {self.parent.name:7s} to {self.productNuclides} with branching "
+            f"ratio of {self.branch:12.5E}>"
+        )
 
 
 class DecayMode(Transmutable):
@@ -227,4 +230,7 @@ class DecayMode(Transmutable):
             raise KeyError(f"{self.type} is not in {DECAY_MODES}")
 
     def __repr__(self):
-        return f"<DecayMode by {self.type} from {self.parent.name:7s} to {self.productNuclides} with a half-life of {self.halfLifeInSeconds:12.5E} s>"
+        return (
+            f"<DecayMode by {self.type} from {self.parent.name:7s} to {self.productNuclides} with a half-life of "
+            f"{self.halfLifeInSeconds:12.5E} s>"
+        )

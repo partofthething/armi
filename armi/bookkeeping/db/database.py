@@ -994,7 +994,8 @@ class Database:
                     # keep going. Since this may lead to potential correctness issues, raise a warning
                     if allowMissing:
                         runLog.warning(
-                            f"Found `{compTypeName}` parameter `{paramName}` in the database, which is not defined. Ignoring it."
+                            f"Found `{compTypeName}` parameter `{paramName}` in the database, which is not "
+                            "defined. Ignoring it."
                         )
                         continue
                     else:
@@ -1176,7 +1177,7 @@ class Database:
                         else:
                             raise ValueError(
                                 "History tracking for non-None, special-formatted parameters is not supported: "
-                                f"{paramName}, { ({k: v for k, v in dataSet.attrs.items()}) }"
+                                f"{paramName}, {dict(dataSet.attrs)}"
                             )
                 else:
                     # Nothing in the database for this param, so use the default value
@@ -1315,7 +1316,8 @@ class Database:
                                 data = replaceNonsenseWithNones(data, paramName)
                             else:
                                 raise ValueError(
-                                    f"History tracking for non-none special formatting not supported: {paramName}, { ({k: v for k, v in dataSet.attrs.items()}) }"
+                                    "History tracking for non-none special formatting not supported: "
+                                    f"{paramName}, {dict(dataSet.attrs)}"
                                 )
                     else:
                         # Nothing in the database, so use the default value
@@ -1630,7 +1632,7 @@ def unpackSpecialData(data: np.ndarray, attrs, paramName: str) -> np.ndarray:
         return np.array(unpackedData)
 
     raise ValueError(
-        f"Do not recognize the type of special formatting that was applied to {paramName}. Attrs: { ({k: v for k, v in attrs.items()}) }"
+        f"Do not recognize the type of special formatting that was applied to {paramName}. Attrs: {dict(attrs)}"
     )
 
 

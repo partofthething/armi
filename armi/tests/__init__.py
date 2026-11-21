@@ -22,7 +22,6 @@ import datetime
 import itertools
 import os
 import unittest
-from typing import Optional
 
 from armi import runLog
 from armi.testing import (  # noqa: F401
@@ -93,7 +92,8 @@ class Fixture:
                     targetTime = datetime.datetime.fromtimestamp(oldestTarget[0])
                     dependencyTime = datetime.datetime.fromtimestamp(newestDependency[0])
                     runLog.important(
-                        f"Fixture is out of date {self}\noldest target:     {targetTime} {oldestTarget[1]}\nnewest dependency: {dependencyTime} {newestDependency[1]}"
+                        f"Fixture is out of date {self}\noldest target:     {targetTime} "
+                        f"{oldestTarget[1]}\nnewest dependency: {dependencyTime} {newestDependency[1]}"
                     )
             if needToUpdate:
                 runLog.important(f"Running test fixture: {self}")

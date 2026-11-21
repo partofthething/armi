@@ -40,7 +40,6 @@ import os
 import pkgutil
 import sysconfig
 from copy import deepcopy
-from typing import List
 
 from armi import runLog
 from armi.materials.material import Material

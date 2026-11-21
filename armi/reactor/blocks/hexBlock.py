@@ -17,7 +17,7 @@
 import copy
 import functools
 import math
-from typing import ClassVar, Optional
+from typing import ClassVar
 
 import numpy as np
 
@@ -30,7 +30,7 @@ from armi.reactor.flags import Flags
 from armi.reactor.parameters import ParamLocation
 from armi.utils import hexagon, iterables, units
 
-_PitchDefiningComponent = Optional[tuple[type[components.Component], ...]]
+_PitchDefiningComponent = tuple[type[components.Component], ...] | None
 
 
 class HexBlock(Block):
@@ -525,7 +525,8 @@ class HexBlock(Block):
 
         if numLocations != self.getNumPins():
             raise ValueError(
-                f"Cannot create spatialGrid, number of locations in rings {numLocations} not equal to pin number {self.getNumPins()}"
+                f"Cannot create spatialGrid, number of locations in rings {numLocations} not equal to pin "
+                f"number {self.getNumPins()}"
             )
 
         # set the spatial position of the sub-block components

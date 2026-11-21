@@ -1,0 +1,5 @@
+# Mechanical reformatting commits, skipped by `git blame` (GitHub does this automatically;
+# locally: git config blame.ignoreRevsFile .git-blame-ignore-revs).
+
+# Modernize syntax for Python 3.11 with ruff's pyupgrade fixes
+30619c2ac39eb0d71db45f967d829a321f71d79a

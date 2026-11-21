@@ -65,7 +65,9 @@ class ReportInterface(interfaces.Interface):
 
         runLog.important(f"Cycle {cycle}, node {node} Summary: ")
         runLog.important(
-            f"  time= {self.r.p.time:8.2f} years, keff= {self.r.core.p.keff:.12f} maxPD= {self.r.core.p.maxPD:-8.2f} MW/m^2, maxBuI= {self.r.core.p.maxBuI:-8.4f} maxBuF= {self.r.core.p.maxBuF:8.4f}"
+            f"  time= {self.r.p.time:8.2f} years, keff= {self.r.core.p.keff:.12f} "
+            f"maxPD= {self.r.core.p.maxPD:-8.2f} MW/m^2, maxBuI= {self.r.core.p.maxBuI:-8.4f} "
+            f"maxBuF= {self.r.core.p.maxBuF:8.4f}"
         )
 
         if self.cs["plots"]:

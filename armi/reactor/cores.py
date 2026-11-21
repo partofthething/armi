@@ -545,7 +545,8 @@ class Core(composites.Composite):
 
         if spatialLocator is not None and spatialLocator in self.childrenByLocator:
             raise ValueError(
-                f"Cannot add {aName} because location {a.spatialLocator} is already filled by {self.childrenByLocator[a.spatialLocator]}."
+                f"Cannot add {aName} because location {a.spatialLocator} is already filled by "
+                f"{self.childrenByLocator[a.spatialLocator]}."
             )
 
         if spatialLocator is not None:
@@ -553,7 +554,8 @@ class Core(composites.Composite):
             spatialLocator = self.spatialGrid[tuple(spatialLocator.indices)]
             if not self.spatialGrid.locatorInDomain(spatialLocator, symmetryOverlap=True):
                 raise LookupError(
-                    f"Location `{spatialLocator}` outside of the represented domain: `{self.spatialGrid.symmetry.domain}`"
+                    f"Location `{spatialLocator}` outside of the represented domain: "
+                    f"`{self.spatialGrid.symmetry.domain}`"
                 )
             a.moveTo(spatialLocator)
 
@@ -562,7 +564,8 @@ class Core(composites.Composite):
         if aName in self.assembliesByName and self.assembliesByName[aName] != a:
             # try to keep assem numbering correct
             runLog.error(
-                f"The assembly {self.assembliesByName[aName]} in the reactor already has the name {aName}.\nCannot add {a}. "
+                f"The assembly {self.assembliesByName[aName]} in the reactor already has the name "
+                f"{aName}.\nCannot add {a}. "
                 f"Current assemNum is {self.r.p.maxAssemNum}"
             )
             raise RuntimeError("Core already contains an assembly with the same name.")
@@ -1737,7 +1740,8 @@ class Core(composites.Composite):
             for block in self.iterBlocks():
                 for gi in groups:
                     f.write(
-                        f"{block.getName():10s} {gi:10d} {block.p.mgFlux[gi]:12.5E} {block.p.adjMgFlux[gi]:12.5E} {block.getVolume():12.5E}\n"
+                        f"{block.getName():10s} {gi:10d} {block.p.mgFlux[gi]:12.5E} "
+                        f"{block.p.adjMgFlux[gi]:12.5E} {block.getVolume():12.5E}\n"
                     )
                 if len(block.p.mgFlux) > len(groups) or len(block.p.adjMgFlux) > len(groups):
                     raise ValueError(f"Too many flux values: {block}\n{block.p.mgFlux}\n{block.p.adjMgFlux}")

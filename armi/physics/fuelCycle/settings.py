@@ -126,7 +126,8 @@ def getFuelCycleSettingValidators(inspector):
     queries.append(
         settingsValidation.Query(
             lambda: " " in inspector.cs[CONF_SHUFFLE_LOGIC],
-            f"Spaces are not allowed in shuffleLogic file location. You have specified {inspector.cs[CONF_SHUFFLE_LOGIC]}. "
+            "Spaces are not allowed in shuffleLogic file location. You have specified "
+            f"{inspector.cs[CONF_SHUFFLE_LOGIC]}. "
             "Shuffling will not occur.",
             "",
             inspector.NO_ACTION,
@@ -156,7 +157,8 @@ def getFuelCycleSettingValidators(inspector):
                 and not inspector._csRelativePathExists(inspector.cs[CONF_SHUFFLE_LOGIC])
                 and importlib.util.find_spec(inspector.cs[CONF_SHUFFLE_LOGIC]) is None
             ),
-            f"The specified shuffle logic module or file '{inspector.cs[CONF_SHUFFLE_LOGIC]}' cannot be found. Shuffling will not occur.",
+            f"The specified shuffle logic module or file '{inspector.cs[CONF_SHUFFLE_LOGIC]}' cannot be "
+            "found. Shuffling will not occur.",
             "Clear specified file value?",
             _clearShufflingInput,
         )

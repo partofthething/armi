@@ -1055,7 +1055,7 @@ class Operator:
                             factorList = [float(item) for item in match.group(3).split(",")]
                         except ValueError:
                             factorList = match.group(3).split(",")
-                    runLog.debug("loaded restart data for cycle %d" % float(match.group(1)))
+                    runLog.debug(f"loaded restart data for cycle {int(float(match.group(1)))}")
 
                     self.restartData.append((float(match.group(1)), float(match.group(2)), factorList))
         runLog.info(f"loaded restart data for {len(self.restartData)} cycles")

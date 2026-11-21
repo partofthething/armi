@@ -25,7 +25,7 @@ import copy
 import math
 import operator
 from collections.abc import Callable
-from typing import ClassVar, Optional
+from typing import ClassVar
 
 import numpy as np
 
@@ -56,7 +56,7 @@ PIN_COMPONENTS = [
     Flags.WIRE,
 ]
 
-_PitchDefiningComponent = Optional[tuple[type[components.Component], ...]]
+_PitchDefiningComponent = tuple[type[components.Component], ...] | None
 
 
 class Block(composites.Composite):

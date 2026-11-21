@@ -160,12 +160,14 @@ class FuelHandlerInterface(interfaces.Interface):
                     if move.fromLoc in fuelHandlers.FuelHandler.DISCHARGE_LOCS:
                         # this is a re-entering assembly. Give extra info so repeat shuffles can handle it
                         out.write(
-                            f"{move.fromLoc} moved to {move.toLoc} with assembly type {move.assemType} ringPosCycle={move.ringPosCycle} with enrich list: {enrichLine}\n"
+                            f"{move.fromLoc} moved to {move.toLoc} with assembly type {move.assemType} "
+                            f"ringPosCycle={move.ringPosCycle} with enrich list: {enrichLine}\n"
                         )
                     else:
                         # skip extra info. regular expression in readMoves will handle it just fine.
                         out.write(
-                            f"{move.fromLoc} moved to {move.toLoc} with assembly type {move.assemType} with enrich list: {enrichLine}\n"
+                            f"{move.fromLoc} moved to {move.toLoc} with assembly type {move.assemType} with "
+                            f"enrich list: {enrichLine}\n"
                         )
             out.write("\n")
         out.close()

@@ -256,7 +256,10 @@ class _Timer:
         return f"<{self.__class__.__name__} name:'{self.name}' num iterations:{self.numIterations} time:{self.time}>"
 
     def __str__(self):
-        s = f"{self.name[:55]:55s} {self.time:>14.2f} {self.time / (self.numIterations + 1):>14.2f} {self.numIterations + 1:11}"
+        s = (
+            f"{self.name[:55]:55s} {self.time:>14.2f} {self.time / (self.numIterations + 1):>14.2f} "
+            f"{self.numIterations + 1:11}"
+        )
         # needs to come after str generation because it resets the timeSinceReport
         self.reportedTotal = self.time
         return s

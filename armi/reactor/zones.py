@@ -68,8 +68,7 @@ class Zone:
 
     def __iter__(self) -> Iterator[str]:
         """Loop through the locations, in alphabetical order."""
-        for loc in sorted(self.locs):
-            yield loc
+        yield from sorted(self.locs)
 
     def __len__(self) -> int:
         """Return the number of locations."""

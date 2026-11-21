@@ -162,7 +162,8 @@ exclude = [
 # N801 - Class name should use CapWords convention
 # SIM - code simplification rules
 # TID - tidy imports
-select = ["D", "E", "F", "I", "N801", "SIM", "TID"]
+# UP - pyupgrade: modern syntax for the oldest supported Python (from requires-python)
+select = ["D", "E", "F", "I", "N801", "SIM", "TID", "UP"]
 
 # Ruff rules we ignore (for now) because they are not 100% automatable
 #

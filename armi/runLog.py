@@ -304,11 +304,11 @@ class _RunLog:
     def warningReport(self):
         """Summarize all warnings for the run."""
         self.logger.info("----- Final Warning Count --------")
-        self.logger.info("  {0:^10s}   {1:^25s}".format("COUNT", "LABEL"))
+        self.logger.info(f"  {'COUNT':^10s}   {'LABEL':^25s}")
 
         warningCounts = self._deduplicationFilter.warningCounts
         if not warningCounts:
-            self.logger.info("  {0:^10s}   {1:^25s}".format(str(0), "None Found"))
+            self.logger.info(f"  {'0':^10s}   {'None Found':^25s}")
             self.logger.info("------------------------------------")
             return
 
@@ -486,7 +486,7 @@ def concatenateLogs(logDir=None):
 
     combinedLogName = os.path.join(logDir, f"{caseTitle}-mpi.log")
     with open(combinedLogName, "w") as workerLog:
-        workerLog.write("\n{0} CONCATENATED WORKER LOG FILES {1}\n".format("-" * 10, "-" * 10))
+        workerLog.write(f"\n{'-' * 10} CONCATENATED WORKER LOG FILES {'-' * 10}\n")
 
         for stdoutName in stdoutFiles:
             # NOTE: If the log file name format changes, this will need to change.
@@ -495,7 +495,7 @@ def concatenateLogs(logDir=None):
                 data = logFile.read()
                 # only write if there's something to write
                 if data:
-                    rankId = "\n{0} RANK {1:03d} STDOUT {2}\n".format("-" * 10, rank, "-" * 60)
+                    rankId = f"\n{'-' * 10} RANK {rank:03d} STDOUT {'-' * 60}\n"
                     if rank == 0:
                         print(rankId, file=sys.stdout)
                         print(data, file=sys.stdout)
@@ -514,7 +514,7 @@ def concatenateLogs(logDir=None):
                     data = logFile.read()
                     if data:
                         # only write if there's something to write.
-                        rankId = "\n{0} RANK {1:03d} STDERR {2}\n".format("-" * 10, rank, "-" * 60)
+                        rankId = f"\n{'-' * 10} RANK {rank:03d} STDERR {'-' * 60}\n"
                         print(rankId, file=sys.stderr)
                         print(data, file=sys.stderr)
                 try:

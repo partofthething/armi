@@ -472,7 +472,8 @@ class Blueprints(YamlObject, metaclass=_BlueprintsPluginCollector):
                 runLog.error("CURRENT COMPARISON ASSEMBLY:")
                 a[0].printContents()
                 raise InputError(
-                    f"Assembly {a} has a different area {assemblyArea} than assembly {references[0]} {references[1]}.  Check inputs for accuracy"
+                    f"Assembly {a} has a different area {assemblyArea} than assembly {references[0]} "
+                    f"{references[1]}.  Check inputs for accuracy"
                 )
 
             blockArea = a[0].getArea()
@@ -487,7 +488,8 @@ class Blueprints(YamlObject, metaclass=_BlueprintsPluginCollector):
                         runLog.error(f"{c} area {c.getArea()} effective area {c.getVolume() / b.getHeight()}")
 
                     raise InputError(
-                        f"Block {b} has a different area {b.getArea()} than block {a[0]} {blockArea}. Check inputs for accuracy"
+                        f"Block {b} has a different area {b.getArea()} than block {a[0]} {blockArea}. Check "
+                        "inputs for accuracy"
                     )
 
     @classmethod

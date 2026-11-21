@@ -220,8 +220,7 @@ class Element:
         return hash(self) == hash(other)
 
     def __iter__(self):
-        for nuc in sorted(self.nuclides):
-            yield nuc
+        yield from sorted(self.nuclides)
 
     def append(self, nuclide):
         """Assigns and sorts the nuclide to the element and ensures no duplicates."""

@@ -175,7 +175,8 @@ def compareDatabases(
         src = databaseFactory(srcFileName, Permissions.READ_ONLY_FME)
         if not isinstance(ref, Database) or not isinstance(src, Database):
             raise TypeError(
-                f"This database comparer only knows how to deal with database version 3; received {type(ref)} and {type(src)}"
+                f"This database comparer only knows how to deal with database version 3; received {type(ref)} "
+                f"and {type(src)}"
             )
 
         with ref, src:
@@ -332,7 +333,8 @@ def _diffSpecialData(
         if not same:
             attrsMatch = False
             out.writeln(
-                f"Special formatting parameters for {name} do not match for {k}. Src: {srcData.attrs[k]} Ref: {refData.attrs[k]}"
+                f"Special formatting parameters for {name} do not match for {k}. Src: {srcData.attrs[k]} Ref: "
+                f"{refData.attrs[k]}"
             )
             break
 

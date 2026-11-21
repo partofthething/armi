@@ -53,7 +53,6 @@ import time
 import traceback
 from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass
-from typing import Union
 
 from armi import context, mpiActions, runLog
 from armi.cases import runners, sweeps
@@ -65,7 +64,7 @@ SNAPSHOT_FILE = "branch-snapshot.pkl"
 #: A branch's modifiers and task, pickled for its job.
 POINT_FILE = "branch-point.pkl"
 
-Task = Union[str, Callable]
+Task = str | Callable
 
 
 class StateModifier:

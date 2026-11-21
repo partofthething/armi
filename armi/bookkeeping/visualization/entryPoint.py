@@ -129,7 +129,8 @@ class VisFileEntryPoint(entryPoint.EntryPoint):
 
             if nodes is not None and any(node not in dbNodes for node in nodes):
                 raise RuntimeError(
-                    f"Some of the requested nodes are not in the source database.\nRequested: {nodes}\nPresent: {dbNodes}"
+                    "Some of the requested nodes are not in the source database.\nRequested: "
+                    f"{nodes}\nPresent: {dbNodes}"
                 )
 
             with dumper:

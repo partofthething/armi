@@ -156,7 +156,8 @@ class FuelAssemNumModifier(GeometryChanger):
 
         if self._sourceReactor.core.powerMultiplier != 1 and self._sourceReactor.core.powerMultiplier != 3:
             raise ValueError(
-                f"Invalid reactor geometry {r.core.powerMultiplier} in {self}. Reactor must be full or third core to modify the "
+                f"Invalid reactor geometry {r.core.powerMultiplier} in {self}. Reactor must be full or third "
+                "core to modify the "
                 "number of assemblies."
             )
 
@@ -567,7 +568,8 @@ class HexToRZThetaConverter(GeometryConverter):
 
         if not self._assemsInRadialZone[radialIndex]:
             raise ValueError(
-                f"No assemblies in radial zone {self._assemsInRadialZone[radialIndex]} between rings {lowerRing} and {upperRing}"
+                f"No assemblies in radial zone {self._assemsInRadialZone[radialIndex]} between rings "
+                f"{lowerRing} and {upperRing}"
             )
 
     @staticmethod
@@ -624,7 +626,8 @@ class HexToRZThetaConverter(GeometryConverter):
 
         if not assemsInRadialThetaZone:
             raise ValueError(
-                f"No assemblies in radial-theta zone between rings {lowerRing} and {upperRing} and theta bounds of {lowerTheta} and {upperTheta}"
+                f"No assemblies in radial-theta zone between rings {lowerRing} and {upperRing} and theta "
+                f"bounds of {lowerTheta} and {upperTheta}"
             )
 
         return assemsInRadialThetaZone
@@ -766,7 +769,8 @@ class HexToRZThetaConverter(GeometryConverter):
 
         if abs(newBlockVolumeFraction - 1.0) > 0.00001:
             raise ValueError(
-                f"The volume fraction of block {newBlock} is {newBlockVolumeFraction} and not 1.0. An error occurred when "
+                f"The volume fraction of block {newBlock} is {newBlockVolumeFraction} and not 1.0. An error "
+                "occurred when "
                 "converting the reactor geometry."
             )
 
@@ -803,7 +807,8 @@ class HexToRZThetaConverter(GeometryConverter):
         # Notify if blocks with different xs types are being homogenized. May be undesired behavior.
         if len(homBlockXsTypes) > 1:
             msg = (
-                f"Blocks {self.blockMap[homBlock]} with dissimilar XS IDs are being homogenized in {self.convReactor.core} between axial heights"
+                f"Blocks {self.blockMap[homBlock]} with dissimilar XS IDs are being homogenized in "
+                f"{self.convReactor.core} between axial heights"
                 f" {lowerAxialZ} cm and {upperAxialZ} cm. "
             )
             if self._strictHomogenization:
@@ -879,7 +884,8 @@ class HexToRZThetaConverter(GeometryConverter):
         radialAssemType = f"({self._currentRadialZoneType})" if self._currentRadialZoneType is not None else ""
         runLog.info(f"Creating: Radial Zone {radIdx + 1}, Theta Zone {thIdx + 1} {radialAssemType}")
         runLog.extra(
-            f"{9 * STR_SPACE} Hex Rings: [{lowerRing}, {upperRing}), Theta Revolutions: [{lowerTheta * units.RAD_TO_REV:.2f}, {upperTheta * units.RAD_TO_REV:.2f})"
+            f"{9 * STR_SPACE} Hex Rings: [{lowerRing}, {upperRing}), Theta Revolutions: "
+            f"[{lowerTheta * units.RAD_TO_REV:.2f}, {upperTheta * units.RAD_TO_REV:.2f})"
         )
         runLog.debug(
             f"{9 * STR_SPACE} Axial Zone - Axial Height (cm) Block Number Block Type             XS ID : "
@@ -901,7 +907,8 @@ class HexToRZThetaConverter(GeometryConverter):
             hexBlockXsIds.append(hexBlock.getMicroSuffix())
 
         runLog.debug(
-            f"{9 * STR_SPACE} {axIdx:<10} - {axialSegmentHeight:<17.3f} {self._newBlockNum:<12} {blockObj.getType():<22} {blockObj.getMicroSuffix():<5} : {hexBlockXsIds}"
+            f"{9 * STR_SPACE} {axIdx:<10} - {axialSegmentHeight:<17.3f} {self._newBlockNum:<12} "
+            f"{blockObj.getType():<22} {blockObj.getMicroSuffix():<5} : {hexBlockXsIds}"
         )
 
     def _expandSourceReactorGeometry(self):
@@ -1020,7 +1027,8 @@ class ThirdCoreHexToFullCoreChanger(GeometryChanger):
         ):
             raise ValueError(
                 "ThirdCoreHexToFullCoreChanger requires the input to have third core hex geometry. "
-                f"Geometry received was {self._sourceReactor.core.symmetry.domain} {self._sourceReactor.core.symmetry.boundary} {self._sourceReactor.core.geomType}"
+                f"Geometry received was {self._sourceReactor.core.symmetry.domain} "
+                f"{self._sourceReactor.core.symmetry.boundary} {self._sourceReactor.core.geomType}"
             )
 
         edgeChanger = EdgeAssemblyChanger()

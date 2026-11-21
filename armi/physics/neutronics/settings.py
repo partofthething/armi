@@ -384,7 +384,8 @@ def getNeutronicsSettingValidators(inspector):
         else:
             newValue = inspector.cs.getSetting(CONF_GROUP_STRUCTURE).default
             runLog.info(
-                f"Unable to automatically convert the {CONF_GROUP_STRUCTURE} setting of {value}. Defaulting to {newValue}"
+                f"Unable to automatically convert the {CONF_GROUP_STRUCTURE} setting of {value}. Defaulting "
+                f"to {newValue}"
             )
 
         inspector.cs = inspector.cs.modified(newSettings={CONF_GROUP_STRUCTURE: newValue})

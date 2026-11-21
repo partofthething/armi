@@ -238,7 +238,8 @@ class Inspector:
         """Add a query that the current value for ``settingName`` may not support certain features."""
         self.addQuery(
             lambda: self.cs[settingName] != self.cs.getSetting(settingName).default,
-            f"{settingName} set as:\n{self.cs[settingName]}\nUsing this location instead of the default location\n{self.cs.getSetting(settingName).default}\n"
+            f"{settingName} set as:\n{self.cs[settingName]}\nUsing this location instead of the default "
+            f"location\n{self.cs.getSetting(settingName).default}\n"
             "may not support certain functions.",
             "Revert to default location?",
             lambda: self._assignCS(settingName, self.cs.getSetting(settingName).default),
@@ -387,8 +388,8 @@ class Inspector:
 
         self.addQuery(
             lambda: self.cs.caseTitle.lower() == os.path.splitext(os.path.basename(self.cs["reloadDBName"].lower()))[0],
-            "Snapshot DB ({0}) and main DB ({1}) cannot have the same name."
-            "Change name of settings file and resubmit.".format(self.cs["reloadDBName"], self.cs.caseTitle),
+            f"Snapshot DB ({self.cs['reloadDBName']}) and main DB ({self.cs.caseTitle}) cannot have the same name. "
+            "Change name of settings file and resubmit.",
             "",
             self.NO_ACTION,
         )
@@ -410,7 +411,8 @@ class Inspector:
                 and not self._csRelativePathExists(self.cs[CONF_EXPLICIT_REPEAT_SHUFFLES])
                 and not _willBeCopiedFrom(self.cs[CONF_EXPLICIT_REPEAT_SHUFFLES])
             ),
-            f"The specified repeat shuffle file `{self.cs[CONF_EXPLICIT_REPEAT_SHUFFLES]}` does not exist, and won't be copied. Run will crash.",
+            f"The specified repeat shuffle file `{self.cs[CONF_EXPLICIT_REPEAT_SHUFFLES]}` does not exist, "
+            "and won't be copied. Run will crash.",
             "",
             self.NO_ACTION,
         )
@@ -421,7 +423,8 @@ class Inspector:
                 and not self._csRelativePathExists(self.cs[CONF_SHUFFLE_SEQUENCE_FILE])
                 and not _willBeCopiedFrom(self.cs[CONF_SHUFFLE_SEQUENCE_FILE])
             ),
-            f"The specified shuffle sequence file `{self.cs[CONF_SHUFFLE_SEQUENCE_FILE]}` does not exist. Run will crash.",
+            f"The specified shuffle sequence file `{self.cs[CONF_SHUFFLE_SEQUENCE_FILE]}` does not exist. Run "
+            "will crash.",
             "",
             self.NO_ACTION,
         )

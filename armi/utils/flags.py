@@ -25,7 +25,6 @@ not support extension of ``Flags``. So, we had to make our own. This is a much s
 
 import math
 from collections.abc import Sequence
-from typing import Union
 
 from armi import runLog
 
@@ -325,4 +324,4 @@ class Flag(metaclass=_FlagMeta):
 
 # Type alias to reliably check for a proper Flag type. This cannot just be `Flag`, since mypy gets confused by `auto`
 # because it doesn't go to the trouble of resolving them in the metaclass.
-FlagType = Union[Flag, auto]
+FlagType = Flag | auto

@@ -776,7 +776,8 @@ def replaceNonesWithNonsense(data: np.ndarray, paramName: str, nones: np.ndarray
     except Exception as ee:
         runLog.error(f"Error while attempting to determine default for {paramName}.\nvalue: {val}\nError: {ee}")
         raise TypeError(
-            f"Could not determine None replacement for {paramName} with type {realType}, val {val}, default {defaultValue}"
+            f"Could not determine None replacement for {paramName} with type {realType}, val {val}, default "
+            f"{defaultValue}"
         )
 
     try:

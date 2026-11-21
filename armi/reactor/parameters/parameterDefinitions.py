@@ -354,7 +354,10 @@ class Parameter:
         self.setter(setter)
 
     def __repr__(self):
-        return f"<ParamDef name:{self.name} collectionType:{self.collectionType.__name__} units:{self.units} assigned:{self.assigned}>"
+        return (
+            f"<ParamDef name:{self.name} collectionType:{self.collectionType.__name__} units:{self.units} "
+            f"assigned:{self.assigned}>"
+        )
 
     def __eq__(self, other):
         """Name defines equality."""
@@ -427,7 +430,8 @@ class Parameter:
 
             def paramSetter(p_self, value):
                 raise ParameterError(
-                    f"Cannot set value for parameter `{self.name}` on {p_self} to `{value}`, it has a restricted setter."
+                    f"Cannot set value for parameter `{self.name}` on {p_self} to `{value}`, it has a "
+                    "restricted setter."
                 )
 
         elif callable(setter):

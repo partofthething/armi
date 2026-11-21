@@ -141,7 +141,8 @@ def createBlockMesh(b: blocks.Block) -> VtkMesh:
         return _createTRZBlockMesh(b)
     else:
         raise TypeError(
-            f"Unsupported block type `{type(b).__name__}`. Supported types are: { ({t.__name__ for t in {blocks.CartesianBlock, blocks.HexBlock, blocks.ThRZBlock}}) }"
+            f"Unsupported block type `{type(b).__name__}`. Supported types are: "
+            f"{ {t.__name__ for t in (blocks.CartesianBlock, blocks.HexBlock, blocks.ThRZBlock)} }"
         )
 
 

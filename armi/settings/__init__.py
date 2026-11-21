@@ -23,7 +23,6 @@ has many settings of its own, and plugins typically register some of their own s
 import fnmatch
 import glob
 import os
-from typing import List
 
 from ruamel import yaml
 
@@ -108,7 +107,8 @@ def recursivelyLoadSettingsFiles(
             runLog.extra(f"skipping {possibleSettingsFile}; it appears to be an incomplete YAML snippet\n    {ee}")
         except Exception as ee:
             runLog.error(
-                f"Failed to parse {possibleSettingsFile}.\nIt looked like a settings file but gave this exception:\n{type(ee).__name__}: {ee}"
+                f"Failed to parse {possibleSettingsFile}.\nIt looked like a settings file but gave this "
+                f"exception:\n{type(ee).__name__}: {ee}"
             )
             raise
 

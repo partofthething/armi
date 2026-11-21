@@ -14,8 +14,6 @@
 
 """Settings that control the base/framework-level ARMI functionality."""
 
-from typing import List
-
 from armi.settings import setting
 from armi.settings.fwSettings import databaseSettings, globalSettings, reportSettings
 

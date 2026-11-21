@@ -51,7 +51,6 @@ import sys
 import traceback
 import warnings
 from collections.abc import Iterable
-from typing import List, Optional, Type
 
 import __main__ as main
 

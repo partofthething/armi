@@ -65,7 +65,8 @@ class BlockConverter:
         discarded. Attaching them to the reactor is not recommended.
         """
         runLog.extra(
-            f"Homogenizing the {soluteName} component into the {solventName} component in block {self._sourceBlock.getType()}",
+            f"Homogenizing the {soluteName} component into the {solventName} component in block "
+            f"{self._sourceBlock.getType()}",
             single=True,
         )
         # break up dimension links since we will be messing with this block's components
@@ -132,7 +133,8 @@ class BlockConverter:
     def _checkInputs(self, soluteName, solventName, solute, solvent):
         if solute is None or solvent is None:
             raise ValueError(
-                f"Block {self._sourceBlock} must have a {soluteName} component and a {solventName} component to homogenize."
+                f"Block {self._sourceBlock} must have a {soluteName} component and a {solventName} component "
+                "to homogenize."
             )
         if not (
             isinstance(solvent, components.DerivedShape)
@@ -161,7 +163,8 @@ class BlockConverter:
             if linkedC in solvent.getLinkedComponents():
                 if not linkedC.containsVoidMaterial():
                     raise ValueError(
-                        f"Non-Void component {linkedC} was linked to solute and solvent {solvent} in converted block {self._sourceBlock}. "
+                        f"Non-Void component {linkedC} was linked to solute and solvent {solvent} in "
+                        f"converted block {self._sourceBlock}. "
                         "Please dissolve this separately."
                     )
                 runLog.extra(
@@ -172,7 +175,8 @@ class BlockConverter:
             else:
                 dims = linkedC.getDimensionNamesLinkedTo(solute)
                 runLog.extra(
-                    f"Linking component {linkedC} in converted block {self._sourceBlock.getType()} to solvent {solvent}.",
+                    f"Linking component {linkedC} in converted block {self._sourceBlock.getType()} to solvent "
+                    f"{solvent}.",
                     single=True,
                 )
                 for dimToChange, dimOfOther in dims:
@@ -186,7 +190,8 @@ class BlockConverter:
             if c.isEncapsulatedBy(solvent):
                 raise ValueError(
                     f"There is a non void component {c} in the location where component {solvent} was expanded "
-                    f"to absorb component solute {solute}. solvent dims {solvent.p.id}, {solvent.p.od} comp dims {c.p.id} {c.p.od}."
+                    f"to absorb component solute {solute}. solvent dims {solvent.p.id}, {solvent.p.od} comp "
+                    f"dims {c.p.id} {c.p.od}."
                 )
             if c.getArea() < 0.0:
                 runLog.warning(
@@ -361,7 +366,8 @@ class MixedPinComponentMerger(MultipleComponentMerger):
             if c.isEncapsulatedBy(solvent):
                 raise ValueError(
                     f"There is a non void component {c} in the location where component {solvent} was expanded "
-                    f"to absorb component solute {solute}. solvent dims {solvent.p.id}, {solvent.p.od} comp dims {c.p.id} {c.p.od}."
+                    f"to absorb component solute {solute}. solvent dims {solvent.p.id}, {solvent.p.od} comp "
+                    f"dims {c.p.id} {c.p.od}."
                 )
             if c.getArea() < 0.0:
                 runLog.warning(

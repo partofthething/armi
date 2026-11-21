@@ -264,7 +264,8 @@ def filterNuclideList(nuclideVector, nuclides):
     """
     if not isinstance(list(nuclideVector.keys())[0], nuclides[0].__class__):
         raise ValueError(
-            f"nuclide vector is indexed by {nuclideVector.keys()[0].__class__} where as the nuclides list is {nuclides[0].__class__}"
+            f"nuclide vector is indexed by {nuclideVector.keys()[0].__class__} where as the nuclides list is "
+            f"{nuclides[0].__class__}"
         )
 
     for nucName in list(nuclideVector.keys()):

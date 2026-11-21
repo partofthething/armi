@@ -55,11 +55,10 @@ import threading
 import time
 from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
-from typing import Union
 
 from armi import runLog
 
-PathLike = Union[str, Path]
+PathLike = str | Path
 
 #: The manifest of an entry: the outputs and their hashes. Written last, so an entry without one is not an entry.
 MANIFEST_NAME = "manifest.json"

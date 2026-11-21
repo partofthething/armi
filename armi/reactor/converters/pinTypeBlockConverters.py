@@ -75,7 +75,8 @@ def adjustSmearDensity(obj, value, bolBlock=None):
         radicand = fuelOD**2 - value * cladID**2
         if radicand < 0.0:
             raise ValueError(
-                f"Cannot modify smear density of {obj} to {value}. The annular fuel OD {fuelOD} is too small relative to the "
+                f"Cannot modify smear density of {obj} to {value}. The annular fuel OD {fuelOD} is too small "
+                "relative to the "
                 f"cladding ID {cladID} to achieve this smear density."
             )
         newID = math.sqrt(radicand)

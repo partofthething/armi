@@ -66,7 +66,8 @@ class CaseSuite:
         existing = next((c for c in self if c.title == case.title), None)
         if existing is not None:
             raise ValueError(
-                f"CaseSuite already contains case with title `{case.title}`\nFirst case:  {existing}\nSecond case: {case}\n"
+                f"CaseSuite already contains case with title `{case.title}`\nFirst case:  {existing}\nSecond "
+                f"case: {case}\n"
                 "Name the cases' settings files differently (the file name sets the title)."
             )
         self._cases.append(case)

@@ -572,7 +572,8 @@ class Case:
 
         if pathTools.armiAbsPath(clone.cs.path) == pathTools.armiAbsPath(self.cs.path):
             raise RuntimeError(
-                f"The source file and destination file are the same: {pathTools.armiAbsPath(clone.cs.path)}\nCannot use armi-clone to "
+                "The source file and destination file are the same: "
+                f"{pathTools.armiAbsPath(clone.cs.path)}\nCannot use armi-clone to "
                 "modify armi settings file."
             )
 

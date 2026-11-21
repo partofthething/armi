@@ -20,7 +20,7 @@ See :doc:`/developer/index`.
 """
 
 from collections.abc import Callable
-from typing import TYPE_CHECKING, Dict, Union
+from typing import TYPE_CHECKING
 
 from armi import materials, plugins
 from armi.utils import onlyRunOnce
@@ -78,7 +78,7 @@ class ReactorPlugin(plugins.ArmiPlugin):
 
     @staticmethod
     @plugins.HOOKIMPL(trylast=True)
-    def defineSystemBuilders() -> dict[str, Callable[[str], Union["Core", "ExcoreStructure", "SpentFuelPool"]]]:
+    def defineSystemBuilders() -> dict[str, Callable[[str], "Core | ExcoreStructure | SpentFuelPool"]]:
         from armi.reactor.excoreStructure import ExcoreStructure
         from armi.reactor.reactors import Core
         from armi.reactor.spentFuelPool import SpentFuelPool
