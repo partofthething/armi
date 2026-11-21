@@ -196,7 +196,7 @@ class NuclideXSMetadata(FileMetadata):
     SCATTER_BAND_KEYS = ("maxUpScatterGroups", "maxDownScatterGroups", "maxScatteringOrder", "maxScatteringBlocks")
 
     def _getSkippedKeys(self, other, selfContainer, otherContainer, mergedData):
-        skippedKeys = set(["chi", "libraryLabel"])
+        skippedKeys = {"chi", "libraryLabel"}
         for key in self.SCATTER_BAND_KEYS:
             values = [v for v in (self[key], other[key]) if v is not None]
             if values:
@@ -211,7 +211,7 @@ class NuclideXSMetadata(FileMetadata):
             mergedData["fileWideChiFlag"] = 0
             skippedKeys.add("fileWideChiFlag")
             mergedData["chi"] = None
-            for nuc in [nn for nn in selfContainer.nuclides + otherContainer.nuclides]:
+            for nuc in list(selfContainer.nuclides + otherContainer.nuclides):
                 if nuc.isotxsMetadata["fisFlag"] > 0:
                     nuc.isotxsMetadata["chiFlag"] = 1
         return skippedKeys

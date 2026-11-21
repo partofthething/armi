@@ -66,7 +66,7 @@ class _FlagMeta(type):
     def __new__(cls, name, bases, attrs):
         autoAt = 1
         explicitFields = [(attr, val) for attr, val in attrs.items() if isinstance(val, int)]
-        explicitValues = set(val for name, val in explicitFields)
+        explicitValues = {val for name, val in explicitFields}
 
         flagClass = type.__new__(cls, name, bases, attrs)
 
@@ -85,7 +85,7 @@ class _FlagMeta(type):
         allFields = {name: val for name, val in attrs.items() if isinstance(val, int)}
         allFields = {n: v for n, v in allFields.items() if not _FlagMeta.isdunder(n)}
         flagClass._nameToValue = allFields
-        flagClass._valuesTaken = set(val for _, val in allFields.items())
+        flagClass._valuesTaken = {val for _, val in allFields.items()}
         flagClass._autoAt = autoAt
         flagClass._width = math.ceil(len(flagClass._nameToValue) / 8)
 
@@ -138,7 +138,7 @@ class Flag(metaclass=_FlagMeta):
     """
 
     _autoAt = None
-    _nameToValue = dict()
+    _nameToValue = {}
     _valuesTaken = set()
     _width = None
 

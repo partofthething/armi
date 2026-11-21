@@ -369,7 +369,7 @@ class NhfluxStream(cccc.StreamWithDataContainer):
         if self._metadata["variantFlag"]:
             keys = FILE_SPEC_1D_KEYS + FILE_SPEC_1D_KEYS_VARIANT11 + tuple(f"IDUM{e:>02}" for e in range(1, 7))
         else:
-            keys = FILE_SPEC_1D_KEYS + tuple(tuple(f"IDUM{e:>02}" for e in range(1, 12)))
+            keys = FILE_SPEC_1D_KEYS + tuple(f"IDUM{e:>02}" for e in range(1, 12))
 
         with self.createRecord() as record:
             self._metadata.update(record.rwImplicitlyTypedMap(keys, self._metadata))

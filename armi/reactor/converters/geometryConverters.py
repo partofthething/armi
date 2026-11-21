@@ -561,9 +561,7 @@ class HexToRZThetaConverter(GeometryConverter):
             assemsInRadialThetaZone = self._getAssemsInRadialThetaZone(lowerRing, upperRing, lowerTheta, upperTheta)
             newAssemsInRadialZone = set(assemsInRadialThetaZone)
             oldAssemsInRadialZone = set(self._assemsInRadialZone[radialIndex])
-            self._assemsInRadialZone[radialIndex].extend(
-                sorted(list(newAssemsInRadialZone.union(oldAssemsInRadialZone)))
-            )
+            self._assemsInRadialZone[radialIndex].extend(sorted(newAssemsInRadialZone.union(oldAssemsInRadialZone)))
             lowerTheta = upperTheta
 
         if not self._assemsInRadialZone[radialIndex]:
@@ -843,9 +841,9 @@ class HexToRZThetaConverter(GeometryConverter):
         assignedMixtureBlockType = None
 
         # Find the most common block type out of the types in the block mixture type exclusions list
-        excludedBlockTypesInBlock = set(
-            [x for x in self._BLOCK_MIXTURE_TYPE_EXCLUSIONS for y in numHexBlockByType if x in y]
-        )
+        excludedBlockTypesInBlock = {
+            x for x in self._BLOCK_MIXTURE_TYPE_EXCLUSIONS for y in numHexBlockByType if x in y
+        }
         if excludedBlockTypesInBlock:
             for blockType in self._BLOCK_MIXTURE_TYPE_EXCLUSIONS:
                 if blockType in excludedBlockTypesInBlock:

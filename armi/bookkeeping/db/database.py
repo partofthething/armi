@@ -903,7 +903,7 @@ class Database:
                 else:
                     # check if temp is a jagged array
                     if any(isinstance(x, (np.ndarray, list)) for x in temp):
-                        jagged = len(set([self._getArrayShape(x) for x in temp])) != 1
+                        jagged = len({self._getArrayShape(x) for x in temp}) != 1
                     else:
                         jagged = False
                     data = JaggedArray(temp, paramDef.name) if jagged else np.array(temp)
@@ -1250,7 +1250,7 @@ class Database:
         """
         histData: Histories = {c: collections.defaultdict(collections.OrderedDict) for c in comps}
         types = {c.__class__ for c in comps}
-        compsByTypeThenSerialNum: dict[type[ArmiObject], dict[int, ArmiObject]] = {t: dict() for t in types}
+        compsByTypeThenSerialNum: dict[type[ArmiObject], dict[int, ArmiObject]] = {t: {} for t in types}
 
         for c in comps:
             compsByTypeThenSerialNum[c.__class__][c.p.serialNum] = c
@@ -1652,7 +1652,7 @@ def collectBlockNumberDensities(blocks) -> dict[str, np.ndarray]:
     if not nuclideBases:
         return {}
 
-    nucNames = sorted(list(set(nucName for b in blocks for nucName in b.getNuclides())))
+    nucNames = sorted({nucName for b in blocks for nucName in b.getNuclides()})
     nucBases = [nuclideBases.byName[nn] for nn in nucNames]
     # It's faster to loop over blocks first and get all number densities from each than it is to get one nuclide at a
     # time from each block because of area fraction calculations. So we use some RAM here instead.
@@ -1661,7 +1661,7 @@ def collectBlockNumberDensities(blocks) -> dict[str, np.ndarray]:
         nucDensityMatrix.append(block.getNuclideNumberDensities(nucNames))
     nucDensityMatrix = np.array(nucDensityMatrix)
 
-    dataDict = dict()
+    dataDict = {}
     for ni, nb in enumerate(nucBases):
         # the nth column is a vector of nuclide densities for this nuclide across all blocks
         dataDict[nb.getDatabaseName()] = nucDensityMatrix[:, ni]

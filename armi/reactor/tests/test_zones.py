@@ -289,7 +289,7 @@ class TestZones(unittest.TestCase):
         self.r.core.buildManualZones(cs)
 
         # test the retrieval of zone locations
-        self.assertEqual(set(["002-001", "002-002"]), self.r.core.zones.getZoneLocations("ring-2"))
+        self.assertEqual({"002-001", "002-002"}, self.r.core.zones.getZoneLocations("ring-2"))
 
     def test_getAllLocations(self):
         # customize settings for this test
@@ -302,7 +302,7 @@ class TestZones(unittest.TestCase):
         self.r.core.buildManualZones(cs)
 
         # test the retrieval of zone locations
-        self.assertEqual(set(["001-001", "002-001", "002-002"]), self.r.core.zones.getAllLocations())
+        self.assertEqual({"001-001", "002-001", "002-002"}, self.r.core.zones.getAllLocations())
 
     def test_summary(self):
         # make sure we have a couple of zones to test on
@@ -364,5 +364,5 @@ class TestZonesFile(unittest.TestCase):
             :id: T_ARMI_ZONE5
             :tests: R_ARMI_ZONE
         """
-        self.assertEqual(set(["001-001"]), self.r.core.zones.getZoneLocations("a_zone"))
-        self.assertEqual(set(["002-001"]), self.r.core.zones.getZoneLocations("a_different_zone"))
+        self.assertEqual({"001-001"}, self.r.core.zones.getZoneLocations("a_zone"))
+        self.assertEqual({"002-001"}, self.r.core.zones.getZoneLocations("a_different_zone"))

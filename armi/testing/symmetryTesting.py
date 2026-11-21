@@ -186,7 +186,7 @@ class SymmetryFactorTester:
 
     @staticmethod
     def _getParamNamesFromDefs(pdefs: "parameters.ParameterDefinitionCollection"):
-        return set([p.name for p in pdefs])
+        return {p.name for p in pdefs}
 
     def _initializeCore(self):
         self._initializeParameters(self.coreParamsToTest, self.core)

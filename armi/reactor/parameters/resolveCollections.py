@@ -82,7 +82,7 @@ class ResolveParametersMeta(type):
         assert attrs.get("paramCollectionType") is None, f"{name} already has parameter collection"
         baseCollections = [b.paramCollectionType for b in bases if hasattr(b, "paramCollectionType")]
         # Make sure that these are what we expect them to be
-        assert all([issubclass(c, ParameterCollection) for c in baseCollections if c is not None])
+        assert all(issubclass(c, ParameterCollection) for c in baseCollections if c is not None)
 
         # Pull out the one element of the list if it exists
         inferredBaseCollection = next(iter(baseCollections), None)

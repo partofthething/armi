@@ -85,8 +85,8 @@ class Dif3dData(cccc.DataContainer):
     def __init__(self):
         cccc.DataContainer.__init__(self)
 
-        self.twoD = {e: None for e in FILE_SPEC_2D_PARAMS}
-        self.threeD = {e: None for e in FILE_SPEC_3D_PARAMS}
+        self.twoD = dict.fromkeys(FILE_SPEC_2D_PARAMS)
+        self.threeD = dict.fromkeys(FILE_SPEC_3D_PARAMS)
         self.fourD = None
         self.fiveD = None
 
@@ -159,7 +159,7 @@ class Dif3dStream(cccc.StreamWithDataContainer):
             with self.createRecord() as record:
                 # Initialize the record if we're reading
                 if self._data.fourD is None:
-                    self._data.fourD = {omegaParam: None for omegaParam in omegaParams}
+                    self._data.fourD = dict.fromkeys(omegaParams)
 
                 for omegaParam in omegaParams:
                     self._data.fourD[omegaParam] = record.rwDouble(self._data.fourD[omegaParam])
@@ -179,8 +179,8 @@ class Dif3dStream(cccc.StreamWithDataContainer):
             with self.createRecord() as record:
                 # Initialize the record if we're reading
                 if self._data.fiveD is None:
-                    self._data.fiveD = {zcmrcParam: None for zcmrcParam in zcmrcParams}
-                    self._data.fiveD.update({nzintsParam: None for nzintsParam in nzintsParams})
+                    self._data.fiveD = dict.fromkeys(zcmrcParams)
+                    self._data.fiveD.update(dict.fromkeys(nzintsParams))
 
                 for zcmrcParam in zcmrcParams:
                     self._data.fiveD[zcmrcParam] = record.rwDouble(self._data.fiveD[zcmrcParam])

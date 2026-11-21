@@ -79,30 +79,30 @@ class MockCompositionDependentExpander(materials.Material):
 
 class TestComponentFactory(unittest.TestCase):
     def getCircleVoidDict(self):
-        return dict(
-            shape="circle",
-            name="gap",
-            Tinput=25,
-            Thot=600,
-            od=2.1,
-            id=0.0,
-            mult=7,
-            material="Void",
-            isotopics="",
-        )
+        return {
+            "shape": "circle",
+            "name": "gap",
+            "Tinput": 25,
+            "Thot": 600,
+            "od": 2.1,
+            "id": 0.0,
+            "mult": 7,
+            "material": "Void",
+            "isotopics": "",
+        }
 
     def getCircleFuelDict(self):
-        return dict(
-            shape="circle",
-            name="fuel",
-            Tinput=25,
-            Thot=600,
-            od=2.1,
-            id=0.0,
-            mult=7,
-            material="UZr",
-            isotopics="",
-        )
+        return {
+            "shape": "circle",
+            "name": "fuel",
+            "Tinput": 25,
+            "Thot": 600,
+            "od": 2.1,
+            "id": 0.0,
+            "mult": 7,
+            "material": "UZr",
+            "isotopics": "",
+        }
 
     def test_factory(self):
         """Creating and verifying void and fuel components.
@@ -138,7 +138,7 @@ class TestComponentFactory(unittest.TestCase):
 
         for i, (name, klass) in enumerate(ComponentType.TYPES.items()):
             # hack together a dictionary input
-            thisAttrs = {k: 1.0 for k in set(klass.INIT_SIGNATURE).difference(attrs)}
+            thisAttrs = dict.fromkeys(set(klass.INIT_SIGNATURE).difference(attrs), 1.0)
             if "oR" in thisAttrs:
                 thisAttrs["oR"] /= 20.0
             if "iR" in thisAttrs:
@@ -595,7 +595,7 @@ class TestDerivedShapeGetArea(unittest.TestCase):
         b = r.core[0][0]
 
         # ensure there is a DerivedShape in this Block
-        shapes = set([type(c) for c in b])
+        shapes = {type(c) for c in b}
         self.assertIn(Circle, shapes)
         self.assertIn(DerivedShape, shapes)
         self.assertIn(Helix, shapes)
@@ -617,7 +617,7 @@ class TestDerivedShapeGetArea(unittest.TestCase):
         b.clearCache()
 
         # ensure there is a DerivedShape in this Block
-        shapes = set([type(c) for c in b])
+        shapes = {type(c) for c in b}
         self.assertIn(Circle, shapes)
         self.assertIn(DerivedShape, shapes)
         self.assertIn(Helix, shapes)

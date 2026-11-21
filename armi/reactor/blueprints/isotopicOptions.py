@@ -234,7 +234,7 @@ class CustomIsotopic(Map):
         self._expandElementMassFracs()
 
     def _initializeMassFracs(self):
-        self.massFracs = dict()  # defaults to 0.0, __init__ is not called
+        self.massFracs = {}  # defaults to 0.0, __init__ is not called
 
         if any(v < 0.0 for v in self.values()):
             raise ValueError(f"Custom isotopic input for {self.name} is negative")

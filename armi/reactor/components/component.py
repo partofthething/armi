@@ -106,7 +106,7 @@ class ComponentType(composites.CompositeModelType):
     plugin-based component subclass registration system.
     """
 
-    TYPES = dict()  #: :meta hide-value:
+    TYPES = {}  #: :meta hide-value:
 
     NON_DIMENSION_NAMES = (
         "Tinput",
@@ -173,8 +173,8 @@ class Component(composites.Composite, metaclass=ComponentType):
         The material object that makes up this component and give it its thermo-mechanical properties.
     """
 
-    DIMENSION_NAMES = tuple()  # will be assigned by ComponentType
-    INIT_SIGNATURE = tuple()  # will be assigned by ComponentType
+    DIMENSION_NAMES = ()  # will be assigned by ComponentType
+    INIT_SIGNATURE = ()  # will be assigned by ComponentType
 
     is3D = False  # flag to show that area is 2D by default
 

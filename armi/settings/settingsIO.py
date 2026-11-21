@@ -53,7 +53,7 @@ class SettingRenamer:
 
     def __init__(self, settings: dict[str, Setting]):
         self._currentNames: set[str] = set()
-        self._activeRenames: dict[str, str] = dict()
+        self._activeRenames: dict[str, str] = {}
         self._expiredRenames: set[tuple[str, str, datetime.date]] = set()
 
         today = datetime.date.today()

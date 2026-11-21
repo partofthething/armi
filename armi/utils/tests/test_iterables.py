@@ -125,7 +125,7 @@ class TestIterables(unittest.TestCase):
         s = iterables.Sequence(range(4, 8))
         sCopy = s.copy()
 
-        vals = [item for item in sCopy]
+        vals = list(sCopy)
         self.assertEqual(vals[0], 4)
         self.assertEqual(vals[-1], 7)
         self.assertEqual(len(vals), 4)
@@ -135,7 +135,7 @@ class TestIterables(unittest.TestCase):
         ex = range(3, 8)
         s.extend(ex)
 
-        vals = [item for item in s]
+        vals = list(s)
         self.assertEqual(vals[0], 0)
         self.assertEqual(vals[-1], 7)
         self.assertEqual(len(vals), 8)
@@ -144,7 +144,7 @@ class TestIterables(unittest.TestCase):
         s = iterables.Sequence(range(3))
         s.extend([999])
 
-        vals = [item for item in s]
+        vals = list(s)
         self.assertEqual(vals[0], 0)
         self.assertEqual(vals[-1], 999)
         self.assertEqual(len(vals), 4)
@@ -155,14 +155,14 @@ class TestIterables(unittest.TestCase):
 
         s3 = s1 + s2
 
-        vals = [item for item in s3]
+        vals = list(s3)
         self.assertEqual(vals[0], 0)
         self.assertEqual(vals[-1], 5)
         self.assertEqual(len(vals), 6)
 
         s1 += s2
 
-        vals = [item for item in s1]
+        vals = list(s1)
         self.assertEqual(vals[0], 0)
         self.assertEqual(vals[-1], 5)
         self.assertEqual(len(vals), 6)

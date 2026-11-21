@@ -126,7 +126,7 @@ class _RunLogFormatter(logging.Formatter):
     def __init__(self, mpiRank, showLevel=True):
         logging.Formatter.__init__(self, "%(message)s")
         self._mpiRank = mpiRank
-        self._prefixes = {level: prefix for level, prefix in _RunLog.getLogLevels(mpiRank).values()}
+        self._prefixes = dict(_RunLog.getLogLevels(mpiRank).values())
         self._whiteSpace = _RunLog.getWhiteSpace(mpiRank)
         self._showLevel = showLevel
 

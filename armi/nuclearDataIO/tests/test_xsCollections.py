@@ -181,7 +181,7 @@ class MockBlock(HexBlock):
         return [self.density.get(nucName, 0.0) for nucName in nucNames]
 
     def _getNdensHelper(self):
-        return {nucName: density for nucName, density in self.density.items()}
+        return dict(self.density.items())
 
     def setNumberDensity(self, key, val, *args, **kwargs):
         """Set the number density of this nuclide to this value."""

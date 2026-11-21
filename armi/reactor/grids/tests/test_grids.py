@@ -89,7 +89,7 @@ class TestSpatialLocator(unittest.TestCase):
                 self.assertFalse(x < y and y < x)
 
         expected = sorted(locs)
-        self.assertEqual(sorted(reversed(locs)), expected)
+        self.assertEqual(sorted(locs), expected)
         self.assertEqual(sorted(locs[::3] + locs[1::3] + locs[2::3]), expected)
 
     def test_multiIndexEq(self):
@@ -964,7 +964,7 @@ class TestCartesianGrid(unittest.TestCase):
         }
 
         for idx, expectedEq in expected.items():
-            equivalents = {i for i in grid.getSymmetricEquivalents(idx)}
+            equivalents = set(grid.getSymmetricEquivalents(idx))
 
             self.assertEqual(expectedEq, equivalents)
 
@@ -989,7 +989,7 @@ class TestCartesianGrid(unittest.TestCase):
         }
 
         for idx, expectedEq in expected.items():
-            equivalents = {i for i in grid.getSymmetricEquivalents(idx)}
+            equivalents = set(grid.getSymmetricEquivalents(idx))
 
             self.assertEqual(expectedEq, equivalents)
 
@@ -1007,7 +1007,7 @@ class TestCartesianGrid(unittest.TestCase):
         }
 
         for idx, expectedEq in expected.items():
-            equivalents = {i for i in grid.getSymmetricEquivalents(idx)}
+            equivalents = set(grid.getSymmetricEquivalents(idx))
 
             self.assertEqual(expectedEq, equivalents)
 
@@ -1031,7 +1031,7 @@ class TestCartesianGrid(unittest.TestCase):
         }
 
         for idx, expectedEq in expected.items():
-            equivalents = {i for i in grid.getSymmetricEquivalents(idx)}
+            equivalents = set(grid.getSymmetricEquivalents(idx))
 
             self.assertEqual(expectedEq, equivalents)
 

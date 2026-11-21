@@ -138,7 +138,7 @@ def _collectObjectData(
     includeParams: set[str] | None = None,
     excludeParams: set[str] | None = None,
 ) -> dict[str, Any]:
-    allData = dict()
+    allData = {}
 
     for pDef in type(objs[0]).pDefs.toWriteToDB(parameters.SINCE_ANYTHING):
         if includeParams is not None and pDef.name not in includeParams:

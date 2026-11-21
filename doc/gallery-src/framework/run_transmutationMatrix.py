@@ -98,7 +98,7 @@ def plotAll(xlim, ylim):
                 "",
                 (xp, yp),
                 (x, y),
-                arrowprops=dict(width=2 * trans.branch, shrink=0.1, alpha=0.4, color=color),
+                arrowprops={"width": 2 * trans.branch, "shrink": 0.1, "alpha": 0.4, "color": color},
             )
             # add reaction label towards the middle of the arrow
             xlabel = xp - (xp - x) * 0.5

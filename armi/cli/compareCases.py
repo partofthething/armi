@@ -98,7 +98,7 @@ class CompareCases(EntryPoint):
         EntryPoint.parse(self, args)
 
         if self.args.timestepCompare:
-            self.args.timestepCompare = list(tuple(map(int, step.split("."))) for step in self.args.timestepCompare)
+            self.args.timestepCompare = [tuple(map(int, step.split("."))) for step in self.args.timestepCompare]
 
         if self.args.weights:
             self.args.weights = dict(w.split(".") for w in self.args.weights)

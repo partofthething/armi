@@ -39,7 +39,7 @@ from armi.utils.yamlSchema import (
 
 
 def _configureAssemblyTypes():
-    assemTypes = dict()
+    assemTypes = {}
     pm = getPluginManagerOrFail()
     for pluginAssemTypes in pm.hook.defineAssemblyTypes():
         for blockType, assemType in pluginAssemTypes:

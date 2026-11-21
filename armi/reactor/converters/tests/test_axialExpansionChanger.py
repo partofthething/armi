@@ -430,7 +430,7 @@ class TestConservation(AxialExpansionTestBase):
         detailedNDens = {}
         for b in a:
             for c in getSolidComponents(b):
-                c.p.detailedNDens = copy.deepcopy([val for val in nDens[c].values()])
+                c.p.detailedNDens = copy.deepcopy(list(nDens[c].values()))
                 detailedNDens[c] = c.p.detailedNDens
         return detailedNDens
 
@@ -615,7 +615,7 @@ class TestManageCoreMesh(unittest.TestCase):
         detailedNDens = {}
         volumes = {}
         for c in componentLst:
-            c.p.detailedNDens = [val for val in c.getNumberDensities().values()]
+            c.p.detailedNDens = list(c.getNumberDensities().values())
             detailedNDens[c] = copy.deepcopy(c.p.detailedNDens)
             volumes[c] = c.getVolume()
         return (detailedNDens, volumes)

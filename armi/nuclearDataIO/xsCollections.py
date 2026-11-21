@@ -330,8 +330,8 @@ class XSCollection:
         elif all(v is None for k, v in other.__dict__.items() if k not in attributesToIgnore):
             pass  # See note 3
         else:
-            overlappingAttrs = set(k for k, v in self.__dict__.items() if v is not None and k != "source")
-            overlappingAttrs &= set(k for k, v in other.__dict__.items() if v is not None and k != "source")
+            overlappingAttrs = {k for k, v in self.__dict__.items() if v is not None and k != "source"}
+            overlappingAttrs &= {k for k, v in other.__dict__.items() if v is not None and k != "source"}
             raise AttributeError(
                 "Cannot merge {} and {}.\n Cross sections overlap in attributes: {}.".format(
                     self.source, other.source, ", ".join(overlappingAttrs)

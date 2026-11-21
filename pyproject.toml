@@ -133,6 +133,7 @@ extend-exclude = ["doc/tutorials/armi-example-app"]
 
 [tool.ruff.lint]
 # B - flake8-bugbear: likely bugs and design problems
+# C4 - flake8-comprehensions: no needless list/dict/set calls and comprehensions
 # D - pydocstyle, numpy convention
 # E, F - pycodestyle errors and Pyflakes
 # I - import sorting
@@ -141,7 +142,7 @@ extend-exclude = ["doc/tutorials/armi-example-app"]
 # SIM - code simplification
 # TID - tidy imports
 # UP - pyupgrade: modern syntax for the oldest supported Python (from requires-python)
-select = ["B", "D", "E", "F", "I", "N801", "RUF100", "SIM", "TID", "UP"]
+select = ["B", "C4", "D", "E", "F", "I", "N801", "RUF100", "SIM", "TID", "UP"]
 
 # Not (yet) enforced, because they need hand-written content rather than mechanical fixes:
 #

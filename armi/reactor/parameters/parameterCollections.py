@@ -252,7 +252,7 @@ class ParameterCollection(metaclass=_ParameterCollectionType):
         # prevent the addition of new parameter definitions. This will lead to errors
         # early, rather than mysterious attribute access errors later.
         cls.pDefs.lock()
-        cls._allFields = list(sorted(["_backup", "_hist", "assigned"] + [pd.fieldName for pd in cls.pDefs]))
+        cls._allFields = sorted(["_backup", "_hist", "assigned"] + [pd.fieldName for pd in cls.pDefs])
 
         cls._slots = set(cls._allFields).union({pd.name for pd in cls.pDefs})
         cls._slots.add("readOnly")
@@ -411,7 +411,7 @@ class ParameterCollection(metaclass=_ParameterCollectionType):
         return list(iter(self)) + list(self._hist.keys())
 
     def values(self):
-        paramVals = list(getattr(self, pd.fieldName) for pd in self.paramDefs if hasattr(self, pd.fieldName))
+        paramVals = [getattr(self, pd.fieldName) for pd in self.paramDefs if hasattr(self, pd.fieldName)]
         return paramVals + list(self._hist.values())
 
     def update(self, someDict):
@@ -467,7 +467,7 @@ class ParameterCollection(metaclass=_ParameterCollectionType):
         paramsToApply : list of ParmeterDefinitions
             restores the state of all parameters not in `paramsToApply`
         """
-        currentData = dict()
+        currentData = {}
 
         if self.assigned & SINCE_BACKUP:
             compParams = (pd for pd in paramsToApply.intersection(set(self.paramDefs)))

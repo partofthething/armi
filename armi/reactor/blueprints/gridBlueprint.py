@@ -473,7 +473,7 @@ class GridBlueprint(YamlObject):
         if self.gridContents is None:
             # Make sure we have at least something; clients shouldn't have to worry about whether
             # gridContents exist at all.
-            self.gridContents = dict()
+            self.gridContents = {}
 
     def _readGridContentsLattice(self):
         """Read an ascii map of grid contents.
@@ -490,7 +490,7 @@ class GridBlueprint(YamlObject):
         latticeCls = asciimaps.asciiMapFromGeomAndDomain(self.geom, symmetry.domain)
         asciimap = latticeCls()
         asciimap.readAscii(self.latticeMap)
-        gridContents = dict()
+        gridContents = {}
 
         iOffset, jOffset = _getAsciiMapOffset(self.geom, self.symmetry, asciimap.keys())
 

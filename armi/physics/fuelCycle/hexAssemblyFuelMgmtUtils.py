@@ -321,7 +321,7 @@ def buildConvergentRingSchedule(chargeRing, dischargeRing=1, coarseFactor=0.0):
     convergent = [int(ring) for ring in np.linspace(dischargeRing, chargeRing, numSteps)]
 
     # step 2. eliminate duplicates
-    convergent = sorted(list(set(convergent)))
+    convergent = sorted(set(convergent))
 
     # step 3. compute widths
     conWidths = []

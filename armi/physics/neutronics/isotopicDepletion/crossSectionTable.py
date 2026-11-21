@@ -71,7 +71,7 @@ class CrossSectionTable(collections.OrderedDict):
         n3n : float
             (n,3n) cross section in barns
         """
-        xsData = {rateType: xs for rateType, xs in zip(self.rateTypes, [nG, nF, n2n, nA, nP, n3n])}
+        xsData = dict(zip(self.rateTypes, [nG, nF, n2n, nA, nP, n3n]))
         nb = nucDir.nuclideBases.byName[nucName]
         mcnpNucName = int(nb.getMcnpId())
         self[mcnpNucName] = xsData
@@ -103,7 +103,7 @@ class CrossSectionTable(collections.OrderedDict):
 
         oneGroupXS = np.asarray(mgCrossSections).dot(mgFlux) / totalFlux
 
-        oneGroupXSbyName = {xsType: xs for xsType, xs in zip(xsTypes, oneGroupXS)}
+        oneGroupXSbyName = dict(zip(xsTypes, oneGroupXS))
         oneGroupXSbyName["n3n"] = 0.0
 
         self.add(nucName, **oneGroupXSbyName)
@@ -203,7 +203,7 @@ def makeReactionRateTable(obj, nuclides: list = None):
     if nuclides is None:
         nuclides = obj.getNuclides()
 
-    rxRates = {nucName: {rxName: 0 for rxName in CrossSectionTable.rateTypes} for nucName in nuclides}
+    rxRates = {nucName: dict.fromkeys(CrossSectionTable.rateTypes, 0) for nucName in nuclides}
 
     for armiObject in obj:
         for nucName in nuclides:

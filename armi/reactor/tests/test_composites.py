@@ -477,7 +477,7 @@ class TestCompositePattern(unittest.TestCase):
         # test the null case
         rRates = self.container.getReactionRates("U235")
         self.assertEqual(len(rRates), 6)
-        self.assertEqual(sum([r for r in rRates.values()]), 0)
+        self.assertEqual(sum(list(rRates.values())), 0)
 
         # init reactor
         _o, r = loadTestReactor(TESTING_ROOT, inputFileName="reactors/smallestTestReactor/armiRunSmallest.yaml")
@@ -490,28 +490,28 @@ class TestCompositePattern(unittest.TestCase):
         c = b.getComponents()[0]
         rRatesComp = c.getReactionRates("U235")
         self.assertEqual(len(rRatesComp), 6)
-        self.assertGreater(sum([r for r in rRatesComp.values()]), 0)
+        self.assertGreater(sum(list(rRatesComp.values())), 0)
 
         # test on a Block
         rRatesBlock = b.getReactionRates("U235")
         self.assertEqual(len(rRatesBlock), 6)
-        self.assertGreater(sum([r for r in rRatesBlock.values()]), 0)
+        self.assertGreater(sum(list(rRatesBlock.values())), 0)
 
         # test on an Assembly
         assem = r.core.getFirstAssembly()
         rRatesAssem = assem.getReactionRates("U235")
         self.assertEqual(len(rRatesAssem), 6)
-        self.assertGreater(sum([r for r in rRatesAssem.values()]), 0)
+        self.assertGreater(sum(list(rRatesAssem.values())), 0)
 
         # test on a Core
         rRatesCore = r.core.getReactionRates("U235")
         self.assertEqual(len(rRatesCore), 6)
-        self.assertGreater(sum([r for r in rRatesCore.values()]), 0)
+        self.assertGreater(sum(list(rRatesCore.values())), 0)
 
         # test on a Reactor
         rRatesReactor = r.getReactionRates("U235")
         self.assertEqual(len(rRatesReactor), 6)
-        self.assertGreater(sum([r for r in rRatesReactor.values()]), 0)
+        self.assertGreater(sum(list(rRatesReactor.values())), 0)
 
         # test that all different levels of the hierarchy have the same reaction rates
         for key, val in rRatesBlock.items():

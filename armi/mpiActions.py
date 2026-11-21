@@ -378,7 +378,7 @@ class DistributeStateAction(MpiAction):
 
     @staticmethod
     def _distributeParamAssignments():
-        data = dict()
+        data = {}
         if context.MPI_RANK == 0:
             data = {
                 (pName, pdType.__name__): pDef.assigned

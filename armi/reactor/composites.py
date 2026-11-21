@@ -238,7 +238,7 @@ class CompositeModelType(resolveCollections.ResolveParametersMeta):
     subclasses, called TYPES.
     """
 
-    TYPES: dict[str, type] = dict()
+    TYPES: dict[str, type] = {}
     """
     Dictionary mapping class name to class object for all subclasses.
 
@@ -1250,7 +1250,7 @@ class ArmiObject(metaclass=CompositeModelType):
 
         Set to almost zero, so components remember which nuclides are where.
         """
-        ndens = {nuc: units.TRACE_NUMBER_DENSITY for nuc in self.getNuclides()}
+        ndens = dict.fromkeys(self.getNuclides(), units.TRACE_NUMBER_DENSITY)
         self.setNumberDensities(ndens)
 
     def density(self):
@@ -1613,7 +1613,7 @@ class Composite(ArmiObject):
         operations can be fairly heavy. Rather, this only checks direct identity
         matches.
         """
-        return id(item) in set(id(c) for c in self._children)
+        return id(item) in {id(c) for c in self._children}
 
     def sort(self):
         """Sort the children of this object."""
@@ -2318,10 +2318,7 @@ class Composite(ArmiObject):
         """
         children = self.iterChildren(*args, **kwargs)
         # Each entry is either (c, ) or (c, c.material) if the child has a material attribute
-        stitched = map(
-            lambda c: (c,) if getattr(c, "material", None) is None else (c, c.material),
-            children,
-        )
+        stitched = ((c,) if getattr(c, "material", None) is None else (c, c.material) for c in children)
         # Iterator that iterates over each "sub" iterator. If we have ((c0, ), (c1, m1)), this produces a single
         # iterator of (c0, c1, m1)
         return itertools.chain.from_iterable(stitched)
@@ -2559,7 +2556,7 @@ class Composite(ArmiObject):
         set or str
             A set of all unique component names found in this Composite.
         """
-        return set(c.getName() for c in self.iterComponents())
+        return {c.getName() for c in self.iterComponents()}
 
     def getComponentsOfShape(self, shapeClass):
         """
@@ -3335,7 +3332,7 @@ def getDominantMaterial(objects: list[ArmiObject], typeSpec: TypeSpec = None, ex
 
     if volumes:
         # find matName with max volume
-        maxMatName = list(sorted(volumes.items(), key=lambda item: item[1])).pop()[0]
+        maxMatName = sorted(volumes.items(), key=lambda item: item[1]).pop()[0]
         # return this material. Note that if this material has properties like Zr-frac, enrichment,
         # etc. then this will just return one in the batch, not an average.
         return samples[maxMatName]

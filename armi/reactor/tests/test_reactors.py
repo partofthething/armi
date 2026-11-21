@@ -1015,7 +1015,7 @@ class TestHexReactorReadOnly(unittest.TestCase):
         self.assertIn("coolant", self.r.core._nuclideCategories)
         self.assertIn("structure", self.r.core._nuclideCategories)
         self.assertIn("fuel", self.r.core._nuclideCategories)
-        self.assertEqual(self.r.core._nuclideCategories["coolant"], set(["NA23"]))
+        self.assertEqual(self.r.core._nuclideCategories["coolant"], {"NA23"})
         self.assertIn("FE56", self.r.core._nuclideCategories["structure"])
         self.assertIn("U235", self.r.core._nuclideCategories["fuel"])
 
@@ -1063,7 +1063,7 @@ class TestHexReactorReadOnly(unittest.TestCase):
                 "assemFlagsToSkipAxialExpansion": ["feed fuel"],
             },
         )
-        aToSkip = list(Flags.fromStringIgnoreErrors(t) for t in o.cs[CONF_ASSEM_FLAGS_SKIP_AXIAL_EXP])
+        aToSkip = [Flags.fromStringIgnoreErrors(t) for t in o.cs[CONF_ASSEM_FLAGS_SKIP_AXIAL_EXP]]
 
         for i, val in enumerate(oldRefBlockAxialMesh[1:]):
             self.assertNotEqual(val, coldHeightR.core.p.referenceBlockAxialMesh[i])

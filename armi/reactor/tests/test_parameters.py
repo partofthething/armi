@@ -492,21 +492,21 @@ class TestParameter(unittest.TestCase):
                 pb.defParam("p3", "units", "p3 description", "location", categories=["bacon"])
 
         pc = MockPC()
-        self.assertEqual(pc.paramDefs.categories, set(["awesome", "stuff", "bacon"]))
+        self.assertEqual(pc.paramDefs.categories, {"awesome", "stuff", "bacon"})
 
         p1 = pc.paramDefs["p1"]
         p2 = pc.paramDefs["p2"]
         p3 = pc.paramDefs["p3"]
-        self.assertEqual(p1.categories, set(["awesome", "stuff"]))
-        self.assertEqual(p2.categories, set(["awesome", "stuff", "bacon"]))
-        self.assertEqual(p3.categories, set(["bacon"]))
+        self.assertEqual(p1.categories, {"awesome", "stuff"})
+        self.assertEqual(p2.categories, {"awesome", "stuff", "bacon"})
+        self.assertEqual(p3.categories, {"bacon"})
 
         for p in [p1, p2, p3]:
             self._testCategoryConsistency(p)
 
-        self.assertEqual(set(pc.paramDefs.inCategory("awesome")), set([p1, p2]))
-        self.assertEqual(set(pc.paramDefs.inCategory("stuff")), set([p1, p2]))
-        self.assertEqual(set(pc.paramDefs.inCategory("bacon")), set([p2, p3]))
+        self.assertEqual(set(pc.paramDefs.inCategory("awesome")), {p1, p2})
+        self.assertEqual(set(pc.paramDefs.inCategory("stuff")), {p1, p2})
+        self.assertEqual(set(pc.paramDefs.inCategory("bacon")), {p2, p3})
 
     def _testCategoryConsistency(self, p: parameters.Parameter):
         for category in p.categories:
@@ -516,16 +516,14 @@ class TestParameter(unittest.TestCase):
     def test_paramColHaveSlots(self):
         """Tests we prevent accidental creation of attributes."""
         self.assertEqual(
-            set(
-                [
-                    "_hist",
-                    "_backup",
-                    "assigned",
-                    "_p_serialNum",
-                    "serialNum",
-                    "readOnly",
-                ]
-            ),
+            {
+                "_hist",
+                "_backup",
+                "assigned",
+                "_p_serialNum",
+                "serialNum",
+                "readOnly",
+            },
             set(parameters.ParameterCollection._slots),
         )
 

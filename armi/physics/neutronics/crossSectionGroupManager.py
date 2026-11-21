@@ -133,13 +133,13 @@ def _checkConsistentNuclides(thisComp, repComp):
     """
     consistentNucs = {"PU239", "U238", "U235", "U234", "FE56", "NA23", "O16"}
     # ignore anything with zero number density
-    theseNucs = set(nuc for nuc, ndens in thisComp.getNumberDensities().items() if ndens > 0.0)
-    thoseNucs = set(nuc for nuc, ndens in repComp.getNumberDensities().items() if ndens > 0.0)
+    theseNucs = {nuc for nuc, ndens in thisComp.getNumberDensities().items() if ndens > 0.0}
+    thoseNucs = {nuc for nuc, ndens in repComp.getNumberDensities().items() if ndens > 0.0}
 
     # in the nuclide list of the component, but at a number density of 0.0
     # treat this more permissively -- i.e., it could be considered as either having or not having it
-    theseNucsAtZero = set(nuc for nuc, ndens in thisComp.getNumberDensities().items() if ndens == 0.0)
-    thoseNucsAtZero = set(nuc for nuc, ndens in repComp.getNumberDensities().items() if ndens == 0.0)
+    theseNucsAtZero = {nuc for nuc, ndens in thisComp.getNumberDensities().items() if ndens == 0.0}
+    thoseNucsAtZero = {nuc for nuc, ndens in repComp.getNumberDensities().items() if ndens == 0.0}
 
     # check for any differences between which `consistentNucs` the components have
     diffNucsNonZero = theseNucs.symmetric_difference(thoseNucs).intersection(consistentNucs)
@@ -479,7 +479,7 @@ class AverageBlockCollection(BlockCollection):
         If the components of blocks in the collection are similar and the user has requested
         Component-level averaging, return True. Otherwise, return False.
         """
-        cFlags = dict()
+        cFlags = {}
         for b in self.getCandidateBlocks():
             cFlags[b] = [c.p.flags for c in sorted(b.getComponents())]
         refB = b
@@ -502,7 +502,7 @@ class AverageBlockCollection(BlockCollection):
         nucs = set()
         for c in components:
             nucs = nucs.union(c.getNuclides())
-        return sorted(list(nucs))
+        return sorted(nucs)
 
 
 def getBlockNuclideTemperature(block, nuclide):
@@ -661,7 +661,7 @@ class CylindricalComponentsAverageBlockCollection(AverageBlockCollection):
         """
         for b in self.getCandidateBlocks():
             self._checkComponentConsistency(b, repBlock)
-        componentLists = [list(sorted(b)) for b in self.getCandidateBlocks()]
+        componentLists = [sorted(b) for b in self.getCandidateBlocks()]
         return [list(comps) for comps in zip(*componentLists)]
 
     def _getNucTempHelper(self):
@@ -773,7 +773,7 @@ class SlabComponentsAverageBlockCollection(BlockCollection):
         nucs = set()
         for c in components:
             nucs = nucs.union(c.getNuclides())
-        return sorted(list(nucs))
+        return sorted(nucs)
 
     @staticmethod
     def _checkComponentConsistency(b, repBlock, components=None):
@@ -864,7 +864,7 @@ class SlabComponentsAverageBlockCollection(BlockCollection):
                 )
             try:
                 self._checkComponentConsistency(b, repBlock)
-                componentsToAdd = [c for c in b]
+                componentsToAdd = list(b)
             except ValueError:
                 runLog.extra(
                     f"Checking if components in block {b} are in the reverse order of the components in the "
@@ -872,7 +872,7 @@ class SlabComponentsAverageBlockCollection(BlockCollection):
                 )
                 reversedComponentOrder = self._reverseComponentOrder(b)
                 self._checkComponentConsistency(b, repBlock, components=reversedComponentOrder)
-                componentsToAdd = [c for c in reversedComponentOrder]
+                componentsToAdd = list(reversedComponentOrder)
             for i, c in enumerate(componentsToAdd):
                 orderedComponents[i].append(c)  # group similar components
         return orderedComponents
@@ -1414,7 +1414,7 @@ class CrossSectionGroupManager(interfaces.Interface):
         if excludedXSTypes is not None:
             for xsType in excludedXSTypes:
                 allocatedXSTypes.add(xsType)
-        availableXsTypes = sorted(list(set(_ALLOWABLE_XS_TYPE_LIST).difference(allocatedXSTypes)))
+        availableXsTypes = sorted(set(_ALLOWABLE_XS_TYPE_LIST).difference(allocatedXSTypes))
         if len(availableXsTypes) < howMany:
             raise ValueError(
                 f"There are not enough available xs types. {len(allocatedXSTypes)} have been allocated, "

@@ -63,7 +63,7 @@ class TestNuclideBases(unittest.TestCase):
             self.assertGreater(len(nuclides), 0, msg=f"z={zz} unexpectedly has no nuclides")
             total = sum([nn.abundance for nn in nuclides if nn.a > 0])
             self.assertAlmostEqual(
-                any([nn.abundance > 0 for nn in nuclides]),
+                any(nn.abundance > 0 for nn in nuclides),
                 total,
                 delta=1e-4,
                 msg="Abundance ({}) not 1.0 for nuclideBases:\n  {}".format(
@@ -175,7 +175,7 @@ class TestNuclideBases(unittest.TestCase):
         trasmuters = self.nuclideBases.where(lambda nn: len(nn.trans) > 0)
         self.assertTrue(trasmuters)
         for nuc in trasmuters:
-            expected = len(set(tt.type for tt in nuc.trans))
+            expected = len({tt.type for tt in nuc.trans})
             self.assertTrue(all(0.0 <= tt.branch <= 1.0 for tt in nuc.trans))
             actual = sum(tt.branch for tt in nuc.trans)
             # ternary fission
@@ -237,7 +237,7 @@ class TestNuclideBases(unittest.TestCase):
     def test_nucBases_AllDatabaseNamesAreUnique(self):
         self.assertEqual(
             len(self.nuclideBases.instances),
-            len(set(nb.getDatabaseName() for nb in self.nuclideBases.instances)),
+            len({nb.getDatabaseName() for nb in self.nuclideBases.instances}),
         )
 
     def test_nucBases_Am242m(self):
@@ -383,7 +383,7 @@ class TestNuclideBases(unittest.TestCase):
         with open(os.path.join(RES, "mcc-nuclides.yaml")) as f:
             yaml = YAML(typ="rt")
             data = yaml.load(f)
-            expectedNuclides = set([nuc for nuc in data.keys() if data[nuc]["ENDF/B-V.2"] is not None])
+            expectedNuclides = {nuc for nuc in data.keys() if data[nuc]["ENDF/B-V.2"] is not None}
 
         for nuc, nb in self.nuclideBases.byMcc2Id.items():
             self.assertIn(nb.name, expectedNuclides)
@@ -406,7 +406,7 @@ class TestNuclideBases(unittest.TestCase):
         with open(os.path.join(RES, "mcc-nuclides.yaml")) as f:
             yaml = YAML(typ="rt")
             data = yaml.load(f)
-            expectedNuclides = set([nuc for nuc in data.keys() if data[nuc]["ENDF/B-VII.0"] is not None])
+            expectedNuclides = {nuc for nuc in data.keys() if data[nuc]["ENDF/B-VII.0"] is not None}
 
         for nuc, nb in self.nuclideBases.byMcc3IdEndfbVII0.items():
             self.assertIn(nb.name, expectedNuclides)
@@ -430,7 +430,7 @@ class TestNuclideBases(unittest.TestCase):
         with open(os.path.join(RES, "mcc-nuclides.yaml")) as f:
             yaml = YAML(typ="rt")
             data = yaml.load(f)
-            expectedNuclides = set([nuc for nuc in data.keys() if data[nuc]["ENDF/B-VII.1"] is not None])
+            expectedNuclides = {nuc for nuc in data.keys() if data[nuc]["ENDF/B-VII.1"] is not None}
 
         for nuc, nb in self.nuclideBases.byMcc3IdEndfbVII1.items():
             self.assertIn(nb.name, expectedNuclides)

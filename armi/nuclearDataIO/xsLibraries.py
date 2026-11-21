@@ -167,7 +167,7 @@ def mergeXSLibrariesInWorkingDirectory(
 
     baseDir = alternateDirectory or os.getcwd()
     globPath = os.path.join(baseDir, _ISOTXS_EXT + "*")
-    xsLibFiles = getISOTXSLibrariesToMerge(xsLibrarySuffix, [iso for iso in glob.glob(globPath)])
+    xsLibFiles = getISOTXSLibrariesToMerge(xsLibrarySuffix, list(glob.glob(globPath)))
     librariesToMerge = []
     neutronVelocities = {}  # Dictionary of neutron velocities from each ISOTXS file
     referenceDummyNuclides = None
@@ -407,7 +407,7 @@ class IsotxsLibrary(_XSLibrary):
 
         Assumes the suffixes are the last 2 letters in the nucNames
         """
-        return list(set(getSuffixFromNuclideLabel(name) for name in self.nuclideLabels))
+        return list({getSuffixFromNuclideLabel(name) for name in self.nuclideLabels})
 
     def __repr__(self):
         isotxs = bool(self.isotxsMetadata.keys())

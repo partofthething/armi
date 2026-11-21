@@ -199,7 +199,7 @@ class App:
         if cacheInvalid:
             currentNames = {pd.name for pd in parameters.ALL_DEFINITIONS}
 
-            renames = dict()
+            renames = {}
             for pluginRenames in self._pm.hook.defineParameterRenames():
                 collisions = currentNames & pluginRenames.keys()
                 if collisions:

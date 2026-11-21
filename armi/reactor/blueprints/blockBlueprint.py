@@ -31,7 +31,7 @@ from armi.utils.yamlSchema import Field, KeyedList, Sequence
 
 
 def _configureGeomOptions():
-    blockTypes = dict()
+    blockTypes = {}
     pm = getPluginManagerOrFail()
     for pluginBlockTypes in pm.hook.defineBlockTypes():
         for compType, blockType in pluginBlockTypes:
@@ -366,7 +366,7 @@ class BlockBlueprint(KeyedList):
 
     @staticmethod
     def _mergeComponents(b):
-        solventNamesToMergeInto = set(c.p.mergeWith for c in b.iterComponents() if c.p.mergeWith)
+        solventNamesToMergeInto = {c.p.mergeWith for c in b.iterComponents() if c.p.mergeWith}
 
         if solventNamesToMergeInto:
             runLog.warning(

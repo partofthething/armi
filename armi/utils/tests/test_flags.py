@@ -141,7 +141,7 @@ class TestFlag(unittest.TestCase):
     def test_iteration(self):
         """We want to be able to iterate over set flags."""
         f = ExampleFlag.FOO | ExampleFlag.BAZ
-        flagsOn = [val for val in f]
+        flagsOn = list(f)
         self.assertIn(ExampleFlag.FOO, flagsOn)
         self.assertIn(ExampleFlag.BAZ, flagsOn)
         self.assertNotIn(ExampleFlag.BAR, flagsOn)

@@ -318,9 +318,9 @@ class Blueprints(YamlObject, metaclass=_BlueprintsPluginCollector):
                 # expand axial heights from cold to hot so dims and masses are consistent with
                 # specified component hot temperatures.
                 assemsToSkip = [Flags.fromStringIgnoreErrors(t) for t in cs[CONF_ASSEM_FLAGS_SKIP_AXIAL_EXP]]
-                assemsToExpand = list(
+                assemsToExpand = [
                     a for a in list(self.assemblies.values()) if not any(a.hasFlags(f) for f in assemsToSkip)
-                )
+                ]
                 axialExpander = getPluginManagerOrFail().hook.getAxialExpansionChanger()
                 if axialExpander is not None:
                     axialExpander.expandColdDimsToHot(

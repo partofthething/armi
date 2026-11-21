@@ -1039,7 +1039,7 @@ class Core(composites.Composite):
         ``nozzleType`` is added during a run. This problem should not occur with the
         ``includeBolAssems=True`` argument provided.
         """
-        nozzleList = list(set(a.p.nozzleType for a in self.getAssemblies(includeBolAssems=True)))
+        nozzleList = list({a.p.nozzleType for a in self.getAssemblies(includeBolAssems=True)})
         return {nozzleType: i for i, nozzleType in enumerate(sorted(nozzleList))}
 
     def getBlockByName(self, name: str) -> blocks.Block:
@@ -1176,7 +1176,7 @@ class Core(composites.Composite):
 
     def getAllXsSuffixes(self):
         """Return all XS suffices (e.g. AA, AB, etc.) in the core."""
-        return sorted(set(b.getMicroSuffix() for b in self.iterBlocks()))
+        return sorted({b.getMicroSuffix() for b in self.iterBlocks()})
 
     def getNuclideCategories(self):
         """

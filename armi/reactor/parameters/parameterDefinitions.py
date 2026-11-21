@@ -487,8 +487,8 @@ class ParameterDefinitionCollection:
     __slots__ = ("_paramDefs", "_paramDefDict", "_representedTypes", "_locked")
 
     def __init__(self):
-        self._paramDefs = list()
-        self._paramDefDict = dict()
+        self._paramDefs = []
+        self._paramDefDict = {}
         self._representedTypes = set()
         self._locked = False
 

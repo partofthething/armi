@@ -459,8 +459,8 @@ needs_fields = {
 }
 
 needs_links = {
-    "tests": dict(incoming="testing", outgoing="requirements"),
-    "implements": dict(incoming="implementations", outgoing="requirements"),
+    "tests": {"incoming": "testing", "outgoing": "requirements"},
+    "implements": {"incoming": "implementations", "outgoing": "requirements"},
 }
 
 needs_layouts = {

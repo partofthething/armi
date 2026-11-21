@@ -79,8 +79,8 @@ def areAxiallyLinked(componentA: Component, componentB: Component) -> bool:
             componentB.spatialLocator, MultiIndexLocation
         ):
             ## Case 2
-            fromA = set(tuple(index) for index in componentA.spatialLocator.indices)
-            fromB = set(tuple(index) for index in componentB.spatialLocator.indices)
+            fromA = {tuple(index) for index in componentA.spatialLocator.indices}
+            fromB = {tuple(index) for index in componentB.spatialLocator.indices}
             if fromA == fromB:
                 linked = _checkOverlap(componentA, componentB)
         else:

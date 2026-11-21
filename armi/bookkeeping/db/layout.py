@@ -149,7 +149,7 @@ class Layout:
         self._spatialLocators: list[grids.LocationBase] = []
         # set of grid parameters that have been seen in _createLayout. For efficient
         # checks for uniqueness
-        self._seenGridParams: dict[Any, Any] = dict()
+        self._seenGridParams: dict[Any, Any] = {}
         # actual list of grid parameters, with stable order for safe indexing
         self.gridParams: list[Any] = []
         self.version = version
@@ -228,7 +228,7 @@ class Layout:
             self.material.append("")
 
         try:
-            comps = sorted(list(comp))
+            comps = sorted(comp)
         except ValueError:
             runLog.error(
                 f"Failed to sort some collection of ArmiObjects for database output: {type(comp)} value {list(comp)}"

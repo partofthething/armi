@@ -231,7 +231,7 @@ class Element:
 
     def isNaturallyOccurring(self):
         """Return True if the element is occurs in nature."""
-        return any([nuc.abundance > 0.0 for nuc in self.nuclides])
+        return any(nuc.abundance > 0.0 for nuc in self.nuclides)
 
     def getNaturalIsotopics(self):
         """

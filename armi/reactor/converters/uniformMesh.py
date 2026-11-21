@@ -279,9 +279,9 @@ class UniformMeshGenerator:
             otherwise it is false.
         """
         if preference == "bottom":
-            meshList = sorted(list(set(meshList)))
+            meshList = sorted(set(meshList))
         elif preference == "top":
-            meshList = sorted(list(set(meshList)), reverse=True)
+            meshList = sorted(set(meshList), reverse=True)
         else:
             raise ValueError(
                 f"Mesh filtering preference {preference} is not an option! Preference must be either bottom or top"
@@ -344,7 +344,7 @@ class UniformMeshGenerator:
         def lastBlockTop(a, flags):
             return a.getBlocks(flags)[-1].p.ztop
 
-        filteredBoundaries = dict()
+        filteredBoundaries = {}
         for meshList, preference, meshGetter, extreme in [
             (bottoms, "bottom", firstBlockBottom, min),
             (tops, "top", lastBlockTop, max),

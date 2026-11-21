@@ -97,7 +97,7 @@ class TestSettings(unittest.TestCase):
         ]
         self.assertEqual(self.cs.environmentSettings, envSettings)
 
-        newEnv = {es: 9 for es in envSettings}
+        newEnv = dict.fromkeys(envSettings, 9)
         newEnv["moduleVerbosity"] = {}
         self.cs.updateEnvironmentSettingsFrom(newEnv)
         self.assertEqual(self.cs["verbosity"], "9")
@@ -270,7 +270,7 @@ assemblyRotationAlgorithm: buReducingAssemblyRotatoin
         )
 
         inspector = Inspector(cs)
-        self.assertTrue(any(["Shuffling will not occur" in query.statement for query in inspector.queries]))
+        self.assertTrue(any("Shuffling will not occur" in query.statement for query in inspector.queries))
 
     def test_pluginSettings(self):
         """Test settings change depending on what plugins are registered.

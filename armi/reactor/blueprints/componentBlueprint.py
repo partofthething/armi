@@ -586,7 +586,7 @@ class ComponentGroups(KeyedList):
 # This import-time magic requires all possible components be imported before this module imports. The intent was to make
 # registration basically automatic. This has proven to be quite problematic and will be replaced with an explicit
 # plugin-level component registration system.
-for dimName in set([kw for cType in components.ComponentType.TYPES.values() for kw in cType.DIMENSION_NAMES]):
+for dimName in {kw for cType in components.ComponentType.TYPES.values() for kw in cType.DIMENSION_NAMES}:
     setattr(
         ComponentBlueprint,
         dimName,

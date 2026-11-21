@@ -248,7 +248,7 @@ class _RZThetaReactorMeshConverterByAxialFlags(RZThetaReactorMeshConverter):
         """
         axialMeshCoordinates = collections.defaultdict(set)
         for a in core.getAssemblies():
-            blockFlags = set([(b.p.flags, b.getMicroSuffix()) for b in a])
+            blockFlags = {(b.p.flags, b.getMicroSuffix()) for b in a}
             for flags, xsID in blockFlags:
                 meshes = []
                 for b in a.iterBlocks(flags):
@@ -282,7 +282,7 @@ class _RZThetaReactorMeshConverterByRingComposition(RZThetaReactorMeshConverter)
         """Set composition of each ring in the reactor by the assembly type."""
         ringIndices = []
         ringCompositions = []
-        numRings = [r for r in range(1, self._numRingsInCore + 1)]
+        numRings = list(range(1, self._numRingsInCore + 1))
         for _i, ring in enumerate(numRings):
             # Note that this needs to be in a HEX ring - Circular ring mode
             # is not supported.

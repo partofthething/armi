@@ -645,7 +645,7 @@ class HexComponentsToCylConverter(BlockAvgToCylConverter):
             elif c.name != "coolant":  #  coolant is addressed in self.interRingComponent
                 nonPins.append(c)
 
-        return list(sorted(pinComponents)), nonPins
+        return sorted(pinComponents), nonPins
 
     def _buildInsideDuct(self):
         """Build a homogenized material of the components inside the duct."""

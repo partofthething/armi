@@ -991,21 +991,21 @@ class TestSimplestDatabaseItems(unittest.TestCase):
 
         # test a simple case
         keys = ["c00n00", "c00n01", "c01n00", "c01n01"]
-        db.h5db = {k: "fake" for k in keys}
+        db.h5db = dict.fromkeys(keys, "fake")
 
         steps = list(db.genTimeSteps())
         self.assertListEqual(steps, [(0, 0), (0, 1), (1, 0), (1, 1)])
 
         # test a case with an EOL time step
         keys = ["c00n00", "c00n01", "c01n00", "c01n01", "c01n01EOL"]
-        db.h5db = {k: "fake" for k in keys}
+        db.h5db = dict.fromkeys(keys, "fake")
 
         steps = list(db.genTimeSteps())
         self.assertListEqual(steps, [(0, 0), (0, 1), (1, 0), (1, 1), (1, 1, "EOL")])
 
         # test a case with an error state
         keys = ["c00n03", "c00n03error"]
-        db.h5db = {k: "fake" for k in keys}
+        db.h5db = dict.fromkeys(keys, "fake")
 
         steps = list(db.genTimeSteps())
         self.assertListEqual(steps, [(0, 3), (0, 3, "error")])
@@ -1022,7 +1022,7 @@ class TestSimplestDatabaseItems(unittest.TestCase):
         # test a simple case
         keys = ["c00n00", "c00n01", "c01n00", "c01n01"]
         const = "fakeGroup"
-        db.h5db = {k: const for k in keys}
+        db.h5db = dict.fromkeys(keys, const)
 
         steps = list(db.genTimeStepGroups())
         self.assertListEqual(steps, [const] * 4)

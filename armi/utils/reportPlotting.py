@@ -128,7 +128,7 @@ def valueVsTime(name, x, y, key, yaxis, title, ymin=None, extension=None):
     plt.grid(color="0.70")
     plt.title(title + f" for {name}")
 
-    if ymin is not None and all([yi > ymin for yi in y]):
+    if ymin is not None and all(yi > ymin for yi in y):
         # set ymin all values are greater than it and it exists.
         ax = plt.gca()
         ax.set_ylim(bottom=ymin)
@@ -177,7 +177,7 @@ def keffVsTime(name, time, keff, keffUnc=None, ymin=None, extension=None):
     plt.grid(color="0.70")
     plt.title("k-eff vs. time" + f" for {name}")
 
-    if ymin is not None and all([yi > ymin for yi in keff]):
+    if ymin is not None and all(yi > ymin for yi in keff):
         # set ymin all values are greater than it and it exists.
         ax = plt.gca()
         ax.set_ylim(bottom=ymin)

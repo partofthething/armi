@@ -96,7 +96,7 @@ class LogCounter(BufferLog):
 
     def __init__(self, *args, **kwargs):
         BufferLog.__init__(self)
-        self.messageCounts = {msgType: 0 for msgType in self.logLevels.keys()}
+        self.messageCounts = dict.fromkeys(self.logLevels.keys(), 0)
 
     def log(self, msgType, *args, **kwargs):
         self.messageCounts[msgType] += 1

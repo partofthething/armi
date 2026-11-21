@@ -281,7 +281,7 @@ class TestBlockConverter(unittest.TestCase):
             hexagon.numPositionsInRing,
         )
         # block went to 1 component
-        self.assertEqual(1, len([c for c in convertedWithoutDriver]))
+        self.assertEqual(1, len(list(convertedWithoutDriver)))
 
     def test_convertHexWithFuelDrOnNegCompAreaBlock(self):
         """

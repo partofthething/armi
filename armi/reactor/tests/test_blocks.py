@@ -1364,23 +1364,21 @@ class TestBlock(unittest.TestCase):
 
     def test_getComponentNames(self):
         cur = self.block.getComponentNames()
-        ref = set(
-            [
-                "annular void",
-                "bond",
-                "fuel",
-                "gap1",
-                "inner liner",
-                "gap2",
-                "outer liner",
-                "gap3",
-                "clad",
-                "wire",
-                "coolant",
-                "duct",
-                "interCoolant",
-            ]
-        )
+        ref = {
+            "annular void",
+            "bond",
+            "fuel",
+            "gap1",
+            "inner liner",
+            "gap2",
+            "outer liner",
+            "gap3",
+            "clad",
+            "wire",
+            "coolant",
+            "duct",
+            "interCoolant",
+        }
         self.assertEqual(cur, ref)
 
     def test_getComponents(self):

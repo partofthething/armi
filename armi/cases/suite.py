@@ -52,7 +52,7 @@ class CaseSuite:
     """
 
     def __init__(self, cs):
-        self._cases = list()
+        self._cases = []
         self.cs = cs
 
     def add(self, case):
@@ -281,8 +281,8 @@ class CaseSuite:
 
         nIssues = 0
 
-        refTitles = set(c.title for c in self)
-        cmpTitles = set(c.title for c in that)
+        refTitles = {c.title for c in self}
+        cmpTitles = {c.title for c in that}
         missingTitles = []
         tableResults = {}
         for caseTitle in refTitles.union(cmpTitles):

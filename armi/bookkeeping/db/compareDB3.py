@@ -253,7 +253,7 @@ def _compareAuxData(
     arbitrary data. These still need to be compared. Missing datasets will be treated as
     structure differences and reported.
     """
-    data = dict()
+    data = {}
 
     def visitor(name, obj):
         if isinstance(obj, h5py.Dataset):
@@ -262,7 +262,7 @@ def _compareAuxData(
     refGroup.visititems(visitor)
     refData = data
 
-    data = dict()
+    data = {}
     srcGroup.visititems(visitor)
     srcData = data
 

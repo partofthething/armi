@@ -107,7 +107,7 @@ class ArmiCLI:
     def __init__(self):
         from armi import getPluginManager
 
-        self._entryPoints = dict()
+        self._entryPoints = {}
         for pluginEntryPoints in getPluginManager().hook.defineEntryPoints():
             for entryPoint in pluginEntryPoints:
                 if entryPoint.name in self._entryPoints:

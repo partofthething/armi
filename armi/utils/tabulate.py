@@ -412,7 +412,7 @@ _tableFormats = {
 }
 
 
-tabulateFormats = list(sorted(_tableFormats.keys()))
+tabulateFormats = sorted(_tableFormats.keys())
 
 # The table formats for which multiline cells will be folded into subsequent table rows. The key is
 # the original format, the value is the format that will be used to represent it.
@@ -1004,7 +1004,7 @@ def _normalizeTabularData(data, headers, showIndex="default"):
         # fill out default values, to ensure all data lists are the same length
         vals = list(data.values())
         maxLen = max([len(v) for v in vals], default=0)
-        vals = [[v for v in vv] + [None] * (maxLen - len(vv)) for vv in vals]
+        vals = [list(vv) + [None] * (maxLen - len(vv)) for vv in vals]
         rows = [tuple(v[i] for v in vals) for i in range(maxLen)]
 
         if headers == "keys":
@@ -1076,7 +1076,7 @@ def _normalizeTabularData(data, headers, showIndex="default"):
         headers = []
 
     headers = list(map(str, headers))
-    rows = list(map(lambda r: r if _isSeparatingLine(r) else list(r), rows))
+    rows = [r if _isSeparatingLine(r) else list(r) for r in rows]
 
     # add or remove an index column
     showIndexIsSStr = type(showIndex) in [str, bytes]
@@ -1342,7 +1342,7 @@ def tabulate(
         assert isinstance(colAlign, Iterable)
         if isinstance(colAlign, str):
             runLog.warning(
-                f"As a string, `colAlign` is interpreted as {[c for c in colAlign]}. Did you "
+                f"As a string, `colAlign` is interpreted as {list(colAlign)}. Did you "
                 + f'mean `colGlobalAlign = "{colAlign}"` or `colAlign = ("{colAlign}",)`?'
             )
         for idx, align in enumerate(colAlign):
@@ -1367,7 +1367,7 @@ def tabulate(
             assert isinstance(headersAlign, Iterable)
             if isinstance(headersAlign, str):
                 runLog.warning(
-                    f"As a string, `headersAlign` is interpreted as {[c for c in headersAlign]}. "
+                    f"As a string, `headersAlign` is interpreted as {list(headersAlign)}. "
                     + f'Did you mean `headersGlobalAlign = "{headersAlign}"` or `headersAlign = '
                     + f'("{headersAlign}",)`?'
                 )

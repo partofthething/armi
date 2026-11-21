@@ -282,7 +282,7 @@ class KlassCounter:
     """
 
     def __init__(self, reportSize):
-        self.counters = dict()
+        self.counters = {}
         self.reportSize = reportSize
         self.count = 0
 

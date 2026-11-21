@@ -375,8 +375,8 @@ assemblies:
         self.assertAlmostEqual(19.1, fuel1.density())
 
         # keys are same
-        keys1 = set([i for i, v in enumerate(fuel1.p.numberDensities) if v == 0.0])
-        keys2 = set([i for i, v in enumerate(fuel2.p.numberDensities) if v == 0.0])
+        keys1 = {i for i, v in enumerate(fuel1.p.numberDensities) if v == 0.0}
+        keys2 = {i for i, v in enumerate(fuel2.p.numberDensities) if v == 0.0}
         self.assertEqual(keys1, keys2)
 
     def test_densAppliedToNonCustomMats(self):
@@ -496,8 +496,8 @@ assemblies:
         fuel4 = self.a[3].getComponent(Flags.FUEL)
         self.assertAlmostEqual(fuel2.density(), fuel4.density())
 
-        keys2 = set([i for i, v in enumerate(fuel2.p.numberDensities) if v == 0.0])
-        keys4 = set([i for i, v in enumerate(fuel4.p.numberDensities) if v == 0.0])
+        keys2 = {i for i, v in enumerate(fuel2.p.numberDensities) if v == 0.0}
+        keys4 = {i for i, v in enumerate(fuel4.p.numberDensities) if v == 0.0}
         self.assertEqual(keys2, keys4)
         np.testing.assert_almost_equal(fuel2.p.numberDensities, fuel4.p.numberDensities)
 

@@ -59,11 +59,11 @@ class TestTabulateAPI(unittest.TestCase):
 class TestTabulateInputs(unittest.TestCase):
     def test_iterableOfEmpties(self):
         """Input: test various empty inputs."""
-        ii = iter(map(lambda x: iter(x), []))
+        ii = iter(iter(x) for x in [])
         result = tabulate(ii, "firstrow")
         self.assertEqual("", result)
 
-        ij = iter(map(lambda x: iter(x), ["abcde"]))
+        ij = iter(iter(x) for x in ["abcde"])
         expected = "\n".join(
             [
                 "a    b    c    d    e",
@@ -85,14 +85,14 @@ class TestTabulateInputs(unittest.TestCase):
 
     def test_iterableOfIterables(self):
         """Input: an iterable of iterables."""
-        ii = iter(map(lambda x: iter(x), [range(5), range(5, 0, -1)]))
+        ii = iter(iter(x) for x in [range(5), range(5, 0, -1)])
         expected = "\n".join(["-  -  -  -  -", "0  1  2  3  4", "5  4  3  2  1", "-  -  -  -  -"])
         result = tabulate(ii, headersAlign="center")
         self.assertEqual(expected, result)
 
     def test_iterableOfIterablesHeaders(self):
         """Input: an iterable of iterables with headers."""
-        ii = iter(map(lambda x: iter(x), [range(5), range(5, 0, -1)]))
+        ii = iter(iter(x) for x in [range(5), range(5, 0, -1)])
         expected = "\n".join(
             [
                 "  a    b    c    d    e",
@@ -106,7 +106,7 @@ class TestTabulateInputs(unittest.TestCase):
 
     def test_iterableOfIterablesFirstrow(self):
         """Input: an iterable of iterables with the first row as headers."""
-        ii = iter(map(lambda x: iter(x), ["abcde", range(5), range(5, 0, -1)]))
+        ii = iter(iter(x) for x in ["abcde", range(5), range(5, 0, -1)])
         expected = "\n".join(
             [
                 "  a    b    c    d    e",

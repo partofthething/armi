@@ -449,7 +449,7 @@ class Material(MatPropsMaterial):
         if not np.isclose(sum(massFracs), 1.0, atol=1e-10):
             raise RuntimeError(f"The mass fractions {massFracs} in {self} do not sum to 1.0.")
 
-        self.massFrac = {nuc: weight for nuc, weight in zip(nucsNames, massFracs)}
+        self.massFrac = dict(zip(nucsNames, massFracs))
         if self.refDens != 0.0:
             # Do not update density if not assigned.
             self.refDens = updatedDensity

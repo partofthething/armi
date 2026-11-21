@@ -879,7 +879,7 @@ class TestXSGM(unittest.TestCase):
         blockCollectionsByXsGroup = {}
         blockCollectionsByXsGroup = self.csm._addXsGroupsFromBlocks(blockCollectionsByXsGroup, self.blockList)
         missingBlueprintBlocks = self.csm._getMissingBlueprintBlocks(blockCollectionsByXsGroup)
-        envGroups = set(b.p.envGroup for b in missingBlueprintBlocks)
+        envGroups = {b.p.envGroup for b in missingBlueprintBlocks}
         self.assertGreater(len(envGroups), 1, "Blueprint block environment groups were not updated!")
 
     def test_calcWeightedBurnup(self):
