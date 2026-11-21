@@ -347,7 +347,7 @@ def getNeutronicsSettingValidators(inspector):
         settingsValidation.Query(
             lambda: inspector.cs[CONF_GEN_XS] in ("True", "False"),
             "The {0} setting cannot not take `True` or `False` as an exact value any more.",
-            'Would you like to auto-correct {0} to the correct value? ("" or {1})'.format(CONF_GEN_XS, NEUTRON),
+            f'Would you like to auto-correct {CONF_GEN_XS} to the correct value? ("" or {NEUTRON})',
             migrateXSOptionGenXS,
         )
     )
@@ -356,9 +356,7 @@ def getNeutronicsSettingValidators(inspector):
         settingsValidation.Query(
             lambda: inspector.cs[CONF_GLOBAL_FLUX_ACTIVE] in ("True", "False"),
             "The {0} setting cannot not take `True` or `False` as an exact value any more.",
-            'Would you like to auto-correct {0} to the correct value? ("" or {1})'.format(
-                CONF_GLOBAL_FLUX_ACTIVE, NEUTRON
-            ),
+            f'Would you like to auto-correct {CONF_GLOBAL_FLUX_ACTIVE} to the correct value? ("" or {NEUTRON})',
             migrateXSOptionGlobalFluxActive,
         )
     )
@@ -370,8 +368,8 @@ def getNeutronicsSettingValidators(inspector):
     queries.append(
         settingsValidation.Query(
             lambda: inspector.cs[CONF_BOUNDARIES] == "Normal",
-            "The {0} setting now takes `Extrapolated` instead of `Normal` as a value.".format(CONF_BOUNDARIES),
-            "Would you like to auto-correct {0} from `Normal` to `Extrapolated`?".format(CONF_BOUNDARIES),
+            f"The {CONF_BOUNDARIES} setting now takes `Extrapolated` instead of `Normal` as a value.",
+            f"Would you like to auto-correct {CONF_BOUNDARIES} from `Normal` to `Extrapolated`?",
             migrateNormalBCSetting,
         )
     )
@@ -382,13 +380,11 @@ def getNeutronicsSettingValidators(inspector):
         newValue = value.upper()
 
         if newValue in GROUP_STRUCTURE:
-            runLog.info("Updating the cross section group structure from {} to {}".format(value, newValue))
+            runLog.info(f"Updating the cross section group structure from {value} to {newValue}")
         else:
             newValue = inspector.cs.getSetting(CONF_GROUP_STRUCTURE).default
             runLog.info(
-                "Unable to automatically convert the {} setting of {}. Defaulting to {}".format(
-                    CONF_GROUP_STRUCTURE, value, newValue
-                )
+                f"Unable to automatically convert the {CONF_GROUP_STRUCTURE} setting of {value}. Defaulting to {newValue}"
             )
 
         inspector.cs = inspector.cs.modified(newSettings={CONF_GROUP_STRUCTURE: newValue})
@@ -396,7 +392,7 @@ def getNeutronicsSettingValidators(inspector):
     queries.append(
         settingsValidation.Query(
             lambda: inspector.cs[CONF_GROUP_STRUCTURE] not in GROUP_STRUCTURE,
-            "The given group structure {0} was not recognized.".format(inspector.cs[CONF_GROUP_STRUCTURE]),
+            f"The given group structure {inspector.cs[CONF_GROUP_STRUCTURE]} was not recognized.",
             "Would you like to auto-correct the group structure value?",
             updateXSGroupStructure,
         )
@@ -423,7 +419,7 @@ def getNeutronicsSettingValidators(inspector):
     queries.append(
         settingsValidation.Query(
             lambda: inspector.cs[CONF_DPA_XS_SET] in ("dpaHT9_33", "dpa_SS316"),
-            "It appears you are using a shortened version of the {0}.".format(CONF_DPA_XS_SET),
+            f"It appears you are using a shortened version of the {CONF_DPA_XS_SET}.",
             "Would you like to auto-correct this to the full name?",
             migrateDpaDpaXsSet,
         )
@@ -432,7 +428,7 @@ def getNeutronicsSettingValidators(inspector):
     queries.append(
         settingsValidation.Query(
             lambda: inspector.cs[CONF_GRID_PLATE_DPA_XS_SET] in ("dpaHT9_33", "dpa_SS316"),
-            "It appears you are using a shortened version of the {0}.".format(CONF_GRID_PLATE_DPA_XS_SET),
+            f"It appears you are using a shortened version of the {CONF_GRID_PLATE_DPA_XS_SET}.",
             "Would you like to auto-correct this to the full name?",
             migrateDpaGridPlate,
         )
@@ -452,10 +448,10 @@ def getNeutronicsSettingValidators(inspector):
 
     queryMsg = (
         "A Snapshots case is selected but the `latticePhysicsFrequency` "
-        "{0} is less than `firstCoupledIteration`. `firstCoupledIteration`"
+        f"{inspector.cs[CONF_LATTICE_PHYSICS_FREQUENCY]} is less than `firstCoupledIteration`. `firstCoupledIteration`"
         " or `all` is recommended for Snapshots when they involve large changes "
         "in power or flow compared to the loaded state."
-    ).format(inspector.cs[CONF_LATTICE_PHYSICS_FREQUENCY])
+    )
     queryPrompt = (
         "Would you like to update `latticePhysicsFrequency` from "
         f"{inspector.cs[CONF_LATTICE_PHYSICS_FREQUENCY]} to `firstCoupledIteration`?"

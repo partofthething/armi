@@ -9,8 +9,8 @@ Costs and generation are each a list of ``(time in years, amount)`` pairs, so an
 construction and operations later) levelizes the same way and the results add up.
 """
 
+from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Sequence
 
 from armi.utils import getAvailabilityFactors, getCycleLengths, getPowerFractions
 

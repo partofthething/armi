@@ -328,12 +328,12 @@ class TestBlockConverter(unittest.TestCase):
             convertedBlock = converter.convert()
             self.assertAlmostEqual(area * numBlocks, convertedBlock.getArea())
             self._checkCiclesAreInContact(convertedBlock)
-            plotFile = "convertedBlock_{0}.svg".format(externalRings)
+            plotFile = f"convertedBlock_{externalRings}.svg"
             converter.plotConvertedBlock(fName=plotFile)
             os.remove(plotFile)
 
             for c in list(reversed(convertedBlock))[:externalRings]:
-                self.assertTrue(c.isFuel(), "c was {}".format(c.name))
+                self.assertTrue(c.isFuel(), f"c was {c.name}")
                 # remove external driver rings in preparation to check composition
                 convertedBlock.remove(c)
             convBlockWithoutDriver = convertedBlock
@@ -352,7 +352,7 @@ class TestBlockConverter(unittest.TestCase):
             try:
                 self.assertAlmostEqual(n1, n2)
             except AssertionError:
-                errorMessage += "\nnuc {} not equal. unmerged: {} merged: {}".format(nucName, n1, n2)
+                errorMessage += f"\nnuc {nucName} not equal. unmerged: {n1} merged: {n2}"
         self.assertTrue(not errorMessage, errorMessage)
         bMass = block.getMass()
         self.assertAlmostEqual(bMass, convertedBlock.getMass())
@@ -371,13 +371,13 @@ class TestBlockConverter(unittest.TestCase):
             if lastCompOD is None:
                 self.assertTrue(
                     thisID == 0,
-                    "The inner component {} should have an ID of zero".format(c),
+                    f"The inner component {c} should have an ID of zero",
                 )
             else:
                 self.assertTrue(
                     thisID == lastCompOD,
-                    "The component {} with id {} was not in contact with the "
-                    "previous component ({}) that had od {}".format(c, thisID, lastComp, lastCompOD),
+                    f"The component {c} with id {thisID} was not in contact with the "
+                    f"previous component ({lastComp}) that had od {lastCompOD}",
                 )
             lastCompOD = thisOD
             lastComp = c

@@ -355,9 +355,7 @@ class CustomIsotopics(KeyedList):
         """
         if customIsotopicsName not in self:
             raise KeyError(
-                "The input custom isotopics do not include {}. The only present specifications are {}".format(
-                    customIsotopicsName, self.keys()
-                )
+                f"The input custom isotopics do not include {customIsotopicsName}. The only present specifications are {self.keys()}"
             )
 
         custom = self[customIsotopicsName]

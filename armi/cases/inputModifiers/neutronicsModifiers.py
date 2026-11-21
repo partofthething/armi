@@ -72,7 +72,7 @@ class NeutronicMeshsSizeModifier(inputModifiers.InputModifier):
     def __init__(self, multFactor):
         inputModifiers.InputModifier.__init__(self, {self.__class__.__name__: multFactor})
         if not isinstance(multFactor, int):
-            raise TypeError("multFactor must be an integer, but got {}".format(multFactor))
+            raise TypeError(f"multFactor must be an integer, but got {multFactor}")
         self.multFactor = multFactor
 
     def __call__(self, cs, bp):

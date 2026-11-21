@@ -25,7 +25,6 @@ the standard ``CaseSuite`` objects.
 import copy
 import os
 import random
-from typing import List
 
 from armi.cases import suite
 from armi.cases.inputModifiers.inputModifiers import DesignModifier
@@ -102,7 +101,7 @@ class SuiteBuilder:
         return len(self.modifierSets)
 
     def __repr__(self):
-        return "<SuiteBuilder len:{} base:{}>".format(len(self), self.baseCase or self.title)
+        return f"<SuiteBuilder len:{len(self)} base:{self.baseCase or self.title}>"
 
     @property
     def title(self) -> str:
@@ -126,7 +125,7 @@ class SuiteBuilder:
         """
         raise NotImplementedError
 
-    def addModifierSet(self, inputModifierSet: List):
+    def addModifierSet(self, inputModifierSet: list):
         """
         Add a single input modifier set to the suite.
 
@@ -185,7 +184,7 @@ class SuiteBuilder:
         if namingFunc is None:
 
             def namingFunc(index, _case, _mods):
-                uniquePart = "{:0>4}".format(index)
+                uniquePart = f"{index:0>4}"
                 return os.path.join(".", "case-suite", uniquePart, self.title + "-" + uniquePart)
 
         cases = []

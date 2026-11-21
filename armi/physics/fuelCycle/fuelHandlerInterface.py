@@ -130,7 +130,7 @@ class FuelHandlerInterface(interfaces.Interface):
                 self.r.core,
                 "percentBu",
                 labelFmt=None,
-                fName="{}.shuffles_{}.png".format(self.cs.caseTitle, self.r.p.cycle),
+                fName=f"{self.cs.caseTitle}.shuffles_{self.r.p.cycle}.png",
                 shuffleArrows=arrows,
             )
 
@@ -152,28 +152,20 @@ class FuelHandlerInterface(interfaces.Interface):
             # do cycle+1 because cycle 0 at t=0 isn't usually interesting
             # remember, we put cycle 0 in so we could do BOL branch searches.
             # This also syncs cycles up with external physics kernel cycles.
-            out.write("Before cycle {0}:\n".format(cycle))
+            out.write(f"Before cycle {cycle}:\n")
             movesThisCycle = self.r.core.moves.get(cycle)
             if movesThisCycle is not None:
                 for move in movesThisCycle:
-                    enrichLine = " ".join(["{0:.8f}".format(enrich) for enrich in move.enrichList])
+                    enrichLine = " ".join([f"{enrich:.8f}" for enrich in move.enrichList])
                     if move.fromLoc in fuelHandlers.FuelHandler.DISCHARGE_LOCS:
                         # this is a re-entering assembly. Give extra info so repeat shuffles can handle it
                         out.write(
-                            "{0} moved to {1} with assembly type {2} ringPosCycle={4} with enrich list: {3}\n".format(
-                                move.fromLoc,
-                                move.toLoc,
-                                move.assemType,
-                                enrichLine,
-                                move.ringPosCycle,
-                            )
+                            f"{move.fromLoc} moved to {move.toLoc} with assembly type {move.assemType} ringPosCycle={move.ringPosCycle} with enrich list: {enrichLine}\n"
                         )
                     else:
                         # skip extra info. regular expression in readMoves will handle it just fine.
                         out.write(
-                            "{0} moved to {1} with assembly type {2} with enrich list: {3}\n".format(
-                                move.fromLoc, move.toLoc, move.assemType, enrichLine
-                            )
+                            f"{move.fromLoc} moved to {move.toLoc} with assembly type {move.assemType} with enrich list: {enrichLine}\n"
                         )
             out.write("\n")
         out.close()

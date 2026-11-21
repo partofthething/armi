@@ -46,9 +46,9 @@ def isBoolSetting(setting: Setting) -> bool:
 
 def recursivelyLoadSettingsFiles(
     rootDir,
-    patterns: List[str],
+    patterns: list[str],
     recursive=True,
-    ignorePatterns: List[str] = None,
+    ignorePatterns: list[str] = None,
     handleInvalids=True,
 ):
     """
@@ -108,9 +108,7 @@ def recursivelyLoadSettingsFiles(
             runLog.extra(f"skipping {possibleSettingsFile}; it appears to be an incomplete YAML snippet\n    {ee}")
         except Exception as ee:
             runLog.error(
-                "Failed to parse {}.\nIt looked like a settings file but gave this exception:\n{}: {}".format(
-                    possibleSettingsFile, type(ee).__name__, ee
-                )
+                f"Failed to parse {possibleSettingsFile}.\nIt looked like a settings file but gave this exception:\n{type(ee).__name__}: {ee}"
             )
             raise
 

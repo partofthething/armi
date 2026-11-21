@@ -83,12 +83,10 @@ def addDummyNuclidesToLibrary(lib, dummyNuclides):
     :py:class:`~armi.nuclearDataIO.xsLibraries.XSLibrary`.
     """
     if not dummyNuclides:
-        runLog.important("No dummy nuclide data provided to be added to {}".format(lib))
+        runLog.important(f"No dummy nuclide data provided to be added to {lib}")
         return False
     elif len(lib.xsIDs) > 1:
-        runLog.warning(
-            "Cannot add dummy nuclide data to GAMISO library {} containing data for more than 1 XS ID.".format(lib)
-        )
+        runLog.warning(f"Cannot add dummy nuclide data to GAMISO library {lib} containing data for more than 1 XS ID.")
         return False
 
     dummyNuclideKeysAddedToLibrary = []
@@ -99,7 +97,7 @@ def addDummyNuclidesToLibrary(lib, dummyNuclides):
         if dummyKey in lib:
             continue
 
-        runLog.debug("Adding {} nuclide data to {}".format(dummyKey, lib))
+        runLog.debug(f"Adding {dummyKey} nuclide data to {lib}")
         newDummy = xsNuclides.XSNuclide(lib, dummyKey)
         # Copy gamiso metadata from the isotxs metadata of the given dummy nuclide
         for kk, vv in dummyNuclide.isotxsMetadata.items():

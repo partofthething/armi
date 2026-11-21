@@ -1374,7 +1374,7 @@ class TestMiscMethods(unittest.TestCase):
 
         # Cleanup
         for child in self.obj:
-            i = np.where(child.p.nuclides == "H1".encode())[0]  # SHOULD just be a single value
+            i = np.where(child.p.nuclides == b"H1")[0]  # SHOULD just be a single value
             if i.size > 0:
                 np.delete(child.p.nuclides, i[0])
                 np.delete(child.p.numberDensities, i[0])

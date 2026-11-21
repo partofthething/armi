@@ -90,7 +90,7 @@ def getIndicesFromDIF3DStyleLocatorLabel(label):
         axLabel = locMatch.group(3)
         firstDigit = ord(ring[0]) - ASCII_LETTER_A
         if firstDigit < 10:
-            i = int("{0}{1}".format(firstDigit, ring[1]))
+            i = int(f"{firstDigit}{ring[1]}")
         else:
             raise RuntimeError(f"invalid label {label}. 1st character too large.")
         j = int(posLabel)

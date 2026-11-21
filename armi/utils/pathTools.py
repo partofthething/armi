@@ -46,13 +46,11 @@ def copyOrWarn(filepathDescription, sourcePath, destinationPath):
             shutil.copytree(sourcePath, destinationPath, dirs_exist_ok=True)
         else:
             safeCopy(sourcePath, destinationPath)
-        runLog.debug("Copied {}: {} -> {}".format(filepathDescription, sourcePath, destinationPath))
+        runLog.debug(f"Copied {filepathDescription}: {sourcePath} -> {destinationPath}")
     except shutil.SameFileError:
         pass
     except Exception as e:
-        runLog.info(
-            "Could not copy {} from {} to {}\nError was: {}".format(filepathDescription, sourcePath, destinationPath, e)
-        )
+        runLog.info(f"Could not copy {filepathDescription} from {sourcePath} to {destinationPath}\nError was: {e}")
 
 
 def isFilePathNewer(path1, path2):
@@ -69,7 +67,7 @@ def isFilePathNewer(path1, path2):
     elif exist1 and not exist2:
         return True
     else:
-        raise IOError(f"Path 1 does not exist: {path1}")
+        raise OSError(f"Path 1 does not exist: {path1}")
 
 
 def isAccessible(path):
@@ -125,7 +123,7 @@ def importCustomPyModule(modulePath):
     """
     modulePath = pathlib.Path(modulePath)
     if not modulePath.exists() or not modulePath.is_file():
-        raise IOError(r"Cannot import module from the given path: `{modulePath}`")
+        raise OSError(r"Cannot import module from the given path: `{modulePath}`")
     _dir, moduleName = os.path.split(modulePath)
     moduleName = os.path.splitext(moduleName)[0]  # take off the extension
     spec = importlib.util.spec_from_file_location(moduleName, modulePath)

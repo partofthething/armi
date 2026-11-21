@@ -39,13 +39,13 @@ def createTable(rst_table, caption=None, label=None, align=None, widths=None, wi
     """Adds ability to add ``rst_table`` table within ``.. exec::``."""
     rst = [".. table:: {}".format(caption or "")]
     if label:
-        rst += ["    :name: {}".format(label)]
+        rst += [f"    :name: {label}"]
     if align:
-        rst += ["    :align: {}".format(align)]
+        rst += [f"    :align: {align}"]
     if width:
-        rst += ["    :width: {}".format(width)]
+        rst += [f"    :width: {width}"]
     if widths:
-        rst += ["    :widths: {}".format(widths)]
+        rst += [f"    :widths: {widths}"]
     rst += [""]
     rst += ["    " + line for line in rst_table.split("\n")]
     return "\n".join(rst)
@@ -83,11 +83,11 @@ def createListTable(rows, caption=None, align=None, widths=None, width=None, kla
     rst = [".. list-table:: {}".format(caption or "")]
     rst += ["    :header-rows: 1"]
     if klass:
-        rst += ["    :class: {}".format(klass)]
+        rst += [f"    :class: {klass}"]
     if align:
-        rst += ["    :align: {}".format(align)]
+        rst += [f"    :align: {align}"]
     if width:
-        rst += ["    :width: {}".format(width)]
+        rst += [f"    :width: {width}"]
     if widths:
         rst += ["    :widths: " + " ".join([str(w) for w in widths])]
     rst += [""]
@@ -136,10 +136,10 @@ def generateParamTable(klass, fwParams, app=None):
             if pDefs is not None:
                 defs[plugin] = pDefs
 
-    headerContent = """
+    headerContent = f"""
 .. container:: break_before ssp-landscape
 
-    .. list-table:: {} Parameters from {{}}
+    .. list-table:: {klass.__name__} Parameters from {{}}
         :class: ssp-tiny
         :widths: 30 40 30
         :header-rows: 1
@@ -147,7 +147,7 @@ def generateParamTable(klass, fwParams, app=None):
         * - Name
           - Description
           - Units
-    """.format(klass.__name__)
+    """
 
     content = []
 

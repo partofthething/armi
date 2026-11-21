@@ -740,7 +740,7 @@ class TestStandardFollowOn(unittest.TestCase):
                 self.FIRST_END_TIME,
                 o.r.p.time,
                 "End time should have been the same for the restart run.\n"
-                "First end time: {},\nSecond End time: {}".format(self.FIRST_END_TIME, o.r.p.time),
+                f"First end time: {self.FIRST_END_TIME},\nSecond End time: {o.r.p.time}",
             )
 
     def _getRestartOperator(self):

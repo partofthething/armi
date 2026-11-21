@@ -179,12 +179,10 @@ class Transmutation(Transmutable):
     def __init__(self, parent, dataDict):
         Transmutable.__init__(self, parent, dataDict)
         if self.type not in TRANSMUTATION_TYPES:
-            raise KeyError("{} not in {}".format(self.type, TRANSMUTATION_TYPES))
+            raise KeyError(f"{self.type} not in {TRANSMUTATION_TYPES}")
 
     def __repr__(self):
-        return "<Transmutation by {} from {:7s} to {} with branching ratio of {:12.5E}>".format(
-            self.type, self.parent.name, self.productNuclides, self.branch
-        )
+        return f"<Transmutation by {self.type} from {self.parent.name:7s} to {self.productNuclides} with branching ratio of {self.branch:12.5E}>"
 
 
 class DecayMode(Transmutable):
@@ -226,12 +224,7 @@ class DecayMode(Transmutable):
         self.decay = LN2 / self.halfLifeInSeconds * self.branch  # decay constant, reduced by branch to make it accurate
 
         if self.type not in DECAY_MODES:
-            raise KeyError("{} is not in {}".format(self.type, DECAY_MODES))
+            raise KeyError(f"{self.type} is not in {DECAY_MODES}")
 
     def __repr__(self):
-        return "<DecayMode by {} from {:7s} to {} with a half-life of {:12.5E} s>".format(
-            self.type,
-            self.parent.name,
-            self.productNuclides,
-            self.halfLifeInSeconds,
-        )
+        return f"<DecayMode by {self.type} from {self.parent.name:7s} to {self.productNuclides} with a half-life of {self.halfLifeInSeconds:12.5E} s>"

@@ -13,7 +13,7 @@
 import collections
 import itertools
 from abc import abstractmethod
-from typing import Iterable, List, Optional, Sequence, Tuple, Union
+from collections.abc import Iterable, Sequence
 
 import numpy as np
 
@@ -229,19 +229,19 @@ class StructuredGrid(Grid):
 
     def __repr__(self) -> str:
         msg = (
-            ["<{} -- {}\nBounds:\n".format(self.__class__.__name__, id(self))]
-            + ["  {}\n".format(b) for b in self._bounds]
+            [f"<{self.__class__.__name__} -- {id(self)}\nBounds:\n"]
+            + [f"  {b}\n" for b in self._bounds]
             + ["Steps:\n"]
-            + ["  {}\n".format(b) for b in self._unitSteps]
+            + [f"  {b}\n" for b in self._unitSteps]
             + [
-                "Anchor: {}\n".format(self.armiObject),
-                "Offset: {}\n".format(self._offset),
-                "Num Locations: {}>".format(len(self)),
+                f"Anchor: {self.armiObject}\n",
+                f"Offset: {self._offset}\n",
+                f"Num Locations: {len(self)}>",
             ]
         )
         return "".join(msg)
 
-    def __getitem__(self, ijk: Union[IJKType, List[IJKType]]) -> LocationBase:
+    def __getitem__(self, ijk: IJKType | list[IJKType]) -> LocationBase:
         """
         Get a location by (i, j, k) indices. If it does not exist, create a new one and return it.
 
@@ -274,10 +274,10 @@ class StructuredGrid(Grid):
             locators = [self[idx] for idx in ijk]
             val.extend(locators)
         else:
-            raise TypeError("Unsupported index type `{}` for `{}`".format(type(ijk), ijk))
+            raise TypeError(f"Unsupported index type `{type(ijk)}` for `{ijk}`")
         return val
 
-    def items(self) -> Iterable[Tuple[IJKType, IndexLocation]]:
+    def items(self) -> Iterable[tuple[IJKType, IndexLocation]]:
         return self._locations.items()
 
     def backUp(self):
@@ -392,7 +392,7 @@ class StructuredGrid(Grid):
 
     def getBounds(
         self,
-    ) -> Tuple[Optional[Sequence[float]], Optional[Sequence[float]], Optional[Sequence[float]]]:
+    ) -> tuple[Sequence[float] | None, Sequence[float] | None, Sequence[float] | None]:
         """Return the grid bounds for each dimension, if present."""
         return self._bounds
 
@@ -449,7 +449,7 @@ class StructuredGrid(Grid):
     def getPositionsInRing(self, ring: int) -> int:
         """Return the number of positions within a ring."""
 
-    def getRingPos(self, indices) -> Tuple[int, int]:
+    def getRingPos(self, indices) -> tuple[int, int]:
         """
         Get ring and position number in this grid.
 
@@ -481,7 +481,7 @@ class StructuredGrid(Grid):
 
     @property
     @abstractmethod
-    def pitch(self) -> Union[float, Tuple[float, float]]:
+    def pitch(self) -> float | tuple[float, float]:
         """Grid pitch.
 
         Some implementations may rely on a single pitch, such

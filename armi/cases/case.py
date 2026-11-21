@@ -35,7 +35,7 @@ import sys
 import textwrap
 import time
 import trace
-from typing import Dict, List, Optional, Sequence, Set, Union
+from collections.abc import Sequence
 
 import coverage
 
@@ -80,7 +80,7 @@ class Case:
         self._startTime = time.time()
         self._caseSuite = caseSuite
         self._tasks = []
-        self._dependencies: Set[Case] = set()
+        self._dependencies: set[Case] = set()
         self.enabled = True
 
         # set the signal if the user passes in a blueprint object, instead of a file
@@ -96,11 +96,11 @@ class Case:
         self._independentVariables = {}
 
         # What a SuiteRunner runs for this case: ``"module:function"``, or None for the full operator loop.
-        self.task: Optional[str] = None
+        self.task: str | None = None
         # The application design object the inputs were rendered from, if any (see SuiteBuilder).
         self.design = None
         # Input files beyond the settings and blueprints that the case's results depend on.
-        self.extraInputFiles: List[str] = []
+        self.extraInputFiles: list[str] = []
 
     @property
     def independentVariables(self):
@@ -121,7 +121,7 @@ class Case:
         return self._independentVariables
 
     def __repr__(self):
-        return "<Case cs: {}>".format(self.cs.path)
+        return f"<Case cs: {self.cs.path}>"
 
     @property
     def bp(self):
@@ -183,7 +183,7 @@ class Case:
         with the other, implicitly discovered, dependencies.
         """
         if case in self._dependencies:
-            runLog.warning("The case {} is already explicitly specified as a dependency of {}".format(case, self))
+            runLog.warning(f"The case {case} is already explicitly specified as a dependency of {self}")
         self._dependencies.add(case)
 
     def getPotentialParentFromSettingValue(self, settingValue, filePattern):
@@ -433,7 +433,7 @@ class Case:
             return
 
         profiler.disable()
-        profiler.dump_stats("profiler.{:0>3}.stats".format(context.MPI_RANK))
+        profiler.dump_stats(f"profiler.{context.MPI_RANK:0>3}.stats")
         statsStream = io.StringIO()
         summary = pstats.Stats(profiler, stream=statsStream).sort_stats("cumulative")
         summary.print_stats()
@@ -443,7 +443,7 @@ class Case:
                 for rank, statsString in enumerate(allStats):
                     # using print statements because the logger has been turned off
                     print("=" * 100)
-                    print("{:^100}".format(" Profiler statistics for RANK={} ".format(rank)))
+                    print("{:^100}".format(f" Profiler statistics for RANK={rank} "))
                     print(statsString)
                     print("=" * 100)
         else:
@@ -572,8 +572,8 @@ class Case:
 
         if pathTools.armiAbsPath(clone.cs.path) == pathTools.armiAbsPath(self.cs.path):
             raise RuntimeError(
-                "The source file and destination file are the same: {}\nCannot use armi-clone to "
-                "modify armi settings file.".format(pathTools.armiAbsPath(clone.cs.path))
+                f"The source file and destination file are the same: {pathTools.armiAbsPath(clone.cs.path)}\nCannot use armi-clone to "
+                "modify armi settings file."
             )
 
         newSettings = copyInterfaceInputs(self.cs, clone.cs.inputDirectory)
@@ -596,7 +596,7 @@ class Case:
         else:
             runLog.warning(f"skipping {CONF_LOADING_FILE}, there is no file specified")
 
-        with open(self.cs[CONF_LOADING_FILE], "r") as f:
+        with open(self.cs[CONF_LOADING_FILE]) as f:
             # The root for handling YAML includes is relative to the YAML file, not the settings file
             root = pathlib.Path(self.cs.inputDirectory) / pathlib.Path(self.cs[CONF_LOADING_FILE]).parent
             cloneRoot = pathlib.Path(clone.cs.inputDirectory) / pathlib.Path(clone.cs[CONF_LOADING_FILE]).parent
@@ -623,7 +623,7 @@ class Case:
     def compare(
         self,
         that,
-        exclusion: Optional[Sequence[str]] = None,
+        exclusion: Sequence[str] | None = None,
         tolerance=0.01,
         timestepCompare=None,
     ) -> int:
@@ -632,7 +632,7 @@ class Case:
 
         This is useful both for in-use testing and engineering analysis.
         """
-        runLog.info("Comparing the following databases:\nREF: {}\nSRC: {}".format(self.dbName, that.dbName))
+        runLog.info(f"Comparing the following databases:\nREF: {self.dbName}\nSRC: {that.dbName}")
         diffResults = compareDatabases(
             self.dbName,
             that.dbName,
@@ -648,7 +648,7 @@ class Case:
 
         return code
 
-    def writeInputs(self, sourceDir: Optional[str] = None, writeStyle: Optional[str] = "short"):
+    def writeInputs(self, sourceDir: str | None = None, writeStyle: str | None = "short"):
         """
         Write the inputs to disk.
 
@@ -737,7 +737,7 @@ def _copyInputsHelper(fileDescription: str, sourcePath: str, destPath: str, orig
         return origFile
 
 
-def copyInterfaceInputs(cs, destination: str, sourceDir: Optional[str] = None) -> Dict[str, Union[str, list]]:
+def copyInterfaceInputs(cs, destination: str, sourceDir: str | None = None) -> dict[str, str | list]:
     """
     Ping active interfaces to determine which files are considered "input". This enables developers
     to add new inputs in a plugin-dependent/ modular way.

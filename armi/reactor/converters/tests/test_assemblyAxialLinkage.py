@@ -13,7 +13,8 @@
 # limitations under the License.
 
 import io
-from typing import TYPE_CHECKING, Callable, Type
+from collections.abc import Callable
+from typing import TYPE_CHECKING
 from unittest import TestCase
 
 from armi.reactor.assemblies import HexAssembly, grids
@@ -241,7 +242,7 @@ class TestCheckOverlap(AxialExpansionTestBase):
 
     def runTest(
         self,
-        componentsToTest: dict[Type["Component"], dict[str, float]],
+        componentsToTest: dict[type["Component"], dict[str, float]],
         assertion: Callable,
     ):
         """Runs various linkage tests.

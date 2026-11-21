@@ -24,7 +24,8 @@ import collections
 import copy
 import math
 import operator
-from typing import Callable, ClassVar, Optional, Tuple, Type
+from collections.abc import Callable
+from typing import ClassVar, Optional
 
 import numpy as np
 
@@ -55,7 +56,7 @@ PIN_COMPONENTS = [
     Flags.WIRE,
 ]
 
-_PitchDefiningComponent = Optional[Tuple[Type[components.Component], ...]]
+_PitchDefiningComponent = Optional[tuple[type[components.Component], ...]]
 
 
 class Block(composites.Composite):
@@ -110,12 +111,8 @@ class Block(composites.Composite):
 
     def __repr__(self):
         # be warned, changing this might break unit tests on input file generations
-        return "<{type} {name} at {loc} XS: {xs} ENV GP: {env}>".format(
-            type=self.getType(),
-            name=self.getName(),
-            xs=self.p.xsType,
-            env=self.p.envGroup,
-            loc=self.getLocation(),
+        return (
+            f"<{self.getType()} {self.getName()} at {self.getLocation()} XS: {self.p.xsType} ENV GP: {self.p.envGroup}>"
         )
 
     def __deepcopy__(self, memo):
@@ -177,7 +174,7 @@ class Block(composites.Composite):
         'B0120-005'
         """
         self.p.assemNum = assemNum
-        return "B{0:04d}-{1:03d}".format(assemNum, axialIndex)
+        return f"B{assemNum:04d}-{axialIndex:03d}"
 
     def getSmearDensity(self, cold=True):
         """
@@ -455,9 +452,7 @@ class Block(composites.Composite):
         env = self.p.envGroup
         if not env:
             raise RuntimeError(
-                "Cannot get MicroXS suffix because {0} in {1} does not have a environment(env) group".format(
-                    self, self.parent
-                )
+                f"Cannot get MicroXS suffix because {self} in {self.parent} does not have a environment(env) group"
             )
 
         xsType = self.p.xsType
@@ -1040,9 +1035,9 @@ class Block(composites.Composite):
             if counter > 1000:
                 cList.append(candidate)
                 runLog.error(
-                    "The component {0} in {1} contains a dimension that is linked to another component, "
+                    f"The component {cList[0]} in {self} contains a dimension that is linked to another component, "
                     " but the required component is not present in the block. They may also be other dependency fails. "
-                    "The component dims are {2}".format(cList[0], self, cList[0].p)
+                    f"The component dims are {cList[0].p}"
                 )
                 raise RuntimeError("Cannot locate linked component.")
         return orderedComponents
@@ -1067,7 +1062,7 @@ class Block(composites.Composite):
         sortedComponents = sortedComponents[:componentIndex]
         return sortedComponents
 
-    def __getPinLikeCounts(self) -> list[Tuple[int, list[components.Component]]]:
+    def __getPinLikeCounts(self) -> list[tuple[int, list[components.Component]]]:
         """Helper method to find components that look like pins, grouped by PIN_COMPONENT flags.
 
         This method is not designed to be used by downstream, but is meant to help ``getPinLocations`` and
@@ -1324,7 +1319,7 @@ class Block(composites.Composite):
         """
         c, _p = self._pitchDefiningComponent
         if c is None:
-            raise ValueError("{} has no valid pitch defining component".format(self))
+            raise ValueError(f"{self} has no valid pitch defining component")
 
         # ask component for dimensions, since they could have changed due to temperature
         p = c.getPitchData()
@@ -1401,7 +1396,7 @@ class Block(composites.Composite):
             c.setDimension("op", val)
             self._pitchDefiningComponent = (c, val)
         else:
-            raise RuntimeError("No pitch-defining component on block {}".format(self))
+            raise RuntimeError(f"No pitch-defining component on block {self}")
 
         if updateBolParams:
             self.completeInitialLoading()
@@ -1461,7 +1456,7 @@ class Block(composites.Composite):
         for c, frac in self.getVolumeFractions():
             report.setData(
                 c.getName(),
-                ["{0:10f}".format(c.getArea()), "{0:10f}".format(frac)],
+                [f"{c.getArea():10f}", f"{frac:10f}"],
                 report.BLOCK_AREA_FRACS,
             )
 
@@ -1495,7 +1490,7 @@ class Block(composites.Composite):
             try:
                 c.updateDims()
             except NotImplementedError:
-                runLog.warning("{0} has no updatedDims method -- skipping".format(c))
+                runLog.warning(f"{c} has no updatedDims method -- skipping")
 
     def getIntegratedMgFlux(self, adjoint=False, gamma=False):
         """

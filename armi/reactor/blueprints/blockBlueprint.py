@@ -15,8 +15,8 @@
 """Define the ARMI input for a block definition, and code for constructing an ARMI ``Block``."""
 
 import collections
+from collections.abc import Iterable, Iterator
 from inspect import signature
-from typing import Iterable, Iterator, Set
 
 from armi import getPluginManagerOrFail, runLog
 from armi.materials.material import Material
@@ -91,9 +91,8 @@ class BlockBlueprint(KeyedList):
                 return blockCls
 
         raise ValueError(
-            "Block input for {} has outer component {} which is "
+            f"Block input for {self.name} has outer component {outerComponent} which is "
             " not a supported Block geometry subclass. Update geometry."
-            "".format(self.name, outerComponent)
         )
 
     def construct(self, cs, blueprint, axialIndex, axialMeshPoints, height, xsType, materialInput):
@@ -126,7 +125,7 @@ class BlockBlueprint(KeyedList):
             and the by-component material modifications under the component's name.
             The inner dict under each key contains material modification names and values.
         """
-        runLog.debug("Constructing block {}".format(self.name))
+        runLog.debug(f"Constructing block {self.name}")
         components = collections.OrderedDict()
         # build grid before components so you can load
         # the components into the grid.
@@ -273,7 +272,7 @@ class BlockBlueprint(KeyedList):
 
         return b
 
-    def _getBlockwiseMaterialModifierOptions(self, children: Iterable[Composite]) -> Set[str]:
+    def _getBlockwiseMaterialModifierOptions(self, children: Iterable[Composite]) -> set[str]:
         """Collect all the material modifiers that exist on a block."""
         validMatModOptions = set()
         for c in children:
@@ -281,7 +280,7 @@ class BlockBlueprint(KeyedList):
             validMatModOptions.update(perChildModifiers)
         return validMatModOptions
 
-    def _getMaterialModsFromBlockChildren(self, c: Composite) -> Set[str]:
+    def _getMaterialModsFromBlockChildren(self, c: Composite) -> set[str]:
         """Collect all the material modifiers from a child of a block."""
         perChildModifiers = set()
         for material in self._getMaterialsInComposite(c):
@@ -369,13 +368,12 @@ class BlockBlueprint(KeyedList):
 
         if solventNamesToMergeInto:
             runLog.warning(
-                "Component(s) {} in block {} has merged components inside it. The merge was valid at hot "
+                f"Component(s) {solventNamesToMergeInto} in block {b.name} has merged components inside it. The merge was valid at hot "
                 "temperature, but the merged component only has the basic thermal expansion factors "
                 "of the component(s) merged into. Expansion properties or dimensions of non hot  "
                 "temperature may not be representative of how the original components would have acted had "
                 "they not been merged. It is recommended that merging happen right before "
-                "a physics calculation using a block converter to avoid this."
-                "".format(solventNamesToMergeInto, b.name),
+                "a physics calculation using a block converter to avoid this.",
                 single=True,
             )
 
@@ -407,9 +405,7 @@ def _setBlueprintNumberOfAxialMeshes(meshPoints, factor):
 
     if factor != 1:
         runLog.important(
-            "An axial mesh refinement factor of {} is applied to blueprint based on setting specification.".format(
-                factor
-            ),
+            f"An axial mesh refinement factor of {factor} is applied to blueprint based on setting specification.",
             single=True,
         )
     return int(meshPoints) * factor

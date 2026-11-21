@@ -106,12 +106,12 @@ class InvalidSettingsStopProcess(SettingException):
     """
 
     def __init__(self, reader):
-        msg = "Input settings file {}".format(reader.inputPath)
+        msg = f"Input settings file {reader.inputPath}"
         if reader.liveVersion != reader.inputVersion:
             msg += (
-                '\n\twas made with version "{0}" which differs from the current version "{1}." '
-                'Either create the input file with the "{1}", or switch to a development version '
-                "of ARMI.".format(reader.inputVersion, reader.liveVersion)
+                f'\n\twas made with version "{reader.inputVersion}" which differs from the current version "{reader.liveVersion}." '
+                f'Either create the input file with the "{reader.liveVersion}", or switch to a development version '
+                "of ARMI."
             )
         if reader.invalidSettings:
             msg += "\n\tcontains the following {} invalid settings:\n\t\t{}".format(
@@ -124,14 +124,14 @@ class NonexistentSetting(SettingException):
     """Exception raised when a non existent setting is asked for."""
 
     def __init__(self, setting):
-        SettingException.__init__(self, "Attempted to locate non-existent setting {}.".format(setting))
+        SettingException.__init__(self, f"Attempted to locate non-existent setting {setting}.")
 
 
 class InvalidSettingsFileError(SettingException):
     """Not a valid settings file."""
 
     def __init__(self, path, customMsgEnd=""):
-        msg = "Attempted to load an invalid settings file from: {}. ".format(path)
+        msg = f"Attempted to load an invalid settings file from: {path}. "
         msg += customMsgEnd
 
         SettingException.__init__(self, msg)
@@ -141,4 +141,4 @@ class NonexistentSettingsFileError(SettingException):
     """Settings file does not exist."""
 
     def __init__(self, path):
-        SettingException.__init__(self, "Attempted to load settings file, cannot locate file: {}".format(path))
+        SettingException.__init__(self, f"Attempted to load settings file, cannot locate file: {path}")

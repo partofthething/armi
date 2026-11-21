@@ -482,21 +482,15 @@ class TestShapedComponent(TestGeneralComponents):
             self.component.setTemperature(ht)
             mass = self.component.getMass()
             masses.append(mass)
-            report += "{:10.1f}, {:7.5e}, {:7.5e}, {:7.5e}\n".format(
-                ht,
-                mass,
-                self.component.getVolume(),
-                self.component.getThermalExpansionFactor(),
-            )
+            report += f"{ht:10.1f}, {mass:7.5e}, {self.component.getVolume():7.5e}, {self.component.getThermalExpansionFactor():7.5e}\n"
 
         for mass in masses:
             self.assertNotAlmostEqual(mass, 0.0)
             self.assertAlmostEqual(
                 masses[0],
                 mass,
-                msg="Masses are not preserved during thermal expansion of component {} at {} C. "
-                "Original Mass: {}, Thermally Expanded Mass: {}\n{}"
-                "".format(self.component, ht, masses[0], mass, report),
+                msg=f"Masses are not preserved during thermal expansion of component {self.component} at {ht} C. "
+                f"Original Mass: {masses[0]}, Thermally Expanded Mass: {mass}\n{report}",
             )
 
     def test_volumeAfterClearCache(self):

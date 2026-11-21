@@ -135,7 +135,6 @@ Settings. Pardon the mess during this transition.
 
 import os
 from enum import Enum
-from typing import List
 
 from armi import context
 from armi.utils.units import HEAVY_METAL_CUTOFF_Z
@@ -258,13 +257,13 @@ class Element:
         return self.z > HEAVY_METAL_CUTOFF_Z
 
 
-def getElementsByChemicalPhase(phase: ChemicalPhase) -> List[Element]:
+def getElementsByChemicalPhase(phase: ChemicalPhase) -> list[Element]:
     """Pass through to Elements.getElementsByChemicalPhase() for the global Elements object."""
     global elements
     return elements.getElementsByChemicalPhase(phase)
 
 
-def getElementsByChemicalGroup(group: ChemicalGroup) -> List[Element]:
+def getElementsByChemicalGroup(group: ChemicalGroup) -> list[Element]:
     """Pass through to Elements.getElementsByChemicalGroup() for the global Elements object."""
     global elements
     return elements.getElementsByChemicalGroup(group)
@@ -370,7 +369,7 @@ class Elements:
         if elementsFile:
             self.elementsFile = elementsFile
 
-        with open(self.elementsFile, "r") as f:
+        with open(self.elementsFile) as f:
             for line in f:
                 # Skip header lines
                 if line.startswith("#") or line.startswith("Z"):
@@ -388,7 +387,7 @@ class Elements:
                     e.standardWeight = float(standardWeight)
                 self.addElement(e)
 
-    def getElementsByChemicalPhase(self, phase: ChemicalPhase) -> List[Element]:
+    def getElementsByChemicalPhase(self, phase: ChemicalPhase) -> list[Element]:
         """
         Returns all elements that are of the given chemical phase.
 
@@ -412,7 +411,7 @@ class Elements:
 
         return elems
 
-    def getElementsByChemicalGroup(self, group: ChemicalGroup) -> List[Element]:
+    def getElementsByChemicalGroup(self, group: ChemicalGroup) -> list[Element]:
         """
         Returns all elements that are of the given chemical group.
 

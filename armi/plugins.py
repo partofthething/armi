@@ -103,7 +103,8 @@ to here.
 
 """
 
-from typing import TYPE_CHECKING, Callable, Dict, List, Union
+from collections.abc import Callable
+from typing import TYPE_CHECKING
 
 import pluggy
 
@@ -138,7 +139,7 @@ class ArmiPlugin:
 
     @staticmethod
     @HOOKSPEC
-    def exposeInterfaces(cs) -> List:
+    def exposeInterfaces(cs) -> list:
         """
         Function for exposing interface(s) to other code.
 
@@ -164,7 +165,7 @@ class ArmiPlugin:
 
     @staticmethod
     @HOOKSPEC
-    def defineParameters() -> Dict:
+    def defineParameters() -> dict:
         """
         Define additional parameters for the reactor data model.
 
@@ -286,7 +287,7 @@ class ArmiPlugin:
 
     @staticmethod
     @HOOKSPEC
-    def defineFlags() -> Dict[str, Union[int, flags.auto]]:
+    def defineFlags() -> dict[str, int | flags.auto]:
         """
         Add new flags to the reactor data model, and the simulation.
 
@@ -311,7 +312,7 @@ class ArmiPlugin:
 
     @staticmethod
     @HOOKSPEC
-    def defineBlockTypes() -> List:
+    def defineBlockTypes() -> list:
         """
         Function for providing novel Block types from a plugin.
 
@@ -329,7 +330,7 @@ class ArmiPlugin:
 
     @staticmethod
     @HOOKSPEC
-    def defineAssemblyTypes() -> List:
+    def defineAssemblyTypes() -> list:
         """
         Function for providing novel Assembly types from a plugin.
 
@@ -359,7 +360,7 @@ class ArmiPlugin:
 
     @staticmethod
     @HOOKSPEC
-    def defineBlueprintsSections() -> List:
+    def defineBlueprintsSections() -> list:
         """
         Return new sections for the blueprints input method.
 
@@ -390,7 +391,7 @@ class ArmiPlugin:
 
     @staticmethod
     @HOOKSPEC
-    def defineEntryPoints() -> List:
+    def defineEntryPoints() -> list:
         """
         Return new entry points for the ARMI CLI.
 
@@ -405,7 +406,7 @@ class ArmiPlugin:
 
     @staticmethod
     @HOOKSPEC
-    def defineSettings() -> List:
+    def defineSettings() -> list:
         """
         Define configuration settings for this plugin.
 
@@ -438,7 +439,7 @@ class ArmiPlugin:
 
     @staticmethod
     @HOOKSPEC
-    def defineSettingsValidators(inspector) -> List:
+    def defineSettingsValidators(inspector) -> list:
         """
         Define the high-level settings input validators by adding them to an inspector.
 
@@ -493,7 +494,7 @@ class ArmiPlugin:
 
     @staticmethod
     @HOOKSPEC
-    def defineGuiWidgets() -> List:
+    def defineGuiWidgets() -> list:
         """
         Define which settings should go in the GUI.
 
@@ -532,7 +533,7 @@ class ArmiPlugin:
 
     @staticmethod
     @HOOKSPEC
-    def defineParameterRenames() -> Dict:
+    def defineParameterRenames() -> dict:
         """
         Return a mapping from old parameter names to new parameter names.
 
@@ -611,7 +612,7 @@ class ArmiPlugin:
 
     @staticmethod
     @HOOKSPEC
-    def defineSystemBuilders() -> Dict[str, Callable[[str], "Composite"]]:
+    def defineSystemBuilders() -> dict[str, Callable[[str], "Composite"]]:
         """
         Convert a user-string from the systems section into a valid composite builder.
 

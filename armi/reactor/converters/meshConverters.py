@@ -114,11 +114,9 @@ class RZThetaReactorMeshConverter(MeshConverter):
         This should be on the ``ThetaRZGrid`` object.
         """
         binCombinations = self.numRingBins * self.numAxialMeshBins * self.numThetaMeshBins
-        runLog.info("Total mesh bins (r, z, theta): {0}".format(binCombinations))
+        runLog.info(f"Total mesh bins (r, z, theta): {binCombinations}")
         runLog.info(
-            "  Radial bins: {}\n  Axial bins:  {}\n  Theta bins:  {}".format(
-                self.numRingBins, self.numAxialMeshBins, self.numThetaMeshBins
-            )
+            f"  Radial bins: {self.numRingBins}\n  Axial bins:  {self.numAxialMeshBins}\n  Theta bins:  {self.numThetaMeshBins}"
         )
         self._writeMeshLogData()
 
@@ -129,8 +127,8 @@ class RZThetaReactorMeshConverter(MeshConverter):
 
     def _logMeshData(self, listType, listName, listDataType):
         if listDataType == "float":
-            listType = ["{:<8.3f}".format(floatValue) for floatValue in listType]
-        runLog.extra("{0} {1}".format(listName, listType))
+            listType = [f"{floatValue:<8.3f}" for floatValue in listType]
+        runLog.extra(f"{listName} {listType}")
 
     def setRingsToConvert(self, core):
         raise NotImplementedError
@@ -170,8 +168,8 @@ class RZThetaReactorMeshConverter(MeshConverter):
     def _combineLastTwoRadialBins(self):
         if (self.radialMesh[-1] - self.radialMesh[-2]) == 1:
             runLog.extra(
-                "Outermost ring of the core {} is not fully filled and will be homogenized with the "
-                "previous ring {}".format(self.radialMesh[-1], self.radialMesh[-2])
+                f"Outermost ring of the core {self.radialMesh[-1]} is not fully filled and will be homogenized with the "
+                f"previous ring {self.radialMesh[-2]}"
             )
             # remove the boundary between the last two bins, merging them into one
             self.radialMesh.pop(-2)
@@ -363,13 +361,13 @@ class RZThetaReactorMeshConverterByRingCompositionAxialFlags(
 
 def checkLastValueInList(inputList, listName, expectedValue, eps=0.001, adjustLastValue=False):
     """Check that the last value in the list is equal to the expected value within +/- eps."""
-    msg = "The last value in {} is {} and should be {}".format(listName, inputList[-1], expectedValue)
+    msg = f"The last value in {listName} is {inputList[-1]} and should be {expectedValue}"
     if not np.isclose(inputList[-1], expectedValue, rtol=0.0, atol=eps):
         if adjustLastValue:
             del inputList[-1]
             inputList.append(expectedValue)
             runLog.extra(msg)
-            runLog.extra("Updating {} in {} to {}".format(inputList[-1], listName, expectedValue))
+            runLog.extra(f"Updating {inputList[-1]} in {listName} to {expectedValue}")
         else:
             raise ValueError(msg)
     return inputList
@@ -381,9 +379,7 @@ def checkListBounds(inputList, listName, minVal, maxVal, eps=0.001):
         minDiff = value - minVal
         maxDiff = value - maxVal
         if minDiff < -eps or maxDiff > eps:
-            raise ValueError(
-                "Invalid values {} out of expected bounds {} to {}".format(listName, minVal - eps, maxVal + eps)
-            )
+            raise ValueError(f"Invalid values {listName} out of expected bounds {minVal - eps} to {maxVal + eps}")
 
 
 def generateBins(totalNumDataPoints, numPerBin, minNum):

@@ -30,7 +30,7 @@ armi.cases.case : An individual item of a case suite.
 
 import os
 import traceback
-from typing import Dict, List, Optional, Sequence
+from collections.abc import Sequence
 
 from armi import runLog, settings
 from armi.cases import case as armicase
@@ -66,10 +66,8 @@ class CaseSuite:
         existing = next((c for c in self if c.title == case.title), None)
         if existing is not None:
             raise ValueError(
-                "CaseSuite already contains case with title `{}`\nFirst case:  {}\nSecond case: {}\n"
-                "Name the cases' settings files differently (the file name sets the title).".format(
-                    case.title, existing, case
-                )
+                f"CaseSuite already contains case with title `{case.title}`\nFirst case:  {existing}\nSecond case: {case}\n"
+                "Name the cases' settings files differently (the file name sets the title)."
             )
         self._cases.append(case)
         case._caseSuite = self
@@ -229,7 +227,7 @@ class CaseSuite:
                     runLog.error(f"{case} failed during execution.")
                     traceback.print_exc()
 
-    def results(self) -> Dict[str, dict]:
+    def results(self) -> dict[str, dict]:
         """The result each case's last run by a :py:class:`~armi.cases.runners.SuiteRunner` left, by title."""
         from armi.utils import caseWorker as worker
 
@@ -240,7 +238,7 @@ class CaseSuite:
                 found[case.title] = result
         return found
 
-    def resultsTable(self) -> List[dict]:
+    def resultsTable(self) -> list[dict]:
         """
         One row per case: its title, status and wall time, its independent variables, then its task's scalar results.
 
@@ -266,7 +264,7 @@ class CaseSuite:
     def compare(
         self,
         that,
-        exclusion: Optional[Sequence[str]] = None,
+        exclusion: Sequence[str] | None = None,
         weights=None,
         tolerance=0.01,
         timestepCompare=None,
@@ -315,7 +313,7 @@ class CaseSuite:
 
         self.writeTable(tableResults)
         if missingTitles:
-            runLog.warning((UNMISSABLE_FAILURE.format(", ".join(missingTitles))))
+            runLog.warning(UNMISSABLE_FAILURE.format(", ".join(missingTitles)))
 
         return nIssues
 
@@ -339,12 +337,10 @@ class CaseSuite:
         """Write a table summarizing the test differences."""
         fmt = "psql"
         print(
-            (
-                tabulate.tabulate(
-                    [["Integration test directory: {}".format(os.getcwd())]],
-                    ["SUMMARIZED INTEGRATION TEST DIFFERENCES:"],
-                    tableFmt=fmt,
-                )
+            tabulate.tabulate(
+                [[f"Integration test directory: {os.getcwd()}"]],
+                ["SUMMARIZED INTEGRATION TEST DIFFERENCES:"],
+                tableFmt=fmt,
             )
         )
         header = ["Test", "User File", "Reference File", "# Problem Diff Lines"]

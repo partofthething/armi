@@ -46,7 +46,7 @@ class UpdateAmericium242(BlueprintsMigration):
         migrated = []
         swapFrom, swapTo = self.swap
         for line in self.stream.read().split("\n"):
-            line = re.sub(r"^(\s+)({0})(:.+)".format(swapFrom), r"\1{0}\3".format(swapTo), line)
+            line = re.sub(rf"^(\s+)({swapFrom})(:.+)", rf"\1{swapTo}\3", line)
             migrated.append(line)
 
         result = "\n".join(migrated)

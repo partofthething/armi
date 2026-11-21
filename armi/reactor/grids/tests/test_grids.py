@@ -108,7 +108,7 @@ class TestSpatialLocator(unittest.TestCase):
         """Two multi index locators on the same grid are equal."""
         grid = MockStructuredGrid()
         a = grids.MultiIndexLocation(grid)
-        a.extend((grids.IndexLocation(i, -i, i, grid) for i in range(5)))
+        a.extend(grids.IndexLocation(i, -i, i, grid) for i in range(5))
 
         b = grids.MultiIndexLocation(grid)
         b.extend(a)

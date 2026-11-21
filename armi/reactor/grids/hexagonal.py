@@ -13,7 +13,6 @@
 # limitations under the License.
 from collections import deque
 from math import isclose, sqrt
-from typing import List, Optional, Tuple
 
 import numpy as np
 
@@ -176,7 +175,7 @@ class HexGrid(StructuredGrid):
         return sqrt(self._unitSteps[0][0] ** 2 + self._unitSteps[1][0] ** 2)
 
     @staticmethod
-    def indicesToRingPos(i: int, j: int) -> Tuple[int, int]:
+    def indicesToRingPos(i: int, j: int) -> tuple[int, int]:
         """
         Convert spatialLocator indices to ring/position.
 
@@ -230,7 +229,7 @@ class HexGrid(StructuredGrid):
         """Return the number of positions within a ring."""
         return hexagon.numPositionsInRing(ring)
 
-    def getNeighboringCellIndices(self, i: int, j: int = 0, k: int = 0) -> List[IJKType]:
+    def getNeighboringCellIndices(self, i: int, j: int = 0, k: int = 0) -> list[IJKType]:
         """
         Return the indices of the immediate neighbors of a mesh point in the plane.
 
@@ -359,7 +358,7 @@ class HexGrid(StructuredGrid):
         i, j, _edge = HexGrid._indicesAndEdgeFromRingAndPos(ring, pos)
         return i, j
 
-    def getRingPos(self, indices: IJKType) -> Tuple[int, int]:
+    def getRingPos(self, indices: IJKType) -> tuple[int, int]:
         """
         Get 1-based ring and position from normal indices.
 
@@ -370,7 +369,7 @@ class HexGrid(StructuredGrid):
         i, j = indices[:2]
         return self.indicesToRingPos(i, j)
 
-    def overlapsWhichSymmetryLine(self, indices: IJType) -> Optional[int]:
+    def overlapsWhichSymmetryLine(self, indices: IJType) -> int | None:
         """Return a list of which lines of symmetry this is on.
 
         Parameters
@@ -407,7 +406,7 @@ class HexGrid(StructuredGrid):
 
         return symmetryLine
 
-    def getSymmetricEquivalents(self, indices: IJKType) -> List[IJType]:
+    def getSymmetricEquivalents(self, indices: IJKType) -> list[IJType]:
         """Retrieve the equivalent indices. If full core return nothing, if 1/3-core grid, return the symmetric
         equivalents, if any other grid, raise an error.
 
@@ -431,7 +430,7 @@ class HexGrid(StructuredGrid):
             raise NotImplementedError(f"Unhandled symmetry condition for HexGrid: {self.symmetry}")
 
     @staticmethod
-    def _getSymmetricIdenticalsThird(indices) -> List[IJType]:
+    def _getSymmetricIdenticalsThird(indices) -> list[IJType]:
         """Rotates the indices by 120 degrees twice, counterclockwise."""
         i, j = indices[:2]
         if i == 0 and j == 0:
@@ -487,7 +486,7 @@ class HexGrid(StructuredGrid):
         unitSteps = np.array(HexGrid._getRawUnitSteps(newPitchCm, self.cornersUp))
         self._unitSteps = unitSteps[self._stepDims]
 
-    def locatorInDomain(self, locator, symmetryOverlap: Optional[bool] = False) -> bool:
+    def locatorInDomain(self, locator, symmetryOverlap: bool | None = False) -> bool:
         # This will include the "top" 120-degree symmetry lines. This is to support adding of edge
         # assemblies.
         if self.symmetry.domain == geometry.DomainType.THIRD_CORE:

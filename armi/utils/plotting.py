@@ -389,7 +389,7 @@ def plotFaceMap(
         try:
             pltKwargs["bbox_inches"] = "tight"
             plt.savefig(fName, dpi=150, **pltKwargs)
-        except IOError:
+        except OSError:
             runLog.warning(f"Cannot update facemap at {fName}: IOError. Is the file open?")
         plt.close(fig)
     elif referencesToKeep:
@@ -613,7 +613,7 @@ class DepthSlider(Slider):
             ax.text(
                 textXCoord,
                 textYCoord,
-                "{:.1f}".format(depth),
+                f"{depth:.1f}",
                 ha="center",
                 va="center",
                 transform=ax.transAxes,
@@ -854,11 +854,11 @@ def _plotBlocksInAssembly(
         blockXsId = b.p.xsType
         dLabel = ""
         if b.hasFlags(Flags.FUEL):
-            dLabel = " {:0.2f}%".format(b.getFissileMassEnrich() * 100)
+            dLabel = f" {b.getFissileMassEnrich() * 100:0.2f}%"
         elif b.hasFlags(Flags.CONTROL):
             blockType = "ctrl"
-            dLabel = " {:0.2f}%".format(b.getBoronMassEnrich() * 100)
-        dLabel += " ({})".format(blockXsId)
+            dLabel = f" {b.getBoronMassEnrich() * 100:0.2f}%"
+        dLabel += f" ({blockXsId})"
 
         # Set up block rectangle
         blockPatch = matplotlib.patches.Rectangle(
@@ -1047,7 +1047,7 @@ def plotBlockFlux(core, fName=None, bList=None, peak=False, adjoint=False, bList
         with open(txtFileName, "w") as f:
             f.write("{0:16s} {1:16s} {2:16s}\n".format("Energy_Group", "Average_Flux", "Peak_Flux"))
             for _, (eMax, avgFlux, peakFlux) in bf1.getTable():
-                f.write("{0:12E} {1:12E} {2:12E}\n".format(eMax, avgFlux, peakFlux))
+                f.write(f"{eMax:12E} {avgFlux:12E} {peakFlux:12E}\n")
 
     if max(bf1.avgFlux) <= 0.0:
         runLog.warning(f"Cannot plot flux with maxval=={bf1.avgFlux} in {bList[0] if bList else 'no blocks'}")
@@ -1103,7 +1103,7 @@ def makeHistogram(x, y):
     if not len(x) == len(y):
         raise ValueError(
             "Cannot make a histogram unless the x and y lists are the same size."
-            + "len(x) == {} and len(y) == {}".format(len(x), len(y))
+            + f"len(x) == {len(x)} and len(y) == {len(y)}"
         )
     n = len(x)
     xHistogram = np.zeros(2 * n)
@@ -1478,7 +1478,7 @@ def plotNucXs(isotxs, nucNames, xsNames, fName=None, label=None, noShow=False, t
 
     for nucName, xsName in zip(nucNames, xsNames):
         nuc = isotxs[nucName]
-        thisLabel = label or "{0} {1}".format(nucName, xsName)
+        thisLabel = label or f"{nucName} {xsName}"
         x = isotxs.neutronEnergyUpperBounds / 1e6
         y = nuc.micros[xsName]
         plt.plot(x, y, "-", label=thisLabel, drawstyle="steps-post")
@@ -1511,7 +1511,7 @@ def plotConvertedBlock(sourceBlock, convertedBlock, fName=None):
     for circleComp in convertedBlock:
         innerR = circleComp.getDimension("id") / 2.0
         outerR = circleComp.getDimension("od") / 2.0
-        runLog.debug("Plotting {:40s} with {:10.3f} {:10.3f} ".format(circleComp, innerR, outerR))
+        runLog.debug(f"Plotting {circleComp:40s} with {innerR:10.3f} {outerR:10.3f} ")
         circle = matplotlib.patches.Wedge((0.0, 0.0), outerR, 0, 360.0, width=outerR - innerR)
         patches.append(circle)
         colors.append(circleComp.density())
@@ -1580,11 +1580,7 @@ def plotConvertedRZTReactor(reactor, fNameBase=None):
                 innerAxial = outerAxial
             innerRadius = outerRadius
         ax.set_title(
-            "{} Core Map from {} to {:.4f} revolutions".format(
-                str(reactor.core.geomType).upper(),
-                innerTheta * units.RAD_TO_REV,
-                outerTheta * units.RAD_TO_REV,
-            ),
+            f"{str(reactor.core.geomType).upper()} Core Map from {innerTheta * units.RAD_TO_REV} to {outerTheta * units.RAD_TO_REV:.4f} revolutions",
             y=1.03,
         )
         ax.set_xticks([0.0] + radialMesh)
@@ -1634,17 +1630,7 @@ def _getBlockAtMeshPoint(reactor, innerTheta, outerTheta, innerRadius, outerRadi
                     return b
 
     raise ValueError(
-        "No block found between ({}, {}), ({}, {}), ({}, {})\nLast block had TRZ= {} {} {}".format(
-            innerTheta,
-            outerTheta,
-            innerRadius,
-            outerRadius,
-            innerAxial,
-            outerAxial,
-            blockMidTh,
-            blockMidR,
-            blockMidZ,
-        )
+        f"No block found between ({innerTheta}, {outerTheta}), ({innerRadius}, {outerRadius}), ({innerAxial}, {outerAxial})\nLast block had TRZ= {blockMidTh} {blockMidR} {blockMidZ}"
     )
 
 

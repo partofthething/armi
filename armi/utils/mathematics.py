@@ -58,7 +58,7 @@ def average1DWithinTolerance(vals, tolerance=0.2):
 
     if (avg <= 0.0).any():
         raise ValueError(
-            "A non-physical value (<=0) was computed, but this is not possible.\nValues: {}\navg: {}".format(vals, avg)
+            f"A non-physical value (<=0) was computed, but this is not possible.\nValues: {vals}\navg: {avg}"
         )
 
     return avg
@@ -507,7 +507,7 @@ def parabolaFromPoints(p1, p2, p3):
     try:
         x = np.linalg.solve(A, b)
     except:
-        print("Error in parabola {} {}".format(A, b))
+        print(f"Error in parabola {A} {b}")
         raise
 
     # x[#] returns `[num]` instead of `num`, so we have to grab the first/only element in that list

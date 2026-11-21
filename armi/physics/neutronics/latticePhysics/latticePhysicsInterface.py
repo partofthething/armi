@@ -308,9 +308,7 @@ class LatticePhysicsInterface(interfaces.Interface):
             if not baseList or xsId in baseList:
                 # write the step number to the info log
                 runLog.info(
-                    "Creating input writer(s) for {0} with {1:65s} BU (%FIMA): {2:10.2f}".format(
-                        xsId, repBlock, repBlock.p.percentBu
-                    )
+                    f"Creating input writer(s) for {xsId} with {repBlock:65s} BU (%FIMA): {repBlock.p.percentBu:10.2f}"
                 )
                 writers = self.getWriters(repBlock, xsLibrarySuffix, xsWriters)
                 for writer in writers:

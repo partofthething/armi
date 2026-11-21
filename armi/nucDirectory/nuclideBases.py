@@ -624,7 +624,7 @@ class NuclideBase(INuclide, IMcnpNuclide):
             # in general mcnp adds 300 + 100*m to the Z number for metastables. see above source
             a += 300 + 100 * self.state
 
-        return "{z:d}{a:03d}".format(z=z, a=a)
+        return f"{z:d}{a:03d}"
 
     def getAAAZZZSId(self):
         """
@@ -738,7 +738,7 @@ class NaturalNuclideBase(INuclide, IMcnpNuclide):
         id : str
             The MCNP ID e.g. ``1000``, ``92000``. Not zero-padded on the left.
         """
-        return "{0:d}000".format(self.z)
+        return f"{self.z:d}000"
 
     def getMcc2Id(self):
         """Return the MC2-2 nuclide identification label based on the ENDF/B-V.2 cross section library."""
@@ -981,7 +981,7 @@ def imposeBurnChain(burnChainStream):
 @functools.cache
 def _readMCCNuclidesFile(mccNuclidesFile):
     """Parse an MCC nuclides file. It is only read, so each file is parsed once per process."""
-    with open(mccNuclidesFile, "r") as f:
+    with open(mccNuclidesFile) as f:
         return YAML(typ="safe").load(f)
 
 
@@ -1435,7 +1435,7 @@ class NuclideBases:
             File path to the custom ARMI "nuclides.dat" file, containing a plain text description of all nuclides to be
             modeled including: Z, number of neutrons, mass number, AMU, natural abundance, half life, nu-bar and more.
         """
-        with open(nuclidesFile, "r") as f:
+        with open(nuclidesFile) as f:
             for line in f:
                 # Skip header lines
                 if line.startswith("#") or line.startswith("Z"):

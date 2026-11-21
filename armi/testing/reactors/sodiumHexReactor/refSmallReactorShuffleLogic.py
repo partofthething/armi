@@ -33,7 +33,7 @@ class EquilibriumShuffler(FuelHandler):
             loc = self.r.core.spatialGrid.getLocatorFromRingAndPos(ring, pos)
             a = self.r.core.childrenByLocator[loc]
             if not a:
-                raise RuntimeError("No assembly in {0} {1}".format(ring, pos))
+                raise RuntimeError(f"No assembly in {ring} {pos}")
             cascade.append(a)
         self.swapCascade(cascade)
         fresh = self.r.blueprints.constructAssem(self.cs, name="igniter fuel")

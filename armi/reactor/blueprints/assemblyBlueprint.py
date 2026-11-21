@@ -167,7 +167,7 @@ class AssemblyBlueprint(YamlObject):
         for bType, aType in cls._assemTypes.items():
             if bType in blockClasses:
                 return aType
-        raise ValueError('Unsupported block geometries in {}: "{}"'.format(cls.name, blocks))
+        raise ValueError(f'Unsupported block geometries in {cls.name}: "{blocks}"')
 
     def construct(self, cs, blueprint):
         """
@@ -180,7 +180,7 @@ class AssemblyBlueprint(YamlObject):
         blueprint : Blueprint
             Root blueprint object containing relevant modeling options.
         """
-        runLog.info("Constructing assembly `{}`".format(self.name))
+        runLog.info(f"Constructing assembly `{self.name}`")
         self._checkParamConsistency()
         a = self._constructAssembly(cs, blueprint)
         a.calculateZCoords()

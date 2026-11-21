@@ -33,7 +33,7 @@ class BufferLog(runLog._RunLog):
     def __init__(self, *args, **kwargs):
         # use a logger of our own, so that nothing done to this log changes the real ARMI logger
         kwargs.setdefault("logger", logging.Logger("BufferLog"))
-        super(BufferLog, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.originalLog = None
         self.originalErr = None
         self._outputStream = ""

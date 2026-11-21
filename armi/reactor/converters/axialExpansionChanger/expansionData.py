@@ -13,9 +13,10 @@
 # limitations under the License.
 """Data container for axial expansion."""
 
+from collections.abc import Iterable
 from statistics import mean
 from textwrap import dedent
-from typing import TYPE_CHECKING, Iterable, Optional, Union
+from typing import TYPE_CHECKING, Union
 
 from armi.materials import material
 from armi.reactor.flags import Flags
@@ -258,7 +259,7 @@ class ExpansionData:
         else:
             self.determineTargetComponent(b)
 
-    def determineTargetComponent(self, b: "Block", flagOfInterest: Optional[Flags] = None) -> "Component":
+    def determineTargetComponent(self, b: "Block", flagOfInterest: Flags | None = None) -> "Component":
         """Determines the component who's expansion will determine block height.
 
         This information is also stored on the block at ``Block.p.axialExpTargetComponent`` for faster

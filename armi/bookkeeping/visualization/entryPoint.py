@@ -85,7 +85,7 @@ class VisFileEntryPoint(entryPoint.EntryPoint):
         if self.args.max_node is not None:
             nodes = re.findall(cycleNodePattern, self.args.max_node)
             if len(nodes) != 1:
-                runLog.error("Bad --max-node: `{}`. Should look like (c,n).".format(self.args.max_node))
+                runLog.error(f"Bad --max-node: `{self.args.max_node}`. Should look like (c,n).")
                 sys.exit(1)
             cycle, node = nodes[0]
             self.args.max_node = (int(cycle), int(node))
@@ -93,16 +93,14 @@ class VisFileEntryPoint(entryPoint.EntryPoint):
         if self.args.min_node is not None:
             nodes = re.findall(cycleNodePattern, self.args.min_node)
             if len(nodes) != 1:
-                runLog.error("Bad --min-node: `{}`. Should look like (c,n).".format(self.args.min_node))
+                runLog.error(f"Bad --min-node: `{self.args.min_node}`. Should look like (c,n).")
                 sys.exit(1)
             cycle, node = nodes[0]
             self.args.min_node = (int(cycle), int(node))
 
         if self.args.format not in self._SUPPORTED_FORMATS:
             runLog.error(
-                "Requested format `{}` not among the supported options: {}".format(
-                    self.args.format, self._SUPPORTED_FORMATS
-                )
+                f"Requested format `{self.args.format}` not among the supported options: {self._SUPPORTED_FORMATS}"
             )
             sys.exit(1)
 
@@ -131,9 +129,7 @@ class VisFileEntryPoint(entryPoint.EntryPoint):
 
             if nodes is not None and any(node not in dbNodes for node in nodes):
                 raise RuntimeError(
-                    "Some of the requested nodes are not in the source database.\nRequested: {}\nPresent: {}".format(
-                        nodes, dbNodes
-                    )
+                    f"Some of the requested nodes are not in the source database.\nRequested: {nodes}\nPresent: {dbNodes}"
                 )
 
             with dumper:
@@ -147,6 +143,6 @@ class VisFileEntryPoint(entryPoint.EntryPoint):
                     if self.args.max_node is not None and (cycle, node) > self.args.max_node:
                         continue
 
-                    runLog.info("Creating visualization file for cycle {}, time node {}...".format(cycle, node))
+                    runLog.info(f"Creating visualization file for cycle {cycle}, time node {node}...")
                     r = db.load(cycle, node)
                     dumper.dumpState(r)

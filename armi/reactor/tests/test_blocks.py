@@ -151,7 +151,7 @@ class TestBlock(unittest.TestCase):
             cur,
             ref,
             places=places,
-            msg="Incorrect getSmearDensity with liner. Got {0}. Should be {1}".format(cur, ref),
+            msg=f"Incorrect getSmearDensity with liner. Got {cur}. Should be {ref}",
         )
 
         # test with annular fuel.
@@ -172,7 +172,7 @@ class TestBlock(unittest.TestCase):
             cur,
             ref,
             places=places,
-            msg="Incorrect getSmearDensity with annular fuel. Got {0}. Should be {1}".format(cur, ref),
+            msg=f"Incorrect getSmearDensity with annular fuel. Got {cur}. Should be {ref}",
         )
 
     def test_getSmearDensityMultipleClads(self):
@@ -385,7 +385,7 @@ class TestBlock(unittest.TestCase):
             self.assertAlmostEqual(
                 a1,
                 a2,
-                msg="The area of {0}={1} but the area of {2} in the copy={3}".format(c1, a1, c2, a2),
+                msg=f"The area of {c1}={a1} but the area of {c2} in the copy={a2}",
             )
             for key in c2.DIMENSION_NAMES:
                 dim = c2.p[key]
@@ -1728,16 +1728,12 @@ class TestBlock(unittest.TestCase):
             self.assertAlmostEqual(
                 initialN[elemental],
                 newDens,
-                msg="Isotopic {2} ndens does not add up to {0}. It adds to {1}".format(
-                    initialN[elemental], newDens, elemental
-                ),
+                msg=f"Isotopic {elemental} ndens does not add up to {initialN[elemental]}. It adds to {newDens}",
             )
             self.assertAlmostEqual(
                 initialM[elemental],
                 newMass,
-                msg="Isotopic {2} mass does not add up to {0} g. It adds to {1}".format(
-                    initialM[elemental], newMass, elemental
-                ),
+                msg=f"Isotopic {elemental} mass does not add up to {initialM[elemental]} g. It adds to {newMass}",
             )
 
     def test_expandAllElementalsToIsotopics(self):
@@ -1762,16 +1758,12 @@ class TestBlock(unittest.TestCase):
             self.assertAlmostEqual(
                 initialN[elemental],
                 newDens,
-                msg="Isotopic {2} ndens does not add up to {0}. It adds to {1}".format(
-                    initialN[elemental], newDens, elemental
-                ),
+                msg=f"Isotopic {elemental} ndens does not add up to {initialN[elemental]}. It adds to {newDens}",
             )
             self.assertAlmostEqual(
                 initialM[elemental],
                 newMass,
-                msg="Isotopic {2} mass does not add up to {0} g. It adds to {1}".format(
-                    initialM[elemental], newMass, elemental
-                ),
+                msg=f"Isotopic {elemental} mass does not add up to {initialM[elemental]} g. It adds to {newMass}",
             )
 
     def test_setPitch(self):
@@ -1832,8 +1824,8 @@ class TestBlock(unittest.TestCase):
 
         for expected, actual in zip(expectedData, actualData):
             msg = (
-                "Data (component, density, volume, mass) for component {} does not match. "
-                "Expected: {}, Actual: {}".format(expected[0], expected, actual)
+                f"Data (component, density, volume, mass) for component {expected[0]} does not match. "
+                f"Expected: {expected}, Actual: {actual}"
             )
             for expectedVal, actualVal in zip(expected, actual):
                 self.assertAlmostEqual(expectedVal, actualVal, msg=msg)
@@ -1849,8 +1841,8 @@ class TestBlock(unittest.TestCase):
 
         for expected, actual in zip(expectedData, actualData):
             msg = (
-                "Data (component, density, volume, mass) for component {} does not match. "
-                "Expected: {}, Actual: {}".format(expected[0], expected, actual)
+                f"Data (component, density, volume, mass) for component {expected[0]} does not match. "
+                f"Expected: {expected}, Actual: {actual}"
             )
             for expectedVal, actualVal in zip(expected, actual):
                 self.assertAlmostEqual(expectedVal, actualVal, msg=msg)
@@ -3383,18 +3375,18 @@ class TestMassConservation(unittest.TestCase):
             hotFuelU238,
             hotCladU238,
             10,
-            "Number Density of fuel in one height ({0}) != number density of fuel at another "
-            "height {1}. Number density conservation violated during thermal "
-            "expansion".format(hotFuelU238, hotCladU238),
+            f"Number Density of fuel in one height ({hotFuelU238}) != number density of fuel at another "
+            f"height {hotCladU238}. Number density conservation violated during thermal "
+            "expansion",
         )
 
         self.assertAlmostEqual(
             hotFuelIRON,
             hotCladIRON,
             10,
-            "Number Density of clad in one height ({0}) != number density of clad at another "
-            "height {1}. Number density conservation violated during thermal "
-            "expansion".format(hotFuelIRON, hotCladIRON),
+            f"Number Density of clad in one height ({hotFuelIRON}) != number density of clad at another "
+            f"height {hotCladIRON}. Number density conservation violated during thermal "
+            "expansion",
         )
 
     def test_massFuelHeatup(self):
@@ -3407,9 +3399,7 @@ class TestMassConservation(unittest.TestCase):
             massCold,
             massHot,
             10,
-            "Cold mass of fuel ({0}) != hot mass {1}. Mass conservation violated during thermal expansion".format(
-                massCold, massHot
-            ),
+            f"Cold mass of fuel ({massCold}) != hot mass {massHot}. Mass conservation violated during thermal expansion",
         )
 
     def test_massCladHeatup(self):
@@ -3422,9 +3412,7 @@ class TestMassConservation(unittest.TestCase):
             massCold,
             massHot,
             10,
-            "Cold mass of clad ({0}) != hot mass {1}. Mass conservation violated during thermal expansion".format(
-                massCold, massHot
-            ),
+            f"Cold mass of clad ({massCold}) != hot mass {massHot}. Mass conservation violated during thermal expansion",
         )
 
     def test_massDuctHeatup(self):
@@ -3437,9 +3425,7 @@ class TestMassConservation(unittest.TestCase):
             massCold,
             massHot,
             10,
-            "Cold mass of duct ({0}) != hot mass {1}. Mass conservation violated during thermal expansion".format(
-                massCold, massHot
-            ),
+            f"Cold mass of duct ({massCold}) != hot mass {massHot}. Mass conservation violated during thermal expansion",
         )
 
     def test_massCoolHeatup(self):
@@ -3452,8 +3438,8 @@ class TestMassConservation(unittest.TestCase):
         self.assertGreater(
             massCold,
             massHot,
-            "Cold mass of coolant ({0}) <= hot mass {1}. Mass conservation not violated during "
-            "thermal expansion of coolant".format(massCold, massHot),
+            f"Cold mass of coolant ({massCold}) <= hot mass {massHot}. Mass conservation not violated during "
+            "thermal expansion of coolant",
         )
 
     def test_dimensionDuctHeatup(self):
@@ -3467,15 +3453,8 @@ class TestMassConservation(unittest.TestCase):
             correctHot,
             pitchHot,
             10,
-            "Theoretical pitch of duct ({0}) != hot pitch {1}. Linear expansion violated during "
-            "heatup. \nTc={tc} Tref={tref} dLL={dLL} cold={pcold}".format(
-                correctHot,
-                pitchHot,
-                tc=duct.temperatureInC,
-                tref=duct.inputTemperatureInC,
-                dLL=dLL,
-                pcold=pitchCold,
-            ),
+            f"Theoretical pitch of duct ({correctHot}) != hot pitch {pitchHot}. Linear expansion violated during "
+            f"heatup. \nTc={duct.temperatureInC} Tref={duct.inputTemperatureInC} dLL={dLL} cold={pitchCold}",
         )
 
     def test_coldMass(self):
@@ -3507,9 +3486,7 @@ class TestMassConservation(unittest.TestCase):
             massCold,
             theoreticalMass,
             7,
-            msg="Cold mass of fuel ({0}) != theoretical mass {1}.  Check calculation of cold mass".format(
-                massCold, theoreticalMass
-            ),
+            msg=f"Cold mass of fuel ({massCold}) != theoretical mass {theoreticalMass}.  Check calculation of cold mass",
         )
 
     def test_massConsistency(self):
@@ -3522,7 +3499,7 @@ class TestMassConservation(unittest.TestCase):
             tMass,
             bMass,
             10,
-            "Sum of component mass {0} != total block mass {1}. ".format(tMass, bMass),
+            f"Sum of component mass {tMass} != total block mass {bMass}. ",
         )
 
 

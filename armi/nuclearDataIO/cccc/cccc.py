@@ -76,7 +76,6 @@ import itertools
 import os
 import struct
 from copy import deepcopy
-from typing import List
 
 import numpy as np
 
@@ -114,7 +113,7 @@ class IORecord:
     _intSize = struct.calcsize("i")
     _longSize = struct.calcsize("q")
     maxsize = len(str(2**31 - 1))  # limit to max short even though Python3 can go bigger.
-    _intFormat = " {{:>+{}}}".format(maxsize)
+    _intFormat = f" {{:>+{maxsize}}}"
     _intLength = maxsize + 1
 
     _floatSize = struct.calcsize("f")
@@ -150,10 +149,9 @@ class IORecord:
             runLog.error("Failed to close CCCC record.")
             runLog.error(ee)
             raise BufferError(
-                "Failed to close record, {}.\n{}\n"
+                f"Failed to close record, {self}.\n{ee}\n"
                 "It is possible too much data was read from the "
                 "record, and the end of the stream was reached.\n"
-                "".format(self, ee)
             )
 
     def open(self):
@@ -236,7 +234,7 @@ class IORecord:
         }
         action = actions.get(containedType)
         if action is None:
-            raise Exception('Cannot pack or unpack the type "{}".'.format(containedType))
+            raise Exception(f'Cannot pack or unpack the type "{containedType}".')
         # this little trick will make this work for both reading and writing, yay!
         if contents is None or len(contents) == 0:
             contents = [None for _ in range(length)]
@@ -305,7 +303,7 @@ class IORecord:
             contents[fortranIndex] = func(contents[fortranIndex])
         return contents
 
-    def rwImplicitlyTypedMap(self, keys: List[str], contents) -> dict:
+    def rwImplicitlyTypedMap(self, keys: list[str], contents) -> dict:
         """
         Read a dict of floats and/or ints with FORTRAN77-style implicit typing.
 
@@ -351,9 +349,9 @@ class BinaryRecordReader(IORecord):
         self.byteCount -= 4
         if numBytes2 != self.numBytes:
             raise BufferError(
-                "Number of bytes specified at end the of record, {}, "
-                "does not match the originally specified number, {}.\n"
-                "Read {} bytes.".format(numBytes2, self.numBytes, self.byteCount)
+                f"Number of bytes specified at end the of record, {numBytes2}, "
+                f"does not match the originally specified number, {self.numBytes}.\n"
+                f"Read {self.byteCount} bytes."
             )
 
     def rwInt(self, val):
@@ -631,14 +629,14 @@ class Stream:
         return result
 
     def __repr__(self):
-        return "<{} {}>".format(self.__class__.__name__, self._fileName)
+        return f"<{self.__class__.__name__} {self._fileName}>"
 
     def __enter__(self):
         """At the inception of a with command, open up the file for a read/write."""
         try:
             self._stream = open(self._fileName, self._fileMode)
-        except IOError:
-            runLog.error("Cannot find {} in {}".format(self._fileName, os.getcwd()))
+        except OSError:
+            runLog.error(f"Cannot find {self._fileName} in {os.getcwd()}")
             raise
         return self
 

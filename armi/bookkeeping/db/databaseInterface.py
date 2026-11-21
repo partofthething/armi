@@ -21,12 +21,7 @@ import copy
 import os
 import pathlib
 import time
-from typing import (
-    MutableSequence,
-    Optional,
-    Sequence,
-    Tuple,
-)
+from collections.abc import MutableSequence, Sequence
 
 from armi import context, interfaces, runLog
 from armi.bookkeeping.db.database import Database, getH5GroupName
@@ -61,7 +56,7 @@ class DatabaseInterface(interfaces.Interface):
     def __init__(self, r, cs):
         interfaces.Interface.__init__(self, r, cs)
         self._db = None
-        self._dbPath: Optional[pathlib.Path] = None
+        self._dbPath: pathlib.Path | None = None
 
         if cs[CONF_FORCE_DB_PARAMS]:
             toSet = {paramName: set() for paramName in cs[CONF_FORCE_DB_PARAMS]}
@@ -70,12 +65,12 @@ class DatabaseInterface(interfaces.Interface):
                     toSet[name].add(pDef)
 
             for name, pDefs in toSet.items():
-                runLog.info("Forcing parameter {} to be written to the database, per user input".format(name))
+                runLog.info(f"Forcing parameter {name} to be written to the database, per user input")
                 for pDef in pDefs:
                     pDef.saveToDB = True
 
     def __repr__(self):
-        return "<{} '{}' {} >".format(self.__class__.__name__, self.name, repr(self._db))
+        return f"<{self.__class__.__name__} '{self.name}' {repr(self._db)} >"
 
     @property
     def database(self):
@@ -93,7 +88,7 @@ class DatabaseInterface(interfaces.Interface):
         if not self._db:
             self.initDB()
 
-    def initDB(self, fName: Optional[os.PathLike] = None):
+    def initDB(self, fName: os.PathLike | None = None):
         """
         Open the underlying database to be written to, and write input files to DB.
 
@@ -315,19 +310,17 @@ class DatabaseInterface(interfaces.Interface):
             # reactor was never set so fail
             if fileName:
                 raise RuntimeError(
-                    "Cannot load state from specified file {} @ {}".format(
-                        fileName, getH5GroupName(cycle, timeNode, timeStepName)
-                    )
+                    f"Cannot load state from specified file {fileName} @ {getH5GroupName(cycle, timeNode, timeStepName)}"
                 )
             raise RuntimeError(
-                "Cannot load state from <unspecified file> @ {}".format(getH5GroupName(cycle, timeNode, timeStepName))
+                f"Cannot load state from <unspecified file> @ {getH5GroupName(cycle, timeNode, timeStepName)}"
             )
 
     def getHistory(
         self,
         comp: ArmiObject,
-        params: Optional[Sequence[str]] = None,
-        timeSteps: Optional[MutableSequence[Tuple[int, int]]] = None,
+        params: Sequence[str] | None = None,
+        timeSteps: MutableSequence[tuple[int, int]] | None = None,
         byLocation: bool = False,
     ) -> History:
         """
@@ -366,8 +359,8 @@ class DatabaseInterface(interfaces.Interface):
     def getHistories(
         self,
         comps: Sequence[ArmiObject],
-        params: Optional[Sequence[str]] = None,
-        timeSteps: Optional[MutableSequence[Tuple[int, int]]] = None,
+        params: Sequence[str] | None = None,
+        timeSteps: MutableSequence[tuple[int, int]] | None = None,
         byLocation: bool = False,
     ) -> Histories:
         """

@@ -17,8 +17,6 @@ Tooling to help flatten jagged (non rectangular) data into rectangular arrays.
 The goal here is to support jagged data for NumPy arrays to be written into the ARMI databases.
 """
 
-from typing import List, Optional
-
 import numpy as np
 
 from armi import runLog
@@ -89,8 +87,8 @@ class JaggedArray:
             runLog.error(
                 "Error! It seems like ARMI may have tried to flatten a jagged array "
                 "where the elements have different numbers of dimensions. `shapes` "
-                "attribute of the JaggedArray for {} cannot be made into a numpy "
-                "array; it might be jagged.".format(paramName)
+                f"attribute of the JaggedArray for {paramName} cannot be made into a numpy "
+                "array; it might be jagged."
             )
             runLog.error(shapes)
             raise ValueError(ee)
@@ -172,7 +170,7 @@ class JaggedArray:
         unpackedJaggedData: list of np.ndarray
             List of numpy arrays with varying dimensions (i.e., jagged arrays)
         """
-        unpackedJaggedData: List[Optional[np.ndarray]] = []
+        unpackedJaggedData: list[np.ndarray | None] = []
         shapeIndices = [i for i, x in enumerate(self.shapes) if sum(x) != 0]
         numElements = len(shapeIndices) + len(self.nones)
         j = 0  # non-None element counter

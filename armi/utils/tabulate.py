@@ -951,8 +951,7 @@ def _prependRowIndex(rows, index):
         return rows
     if isinstance(index, Sized) and len(index) != len(rows):
         raise ValueError(
-            "index must be as long as the number of data rows: "
-            + "len(index)={} len(rows)={}".format(len(index), len(rows))
+            "index must be as long as the number of data rows: " + f"len(index)={len(index)} len(rows)={len(rows)}"
         )
     sansRows, separatingLines = _removeSeparatingLines(rows)
     newRows = []

@@ -478,7 +478,7 @@ class CompxsRegion:
         self.metadata = self._getMetadata()
 
     def __repr__(self):
-        return "<{} {}>".format(self.__class__.__name__, self.regionNumber)
+        return f"<{self.__class__.__name__} {self.regionNumber}>"
 
     def _getFileMetadata(self):
         return self.container.compxsMetadata

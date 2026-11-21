@@ -20,7 +20,6 @@ that are not related to any particular physics or plugins.
 """
 
 import os
-from typing import List
 
 import voluptuous as vol
 
@@ -111,7 +110,7 @@ CONF_ZONE_DEFINITIONS = "zoneDefinitions"
 CONF_ZONES_FILE = "zonesFile"
 
 
-def defineSettings() -> List[setting.Setting]:
+def defineSettings() -> list[setting.Setting]:
     """
     Return a list of global framework settings.
 

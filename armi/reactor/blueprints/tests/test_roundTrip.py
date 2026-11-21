@@ -64,7 +64,7 @@ BLUEPRINTS = [
 def _readResolved(relPath):
     r"""Read a blueprint and paste in its ``!include``\ s, the way ``loadFromCs`` does."""
     path = os.path.join(TESTING_ROOT, "reactors", relPath)
-    with open(path, "r") as f:
+    with open(path) as f:
         return textProcessors.resolveMarkupInclusions(f, os.path.dirname(path)).getvalue()
 
 

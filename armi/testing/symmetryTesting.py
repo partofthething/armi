@@ -36,8 +36,9 @@ The test helper uses the `SymmetryFactorTester` to handle the bookkeeping tasks 
 """
 
 import unittest
+from collections.abc import Iterable
 from contextlib import contextmanager
-from typing import TYPE_CHECKING, Any, Iterable, Union
+from typing import TYPE_CHECKING, Any, Union
 
 from armi.testing import loadTestReactor, reduceTestReactorRings
 

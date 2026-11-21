@@ -44,7 +44,6 @@ armi.reactor.geometry : a specific usage of lattices, for core maps
 """
 
 import re
-from typing import Union
 
 from armi import runLog
 from armi.reactor import geometry
@@ -601,9 +600,7 @@ class AsciiMapHexFullTipsUp(AsciiMap):
             self.asciiOffsets.append(li)
 
 
-def asciiMapFromGeomAndDomain(
-    geomType: Union[str, geometry.GeomType], domain: Union[str, geometry.DomainType]
-) -> "AsciiMap":
+def asciiMapFromGeomAndDomain(geomType: str | geometry.GeomType, domain: str | geometry.DomainType) -> "AsciiMap":
     """Get a ASCII map class from a geometry and domain type."""
     from armi.reactor import geometry
 

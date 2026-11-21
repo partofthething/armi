@@ -26,7 +26,6 @@ import collections
 import os
 import re
 import time
-from typing import Optional, Tuple
 
 from armi import context, interfaces, runLog
 from armi.bookkeeping import db, memoryProfiler
@@ -337,7 +336,7 @@ class Operator:
 
     def __exit__(self, exception_type, exception_value, stacktrace):
         if any([exception_type, exception_value, stacktrace]):
-            runLog.error(r"{}\n{}\{}".format(exception_type, exception_value, stacktrace))
+            runLog.error(rf"{exception_type}\n{exception_value}\{stacktrace}")
             self.interactAllError()
 
     def operate(self):
@@ -366,7 +365,7 @@ class Operator:
                 break
         self.interactAllEOL()
 
-    def interactAllRestart(self, dbi: Optional[db.DatabaseInterface]):
+    def interactAllRestart(self, dbi: db.DatabaseInterface | None):
         """Prepare for a restart simulation.
 
         Some steps are necessary to be taken after interfaces are constructed but before we
@@ -495,14 +494,14 @@ class Operator:
         -----
         This is the base method for the other ``interactAll`` methods.
         """
-        interactMethodName = "interact{}".format(interactionName)
+        interactMethodName = f"interact{interactionName}"
 
         printMemUsage = self.cs["verbosity"] == "debug" and self.cs["debugMem"]
 
         halt = False
 
         cycleNodeTag = self._expandCycleAndTimeNodeArgs(interactionName)
-        runLog.header("===========  Triggering {} Event ===========".format(interactionName + cycleNodeTag))
+        runLog.header(f"===========  Triggering {interactionName + cycleNodeTag} Event ===========")
 
         for statePointIndex, interface in enumerate(activeInterfaces, start=1):
             self.printInterfaceSummary(interface, interactionName, statePointIndex)
@@ -523,12 +522,12 @@ class Operator:
                 memAfter.broadcast()
                 memAfter.invoke(self, self.r, self.cs)
                 memAfter -= memBefore
-                memAfter.printUsage("after {:25s} {:15s} interaction".format(interface.name, interactionName))
+                memAfter.printUsage(f"after {interface.name:25s} {interactionName:15s} interaction")
 
             # Allow inherited classes to clean up things after an interaction
             self._finalizeInteract()
 
-        runLog.header("===========  Completed {} Event ===========\n".format(interactionName + cycleNodeTag))
+        runLog.header(f"===========  Completed {interactionName + cycleNodeTag} Event ===========\n")
 
         return halt
 
@@ -547,9 +546,7 @@ class Operator:
         long banners to save disk space.
         """
         nodeInfo = self._expandCycleAndTimeNodeArgs(interactionName)
-        line = "=========== {:02d} - {:30s} {:15s} ===========".format(
-            statePointIndex, interface.name, interactionName + nodeInfo
-        )
+        line = f"=========== {statePointIndex:02d} - {interface.name:30s} {interactionName + nodeInfo:15s} ==========="
         runLog.header(line)
 
     def _expandCycleAndTimeNodeArgs(self, interactionName):
@@ -565,7 +562,7 @@ class Operator:
         if interactionName == "Coupled":
             cycleNodeInfo = (
                 f" - timestep: cycle {self.r.p.cycle}, node {self.r.p.timeNode}, "
-                f"year {'{0:.2f}'.format(self.r.p.time)} - iteration "
+                f"year {f'{self.r.p.time:.2f}'} - iteration "
                 f"{self.r.core.p.coupledIteration}"
             )
         elif interactionName in ("BOC", "EOC"):
@@ -575,7 +572,7 @@ class Operator:
             cycleNodeInfo = ""
         else:
             cycleNodeInfo = (
-                f" - timestep: cycle {self.r.p.cycle}, node {self.r.p.timeNode}, year {'{0:.2f}'.format(self.r.p.time)}"
+                f" - timestep: cycle {self.r.p.cycle}, node {self.r.p.timeNode}, year {f'{self.r.p.time:.2f}'}"
             )
 
         return cycleNodeInfo
@@ -691,7 +688,7 @@ class Operator:
     def interactAllError(self):
         """Interact when an error is raised by any other interface. Provides a wrap-up option on the way to a crash."""
         for i in self.interfaces:
-            runLog.extra("Error-interacting with {0}".format(i.name))
+            runLog.extra(f"Error-interacting with {i.name}")
             i.interactError()
 
     def createInterfaces(self):
@@ -764,26 +761,21 @@ class Operator:
 
         if iFunc:
             if issubclass(type(iFunc), type(interface)):
-                runLog.info(
-                    "Ignoring Interface {newFunc} because existing interface {old} already  more specific".format(
-                        newFunc=interface, old=iFunc
-                    )
-                )
+                runLog.info(f"Ignoring Interface {interface} because existing interface {iFunc} already  more specific")
                 return
             elif issubclass(type(interface), type(iFunc)):
                 self.removeInterface(iFunc)
                 runLog.info(
-                    "Will Insert Interface {newFunc} because it is a subclass of {old} interface and "
-                    " more derived".format(newFunc=interface, old=iFunc)
+                    f"Will Insert Interface {interface} because it is a subclass of {iFunc} interface and  more derived"
                 )
             else:
                 raise RuntimeError(
-                    "Cannot add {0}; the {1} already is designated "
-                    "as the {2} interface. Multiple interfaces of the same "
-                    "purpose is not supported.".format(interface, iFunc, interface.purpose)
+                    f"Cannot add {interface}; the {iFunc} already is designated "
+                    f"as the {interface.purpose} interface. Multiple interfaces of the same "
+                    "purpose is not supported."
                 )
 
-        runLog.debug("Adding {0}".format(interface))
+        runLog.debug(f"Adding {interface}")
         if index is None:
             self.interfaces.append(interface)
         else:
@@ -821,9 +813,7 @@ class Operator:
 
                     if not self.getInterface(name, purpose=purpose):
                         runLog.extra(
-                            "Attaching {} interface (disabled, BOL forced) due to dependency in {}".format(
-                                klass.name, i.name
-                            )
+                            f"Attaching {klass.name} interface (disabled, BOL forced) due to dependency in {i.name}"
                         )
                         self.addInterface(klass(r=self.r, cs=self.cs), enabled=False, bolForce=True)
             if len(self.interfaces) == numInterfaces:
@@ -862,7 +852,7 @@ class Operator:
             interface.detachReactor()
             return True
         else:
-            runLog.warning("Cannot remove interface {0} because it is not in the interface stack.".format(interface))
+            runLog.warning(f"Cannot remove interface {interface} because it is not in the interface stack.")
             return False
 
     def getInterface(self, name=None, purpose=None):
@@ -890,7 +880,7 @@ class Operator:
                 else:
                     raise RuntimeError(
                         "Cannot retrieve a single interface as there are multiple "
-                        "interfaces with name {} or purpose {} attached. ".format(name, purpose)
+                        f"interfaces with name {name} or purpose {purpose} attached. "
                     )
 
         return candidateI
@@ -929,7 +919,7 @@ class Operator:
     def getActiveInterfaces(
         self,
         interactState: str,
-        excludedInterfaceNames: Tuple[str] = (),
+        excludedInterfaceNames: tuple[str] = (),
         cycle: int = 0,
     ):
         """Retrieve the interfaces which are active for a given interaction state.
@@ -1046,7 +1036,7 @@ class Operator:
         else:
             runLog.info(f"Loading restart data from {restartName}")
 
-        with open(restartName, "r") as restart:
+        with open(restartName) as restart:
             for line in restart:
                 match = re.search(
                     r"cycle=(\d+)\s+time=(\d+\.\d+[Ee+-]+\d+)\s+factorList=[\[\{](.+?)[\]\}]",
@@ -1068,7 +1058,7 @@ class Operator:
                     runLog.debug("loaded restart data for cycle %d" % float(match.group(1)))
 
                     self.restartData.append((float(match.group(1)), float(match.group(2)), factorList))
-        runLog.info("loaded restart data for {0} cycles".format(len(self.restartData)))
+        runLog.info(f"loaded restart data for {len(self.restartData)} cycles")
 
     def loadState(self, cycle, timeNode, timeStepName="", fileName=None):
         """
@@ -1126,9 +1116,9 @@ class Operator:
             if "mcc" in fileName and re.search(r"[A-Z]AF?\d?.inp", fileName):
                 base, ext = os.path.splitext(fileName)
                 if iteration is not None:
-                    newFile = "{0}_{1:03d}_{2:d}_{4}{3}".format(base, cycle, node, ext, iteration)
+                    newFile = f"{base}_{cycle:03d}_{node:d}_{iteration}{ext}"
                 else:
-                    newFile = "{0}_{1:03d}_{2:d}{3}".format(base, cycle, node, ext)
+                    newFile = f"{base}_{cycle:03d}_{node:d}{ext}"
                 # add the cycle and timenode to the XS input file names so that a rx-coeff case that
                 # runs in here won't overwrite them.
                 pathTools.copyOrWarn(fileName, fileName, os.path.join(newFolder, newFile))

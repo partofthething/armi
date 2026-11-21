@@ -16,7 +16,6 @@
 
 import unittest
 from copy import deepcopy
-from typing import Optional
 
 from armi import (
     configure,
@@ -273,7 +272,7 @@ class TestPluginBasics(unittest.TestCase):
 class TestPlugin(unittest.TestCase):
     """Some sanity tests that can be used by implementing plugins."""
 
-    plugin: Optional[plugins.ArmiPlugin] = None
+    plugin: plugins.ArmiPlugin | None = None
 
     def test_defineBlueprintsSections(self):
         """Make sure that the defineBlueprintsSections hook is properly implemented."""

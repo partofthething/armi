@@ -51,8 +51,9 @@ import signal
 import sys
 import time
 import traceback
+from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass
-from typing import Callable, Dict, Iterable, List, Optional, Sequence, Union
+from typing import Union
 
 from armi import context, mpiActions, runLog
 from armi.cases import runners, sweeps
@@ -82,7 +83,7 @@ class StateModifier:
         Name/value pairs describing this perturbation, which become columns of the results table.
     """
 
-    def __init__(self, independentVariable: Optional[dict] = None):
+    def __init__(self, independentVariable: dict | None = None):
         self.independentVariable = independentVariable or {}
 
     def __call__(self, r) -> None:
@@ -125,7 +126,7 @@ class Branch:
 class BranchResults(dict):
     """The result of each branch, by title, in the format of a suite case's result file."""
 
-    def table(self) -> List[dict]:
+    def table(self) -> list[dict]:
         """One row per branch: its title, status, wall time, independent variables and scalar results."""
         return [runners.resultRow(title, result) for title, result in self.items()]
 
@@ -139,7 +140,7 @@ class BranchResults(dict):
 
         return pd.DataFrame(self.table()).set_index("case")
 
-    def failed(self) -> List[str]:
+    def failed(self) -> list[str]:
         """Titles of the branches that did not succeed."""
         return [title for title, result in self.items() if result.get("status") != "ok"]
 
@@ -151,7 +152,7 @@ def runBranches(
     task: Task,
     executor=None,
     directory: str = "branches",
-    names: Optional[Callable[[int, tuple], str]] = None,
+    names: Callable[[int, tuple], str] | None = None,
 ) -> BranchResults:
     """
     Run ``task`` on a perturbed copy of the reactor for each point of ``sweep`` and return the results.
@@ -199,7 +200,7 @@ def runBranches(
 class Executor:
     """Runs branches somewhere. Subclasses implement :py:meth:`run`."""
 
-    def run(self, r, cs, branches: Sequence[Branch], task: Task, root: str) -> Dict[str, dict]:
+    def run(self, r, cs, branches: Sequence[Branch], task: Task, root: str) -> dict[str, dict]:
         """Run every branch and return each one's result, by title."""
         raise NotImplementedError
 
@@ -236,7 +237,7 @@ class ForkExecutor(Executor):
         Threads each branch's codes may use, set as ``OMP_NUM_THREADS`` in the child.
     """
 
-    def __init__(self, maxWorkers: Optional[int] = None, timeout: Optional[float] = None, threadsPerWorker=None):
+    def __init__(self, maxWorkers: int | None = None, timeout: float | None = None, threadsPerWorker=None):
         self.maxWorkers = maxWorkers or max(1, (os.cpu_count() or 1) // (threadsPerWorker or 1))
         self.timeout = timeout
         self.threadsPerWorker = threadsPerWorker
@@ -349,7 +350,7 @@ class SnapshotExecutor(Executor):
         Seconds a branch may run, enforced by the worker.
     """
 
-    def __init__(self, runner: "runners.SuiteRunner", timeout: Optional[float] = None):
+    def __init__(self, runner: "runners.SuiteRunner", timeout: float | None = None):
         self.runner = runner
         self.timeout = timeout
 

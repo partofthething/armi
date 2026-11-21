@@ -166,7 +166,7 @@ class MainInterface(interfaces.Interface):
             # snapText is a CCCNNN with C=cycle and N=node
             cycle = int(snapText[0:3])
             node = int(snapText[3:])
-            newFolder = "snapShot{0}_{1}".format(cycle, node)
+            newFolder = f"snapShot{cycle}_{node}"
             utils.pathTools.cleanPath(newFolder, forceClean=True)
 
         # delete database if it's SQLlite
@@ -198,6 +198,4 @@ class MainInterface(interfaces.Interface):
                     try:
                         os.remove(fileName)
                     except OSError:
-                        runLog.warning(
-                            "Error removing file {0} during cleanup. It is still in use, probably".format(fileName)
-                        )
+                        runLog.warning(f"Error removing file {fileName} during cleanup. It is still in use, probably")

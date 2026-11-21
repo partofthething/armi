@@ -185,7 +185,7 @@ class TestPlotting(unittest.TestCase):
             _ = reactors.factory(cs, blueprint)
             for name, bDesign in blueprint.blockDesigns.items():
                 b = bDesign.construct(cs, blueprint, 0, 1, 1, "AA", {})
-                plotting.plotBlockDiagram(b, "{}.svg".format(name), True)
+                plotting.plotBlockDiagram(b, f"{name}.svg", True)
 
             self._checkFileExists("uo2.svg")
             self._checkFileExists("mox.svg")

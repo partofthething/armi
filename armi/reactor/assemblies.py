@@ -23,7 +23,7 @@ import math
 import pickle
 from collections.abc import Iterable
 from random import randint
-from typing import ClassVar, Optional, Type
+from typing import ClassVar
 
 import numpy as np
 from scipy import interpolate
@@ -42,7 +42,7 @@ class Assembly(composites.Composite):
     Append blocks to add them up. Index blocks with 0 being the bottom.
     """
 
-    _BLOCK_TYPE: ClassVar[Optional[Type[blocks.Block]]] = None
+    _BLOCK_TYPE: ClassVar[type[blocks.Block] | None] = None
     pDefs = assemblyParameters.getAssemblyParameterDefinitions()
 
     # For assemblies coming in from the database, waiting to be loaded to their old
@@ -80,9 +80,7 @@ class Assembly(composites.Composite):
         self.p.ringPosHist = []
 
     def __repr__(self):
-        msg = "<{typeName} Assembly {name} at {loc}>".format(
-            name=self.getName(), loc=self.getLocation(), typeName=self.getType()
-        )
+        msg = f"<{self.getType()} Assembly {self.getName()} at {self.getLocation()}>"
         return msg
 
     def __lt__(self, other):
@@ -132,7 +130,7 @@ class Assembly(composites.Composite):
 
         AssemNums are like serial numbers for assemblies.
         """
-        return "A{0:04d}".format(int(assemNum))
+        return f"A{int(assemNum):04d}"
 
     def renumber(self, newNum):
         """
@@ -374,9 +372,7 @@ class Assembly(composites.Composite):
                 continue
             elif refB.getHeight() > b.getHeight():
                 raise RuntimeError(
-                    "can't split {0} ({1}cm) into larger blocks to match ref block {2} ({3}cm)".format(
-                        b, b.getHeight(), refB, refB.getHeight()
-                    )
+                    f"can't split {b} ({b.getHeight()}cm) into larger blocks to match ref block {refB} ({refB.getHeight()}cm)"
                 )
             else:
                 # b is larger than refB. Split b up by splitting it into several smaller blocks of
@@ -632,10 +628,10 @@ class Assembly(composites.Composite):
                 b.p.topIndex = np.where(np.isclose(refMesh, top))[0].tolist()[0]
             except IndexError:
                 runLog.error(
-                    "Height {0} in this assembly ({1} in {4}) is not in the reactor mesh "
-                    "list from  {2}\nThis has: {3}\nIf you want to run "
+                    f"Height {top} in this assembly ({self} in {self.parent}) is not in the reactor mesh "
+                    f"list from  {refMesh}\nThis has: {selfMesh}\nIf you want to run "
                     "a case with non-uniform axial mesh, activate the `detailedAxialExpansion` "
-                    "setting".format(top, self, refMesh, selfMesh, self.parent)
+                    "setting"
                 )
                 raise
             z = top
@@ -740,8 +736,8 @@ class Assembly(composites.Composite):
 
         if self[-1].p.topIndex == 0:
             runLog.warning(
-                "Reference uniform mesh not being applied to {}. It was likely "
-                "excluded through the setting `nonUniformAssemFlags`.".format(self.p.type)
+                f"Reference uniform mesh not being applied to {self.p.type}. It was likely "
+                "excluded through the setting `nonUniformAssemFlags`."
             )
             return
 
@@ -753,16 +749,14 @@ class Assembly(composites.Composite):
 
             if not 0 <= topIndex < len(blockMesh):
                 runLog.warning(
-                    "index {0} does not exist in topvals (len:{1}). 0D case? Skipping snap".format(
-                        topIndex, len(blockMesh)
-                    )
+                    f"index {topIndex} does not exist in topvals (len:{len(blockMesh)}). 0D case? Skipping snap"
                 )
                 return
 
             newTop = blockMesh[topIndex]
 
             if newTop is None:
-                runLog.warning("Skipping axial snapping on {0}".format(self), 1)
+                runLog.warning(f"Skipping axial snapping on {self}", 1)
                 return
 
             if conserveMassFlag == "auto":
@@ -885,7 +879,7 @@ class Assembly(composites.Composite):
     def hasContinuousCoolantChannel(self):
         return all(b.containsAtLeastOneChildWithFlags(Flags.COOLANT) for b in self)
 
-    def getFirstBlock(self, typeSpec: TypeSpec = None, exact: bool = False) -> Optional[blocks.Block]:
+    def getFirstBlock(self, typeSpec: TypeSpec = None, exact: bool = False) -> blocks.Block | None:
         """Find the first block that matches the spec.
 
         Parameters
@@ -911,14 +905,14 @@ class Assembly(composites.Composite):
             # No items found in the iteration -> no blocks match the request
             return None
 
-    def getFirstBlockByType(self, typeName: str) -> Optional[blocks.Block]:
+    def getFirstBlockByType(self, typeName: str) -> blocks.Block | None:
         blocks = filter(lambda b: b.getType() == typeName, self)
         try:
             return next(blocks)
         except StopIteration:
             return None
 
-    def getBlockAtElevation(self, elevation: float) -> Optional[blocks.Block]:
+    def getBlockAtElevation(self, elevation: float) -> blocks.Block | None:
         """
         Returns the block at a specified axial dimension elevation (given in cm).
 
@@ -1133,8 +1127,8 @@ class Assembly(composites.Composite):
                 fillValue = values[:, 0], values[:, -1]
             else:
                 raise Exception(
-                    'Unsupported shape ({}) returned from getChildParamValues("{}").'
-                    "Shape must be 1 or 2 dimensions".format(values.shape, param)
+                    f'Unsupported shape ({values.shape}) returned from getChildParamValues("{param}").'
+                    "Shape must be 1 or 2 dimensions"
                 )
         interpolater = interpolate.interp1d(
             z,

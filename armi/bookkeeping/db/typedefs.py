@@ -12,13 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Any, Dict, Tuple
+from typing import Any
 
 from armi.reactor.composites import ArmiObject
 from armi.reactor.grids import LocationBase
 
 # Return type for the getHistories() method
 #              param       time node      value
-History = Dict[str, Dict[Tuple[int, int], Any]]
-Histories = Dict[ArmiObject, History]
-LocationHistories = Dict[LocationBase, History]
+History = dict[str, dict[tuple[int, int], Any]]
+Histories = dict[ArmiObject, History]
+LocationHistories = dict[LocationBase, History]

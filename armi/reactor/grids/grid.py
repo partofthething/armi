@@ -12,7 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Dict, Hashable, Iterable, List, Optional, Tuple, Union
+from collections.abc import Hashable, Iterable
+from typing import TYPE_CHECKING, Optional
 
 import numpy as np
 
@@ -68,8 +69,8 @@ class Grid(ABC):
 
     def __init__(
         self,
-        geomType: Union[str, geometry.GeomType] = "",
-        symmetry: Union[str, geometry.SymmetryType] = "",
+        geomType: str | geometry.GeomType = "",
+        symmetry: str | geometry.SymmetryType = "",
         armiObject: Optional["ArmiObject"] = None,
     ):
         # geometric metadata encapsulated here because it's related to the grid.
@@ -88,7 +89,7 @@ class Grid(ABC):
         return geometry.GeomType.fromStr(self._geomType)
 
     @geomType.setter
-    def geomType(self, geomType: Union[str, geometry.GeomType]):
+    def geomType(self, geomType: str | geometry.GeomType):
         if geomType:
             self._geomType = str(geometry.GeomType.fromAny(geomType))
         else:
@@ -120,13 +121,13 @@ class Grid(ABC):
         return geometry.SymmetryType.fromStr(self._symmetry)
 
     @symmetry.setter
-    def symmetry(self, symmetry: Union[str, geometry.SymmetryType]):
+    def symmetry(self, symmetry: str | geometry.SymmetryType):
         if symmetry:
             self._symmetry = str(geometry.SymmetryType.fromAny(symmetry))
         else:
             self._symmetry = ""
 
-    def __getstate__(self) -> Dict:
+    def __getstate__(self) -> dict:
         """
         Pickling removes reference to ``armiObject``.
 
@@ -142,7 +143,7 @@ class Grid(ABC):
 
         return state
 
-    def __setstate__(self, state: Dict):
+    def __setstate__(self, state: dict):
         """
         Pickling removes reference to ``armiObject``.
 
@@ -163,11 +164,11 @@ class Grid(ABC):
         """Number of items in the grid."""
 
     @abstractmethod
-    def items(self) -> Iterable[Tuple[IJKType, IndexLocation]]:
+    def items(self) -> Iterable[tuple[IJKType, IndexLocation]]:
         """Return list of ((i, j, k), IndexLocation) tuples."""
 
     @abstractmethod
-    def locatorInDomain(self, locator: LocationBase, symmetryOverlap: Optional[bool] = False) -> bool:
+    def locatorInDomain(self, locator: LocationBase, symmetryOverlap: bool | None = False) -> bool:
         """
         Return whether the passed locator is in the domain represented by the Grid.
 
@@ -190,7 +191,7 @@ class Grid(ABC):
         """
 
     @abstractmethod
-    def getSymmetricEquivalents(self, indices: IJType) -> List[IJType]:
+    def getSymmetricEquivalents(self, indices: IJType) -> list[IJType]:
         """
         Return a list of grid indices that contain matching contents based on symmetry.
 
@@ -202,7 +203,7 @@ class Grid(ABC):
         """
 
     @abstractmethod
-    def overlapsWhichSymmetryLine(self, indices: IJType) -> Optional[int]:
+    def overlapsWhichSymmetryLine(self, indices: IJType) -> int | None:
         """Return lines of symmetry position at a given index can be found.
 
         Parameters
@@ -221,7 +222,7 @@ class Grid(ABC):
     @abstractmethod
     def getCoordinates(
         self,
-        indices: Union[IJKType, List[IJKType]],
+        indices: IJKType | list[IJKType],
         nativeCoords: bool = False,
     ) -> np.ndarray:
         pass
@@ -256,7 +257,7 @@ class Grid(ABC):
         return label
 
     @abstractmethod
-    def reduce(self) -> Tuple[Hashable, ...]:
+    def reduce(self) -> tuple[Hashable, ...]:
         """
         Return the set of arguments used to create this Grid.
 

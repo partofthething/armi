@@ -47,7 +47,7 @@ class Reactor(composites.Composite):
     pDefs = reactorParameters.defineReactorParameters()
 
     def __init__(self, name, blueprints):
-        composites.Composite.__init__(self, "R-{}".format(name))
+        composites.Composite.__init__(self, f"R-{name}")
         self.o = None
         self.spatialGrid = None
         self.spatialLocator = None

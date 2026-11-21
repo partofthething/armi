@@ -358,7 +358,7 @@ class TestTabulateInputs(unittest.TestCase):
 
     def test_listBytes(self):
         """Input: a list of bytes."""
-        lb = [["你好".encode("utf-8")], ["你好"]]
+        lb = [["你好".encode()], ["你好"]]
         expected = "\n".join(
             [
                 "bytes",
@@ -622,11 +622,11 @@ class TestTabulateInternal(unittest.TestCase):
     def test_type(self):
         """Basic sanity test of internal _type() function."""
         self.assertEqual(_type(None), type(None))
-        self.assertEqual(_type("foo"), type(""))
-        self.assertEqual(_type("1"), type(1))
-        self.assertEqual(_type("\x1b[31m42\x1b[0m"), type(42))
-        self.assertEqual(_type("\x1b[31m42\x1b[0m"), type(42))
-        self.assertEqual(_type(datetime.now()), type("2024-12-31"))
+        self.assertEqual(_type("foo"), str)
+        self.assertEqual(_type("1"), int)
+        self.assertEqual(_type("\x1b[31m42\x1b[0m"), int)
+        self.assertEqual(_type("\x1b[31m42\x1b[0m"), int)
+        self.assertEqual(_type(datetime.now()), str)
 
     def test_visibleWidth(self):
         """Basic sanity test of internal _visibleWidth() function."""

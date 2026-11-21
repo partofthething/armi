@@ -21,7 +21,7 @@ This module contains the abstract definition of a Component.
 
 import copy
 import re
-from typing import Iterable, Union
+from collections.abc import Iterable
 
 import numpy as np
 
@@ -666,7 +666,7 @@ class Component(composites.Composite, metaclass=ComponentType):
         else:
             return 0.0
 
-    def getNuclideNumberDensities(self, nucNames: Iterable[Union[str, np.bytes_]]) -> np.ndarray:
+    def getNuclideNumberDensities(self, nucNames: Iterable[str | np.bytes_]) -> np.ndarray:
         """
         Return an array of number densities for the nuclide names requested.
 
@@ -883,7 +883,7 @@ class Component(composites.Composite, metaclass=ComponentType):
         except ZeroDivisionError:
             return 0.0
 
-    def getMass(self, nuclideNames: Union[None, str, list[str]] = None) -> float:
+    def getMass(self, nuclideNames: None | str | list[str] = None) -> float:
         r"""
         Determine the mass in grams of nuclide(s) and/or elements in this object.
 

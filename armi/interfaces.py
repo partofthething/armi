@@ -25,7 +25,7 @@ armi.plugins : Register various interfaces
 """
 
 import copy
-from typing import Dict, List, NamedTuple, Tuple, Union
+from typing import NamedTuple
 
 import numpy as np
 from numpy.linalg import norm
@@ -280,7 +280,7 @@ class Interface:
         """Return a MergeableDict containing files that should be considered "input"."""
         return utils.MergeableDict()
 
-    name: Union[str, None] = None
+    name: str | None = None
     """
     The name of the interface. This is undefined for the base class, and must be overridden by any
     concrete class that extends this one.
@@ -319,9 +319,7 @@ class Interface:
             Interfaces derived from Interface must define their name
         """
         if self.name is None:
-            raise RuntimeError(
-                "Interfaces derived from Interface must define their name ({}).".format(type(self).__name__)
-            )
+            raise RuntimeError(f"Interfaces derived from Interface must define their name ({type(self).__name__}).")
         self._enabled = True
         self.reverseAtEOL = False
         self._bolForce = False  # override disabled flag in interactBOL if true.
@@ -331,7 +329,7 @@ class Interface:
         self.coupler = _setTightCouplerByInterfaceFunction(self, cs)
 
     def __repr__(self):
-        return "<Interface {0}>".format(self.name)
+        return f"<Interface {self.name}>"
 
     def _checkSettings(self):
         """Raises an exception if interface settings requirements are not met."""
@@ -495,7 +493,7 @@ class Interface:
         """Called after this interface is copied to a different (non-primary) MPI node."""
         pass
 
-    def interactRestart(self, startNode: Tuple[int, int], previousNode: Tuple[int, int]):
+    def interactRestart(self, startNode: tuple[int, int], previousNode: tuple[int, int]):
         """Perform any actions prior to simulating a restart.
 
         Interfaces may want to restore some state that would have existed at the start of ``startNode`` prior to calling
@@ -583,7 +581,7 @@ class Interface:
         elif isinstance(flag, bool):
             self._enabled = flag
         else:
-            raise ValueError("Non-bool passed to assign {}.enable().".format(self))
+            raise ValueError(f"Non-bool passed to assign {self}.enable().")
 
     def bolForce(self, flag=None):
         """
@@ -616,7 +614,7 @@ class Interface:
         raise NotImplementedError()
 
     @staticmethod
-    def specifyInputs(cs) -> Dict[Union[str, settings.Setting], List[str]]:
+    def specifyInputs(cs) -> dict[str | settings.Setting, list[str]]:
         """
         Return a collection of file names that are considered input files.
 

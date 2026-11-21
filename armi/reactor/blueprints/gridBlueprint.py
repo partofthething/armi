@@ -102,7 +102,6 @@ Examples
 import copy
 import itertools
 from io import StringIO
-from typing import Tuple
 
 import numpy as np
 from ruamel.yaml import scalarstring
@@ -369,7 +368,7 @@ class GridBlueprint(YamlObject):
             isOffset = symmetry is not None and not symmetry.isThroughCenterAssembly
             spatialGrid = grids.CartesianGrid.fromRectangle(xw, yw, numRings=maxIndex + 1, isOffset=isOffset)
 
-        runLog.debug("Built grid: {}".format(spatialGrid))
+        runLog.debug(f"Built grid: {spatialGrid}")
         # set geometric metadata on spatialGrid. This information is needed in various parts of the
         # code and is best encapsulated on the grid itself rather than on the container state.
         spatialGrid._geomType: str = str(self.geom)
@@ -550,7 +549,7 @@ class Grids(KeyedList):
     keyField = GridBlueprint.name
 
 
-def _getGridSize(idx) -> Tuple[int, int]:
+def _getGridSize(idx) -> tuple[int, int]:
     """
     Return the number of spaces between the min and max of a collection of (int, int) tuples, inclusive.
 
@@ -563,7 +562,7 @@ def _getGridSize(idx) -> Tuple[int, int]:
     return nx, ny
 
 
-def _getAsciiMapOffset(geom, symmetry, indices) -> Tuple[int, int]:
+def _getAsciiMapOffset(geom, symmetry, indices) -> tuple[int, int]:
     """
     Return the (i, j) shift between ascii map positions and grid indices.
 
@@ -619,15 +618,9 @@ def _filterOutsideDomain(gridBp):
             if symmetric in gridBp.gridContents:
                 if gridBp.gridContents[symmetric] != gridBp.gridContents[idx]:
                     raise ValueError(
-                        "The contents at `{}` (`{}`) in grid `{}` is not the "
-                        "same as it's symmetric equivalent at `{}` (`{}`). "
-                        "Check your grid blueprints for symmetry.".format(
-                            idx,
-                            gridBp.gridContents[idx],
-                            gridBp.name,
-                            symmetric,
-                            gridBp.gridContents[symmetric],
-                        )
+                        f"The contents at `{idx}` (`{gridBp.gridContents[idx]}`) in grid `{gridBp.name}` is not the "
+                        f"same as it's symmetric equivalent at `{symmetric}` (`{gridBp.gridContents[symmetric]}`). "
+                        "Check your grid blueprints for symmetry."
                     )
 
         del gridBp.gridContents[idx]

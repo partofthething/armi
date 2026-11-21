@@ -83,12 +83,12 @@ class SnapshotInterface(interfaces.Interface):
         else:
             snapTimeCycleNodePairs = self._getSnapTimesNormal()
 
-        snapText = ["{0:03d}{1:03d}".format(c, n) for c, n in snapTimeCycleNodePairs]
+        snapText = [f"{c:03d}{n:03d}" for c, n in snapTimeCycleNodePairs]
 
         # determine if there are new snapshots to add to the settings file
         for snapT in snapText:
             if snapT not in self.cs["dumpSnapshot"]:
-                runLog.info("Adding default snapshot {0} to snapshot queue.".format(snapT))
+                runLog.info(f"Adding default snapshot {snapT} to snapshot queue.")
                 self.cs["dumpSnapshot"] = self.cs["dumpSnapshot"] + [snapT]
 
     def _getSnapTimesEquilibrium(self):
@@ -144,4 +144,4 @@ def getCycleNodeStamp(cycle, node):
     isRequestedDetailPoint : compares a cycle,node to the dumpSnapshot list.
     extractCycleNodeFromStamp : does the opposite
     """
-    return "{0:03d}{1:03d}".format(cycle, node)
+    return f"{cycle:03d}{node:03d}"

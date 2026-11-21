@@ -27,7 +27,7 @@ def _changeDirectory(destination):
     if os.path.exists(destination):
         os.chdir(destination)
     else:
-        raise IOError("Cannot change directory to non-existent location: {}".format(destination))
+        raise OSError(f"Cannot change directory to non-existent location: {destination}")
 
 
 class DirectoryChanger:
@@ -81,14 +81,14 @@ class DirectoryChanger:
 
     def __enter__(self):
         """At the inception of a with command, navigate to a new directory if one is supplied."""
-        runLog.debug("Changing directory to {}".format(self.destination))
+        runLog.debug(f"Changing directory to {self.destination}")
         self.moveFiles()
         self.open()
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
         """At the termination of a with command, navigate back to the original directory."""
-        runLog.debug("Returning to directory {}".format(self.initial))
+        runLog.debug(f"Returning to directory {self.initial}")
         self._createOutputDirectory()
         if exc_type is not None and self._dumpOnException:
             runLog.info("An exception was raised within a DirectoryChanger. Retrieving entire folder for debugging.")
@@ -99,7 +99,7 @@ class DirectoryChanger:
 
     def __repr__(self):
         """Print the initial and destination paths."""
-        return "<{} {} to {}>".format(self.__class__.__name__, self.initial, self.destination)
+        return f"<{self.__class__.__name__} {self.initial} to {self.destination}>"
 
     def open(self):
         """

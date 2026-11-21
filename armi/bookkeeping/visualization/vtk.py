@@ -29,7 +29,7 @@ that can be improved upon. For instance:
   important unless dealing with really big meshes.
 """
 
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any
 
 import numpy as np
 from pyevtk.vtk import VtkGroup
@@ -51,14 +51,14 @@ class VtkDumper(dumper.VisFileDumper):
 
     def __init__(self, baseName: str, inputName: str):
         self._baseName = baseName
-        self._assemFiles: List[Tuple[str, float]] = []
-        self._blockFiles: List[Tuple[str, float]] = []
+        self._assemFiles: list[tuple[str, float]] = []
+        self._blockFiles: list[tuple[str, float]] = []
 
     def dumpState(
         self,
         r: reactors.Reactor,
-        includeParams: Optional[Set[str]] = None,
-        excludeParams: Optional[Set[str]] = None,
+        includeParams: set[str] | None = None,
+        excludeParams: set[str] | None = None,
     ):
         """
         Dump a reactor to a VTK file.
@@ -82,8 +82,8 @@ class VtkDumper(dumper.VisFileDumper):
 
         # We avoid using cXnY, since VisIt doesn't support .pvd files, but *does* know
         # to lump data with similar file names and integers at the end.
-        blockPath = "{}_blk_{:0>3}{:0>3}".format(self._baseName, cycle, timeNode)
-        assemPath = "{}_asy_{:0>3}{:0>3}".format(self._baseName, cycle, timeNode)
+        blockPath = f"{self._baseName}_blk_{cycle:0>3}{timeNode:0>3}"
+        assemPath = f"{self._baseName}_asy_{cycle:0>3}{timeNode:0>3}"
 
         # include and exclude params are mutually exclusive
         if includeParams is not None and excludeParams is not None:
@@ -134,10 +134,10 @@ class VtkDumper(dumper.VisFileDumper):
 
 
 def _collectObjectData(
-    objs: List[composites.ArmiObject],
-    includeParams: Optional[Set[str]] = None,
-    excludeParams: Optional[Set[str]] = None,
-) -> Dict[str, Any]:
+    objs: list[composites.ArmiObject],
+    includeParams: set[str] | None = None,
+    excludeParams: set[str] | None = None,
+) -> dict[str, Any]:
     allData = dict()
 
     for pDef in type(objs[0]).pDefs.toWriteToDB(parameters.SINCE_ANYTHING):
@@ -182,9 +182,7 @@ def _collectObjectData(
             if data.dtype.kind == "O":
                 # Didn't work
                 runLog.warning(
-                    "The parameter data for  `{}` could not be coerced into a native type for output; skipping.".format(
-                        pDef.name
-                    )
+                    f"The parameter data for  `{pDef.name}` could not be coerced into a native type for output; skipping."
                 )
                 continue
         if len(data.shape) != 1:

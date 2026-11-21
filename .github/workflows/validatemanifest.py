@@ -30,7 +30,7 @@ PRPROJECT = "pyproject.toml"
 
 def main():
     # parse the data files out of the pyproject.toml
-    txt = open(PRPROJECT, "r").read()
+    txt = open(PRPROJECT).read()
     data = toml.loads(txt)
     fileChunks = data["tool"]["setuptools"]["package-data"]["armi"]
 
@@ -50,7 +50,7 @@ def main():
     # If there were any missing files, raise an Error.
     if errors:
         for i, line in errors:
-            print("Nonexistant file on line {}: {}".format(i, line))
+            print(f"Nonexistant file on line {i}: {line}")
         raise ValueError("Package-data file is incorrect: includes non-existant files.")
 
 

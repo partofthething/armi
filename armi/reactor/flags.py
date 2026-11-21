@@ -107,14 +107,15 @@ True
 """
 
 import re
-from typing import Optional, Sequence, Union
+from collections.abc import Sequence
+from typing import Optional
 
 from armi.utils.flags import Flag, FlagType, auto
 
 # Type alias used for passing type specifications to many of the composite methods. See
 # Composite::hasFlags() to understand the semantics for how TypeSpecs are interpreted.
 # Anything that interprets a TypeSpec should apply the same semantics.
-TypeSpec = Optional[Union[FlagType, Sequence[FlagType]]]
+TypeSpec = Optional[FlagType | Sequence[FlagType]]
 
 
 def __fromStringGeneral(cls, typeSpec, updateMethod):
@@ -188,7 +189,7 @@ def _toString(cls, typeSpec):
     -----
     This converts a flag from ``Flags.A|B`` to ``'A B'``
     """
-    strings = str(typeSpec).split("{}.".format(cls.__name__))[1]
+    strings = str(typeSpec).split(f"{cls.__name__}.")[1]
     return " ".join(sorted(strings.split("|")))
 
 

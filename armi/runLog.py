@@ -308,7 +308,7 @@ class _RunLog:
 
         warningCounts = self._deduplicationFilter.warningCounts
         if not warningCounts:
-            self.logger.info("  {0:^10s}   {1:^25s}".format(str(0), str("None Found")))
+            self.logger.info("  {0:^10s}   {1:^25s}".format(str(0), "None Found"))
             self.logger.info("------------------------------------")
             return
 
@@ -437,7 +437,7 @@ def close(mpiRank=None):
     if mpiRank == 0:
         try:
             concatenateLogs()
-        except IOError as ee:
+        except OSError as ee:
             warning("Failed to concatenate logs due to IOError.")
             error(ee)
 
@@ -491,7 +491,7 @@ def concatenateLogs(logDir=None):
         for stdoutName in stdoutFiles:
             # NOTE: If the log file name format changes, this will need to change.
             rank = int(stdoutName.split(".")[-2])
-            with open(stdoutName, "r") as logFile:
+            with open(stdoutName) as logFile:
                 data = logFile.read()
                 # only write if there's something to write
                 if data:

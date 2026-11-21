@@ -13,8 +13,8 @@ Heavy metal other than uranium (plutonium, thorium) pays fabrication but no mate
 how much of it there is.
 """
 
+from collections.abc import Iterable
 from dataclasses import dataclass, field, replace
-from typing import Iterable, Optional
 
 from armi import runLog
 from armi.physics.economics import enrichment, levelized
@@ -232,7 +232,7 @@ def classifyFuelForm(component) -> str:
     return "U-metal"
 
 
-def fuelInventory(core, form: str = "auto", assemblies: Optional[Iterable] = None) -> list[FuelGroup]:
+def fuelInventory(core, form: str = "auto", assemblies: Iterable | None = None) -> list[FuelGroup]:
     """
     Return heavy metal grouped by fuel form and uranium enrichment, in kg, scaled to the full core.
 
@@ -316,7 +316,7 @@ class CycleSummary:
     cycle: int
     start: float
     length: float
-    loaded: Optional[FuelCost]
+    loaded: FuelCost | None
     """The fresh fuel loaded at the start of the cycle (None if none was)."""
 
     backEnd: float
@@ -357,7 +357,7 @@ class FuelCycleCost:
     thermalEfficiency: float
     discountRate: float
     source: str = "projected"
-    reloadFraction: Optional[float] = None
+    reloadFraction: float | None = None
 
     @classmethod
     def projected(cls, initialCore: list[FuelGroup], unitCosts: UnitCosts, cs) -> "FuelCycleCost":

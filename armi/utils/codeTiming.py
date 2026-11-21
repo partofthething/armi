@@ -73,7 +73,7 @@ class MasterTimer:
     def __init__(self):
         if MasterTimer._instance is not None:
             raise RuntimeError(
-                "{} is a pseudo singleton, do not attempt to make more than one.".format(self.__class__.__name__)
+                f"{self.__class__.__name__} is a pseudo singleton, do not attempt to make more than one."
             )
         MasterTimer._instance = self
 
@@ -253,17 +253,10 @@ class _Timer:
             self.start()
 
     def __repr__(self):
-        return "<{} name:'{}' num iterations:{} time:{}>".format(
-            self.__class__.__name__, self.name, self.numIterations, self.time
-        )
+        return f"<{self.__class__.__name__} name:'{self.name}' num iterations:{self.numIterations} time:{self.time}>"
 
     def __str__(self):
-        s = "{:55s} {:>14.2f} {:>14.2f} {:11}".format(
-            self.name[:55],
-            self.time,
-            self.time / (self.numIterations + 1),
-            self.numIterations + 1,
-        )
+        s = f"{self.name[:55]:55s} {self.time:>14.2f} {self.time / (self.numIterations + 1):>14.2f} {self.numIterations + 1:11}"
         # needs to come after str generation because it resets the timeSinceReport
         self.reportedTotal = self.time
         return s

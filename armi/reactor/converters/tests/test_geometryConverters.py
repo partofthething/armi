@@ -202,7 +202,7 @@ class TestHexToRZConverter(unittest.TestCase):
     def _checkBlockComponents(self, newR):
         for b in newR.core.iterBlocks():
             if len(b) != 1:
-                raise ValueError("Block {} has {} components and should only have 1".format(b, len(b)))
+                raise ValueError(f"Block {b} has {len(b)} components and should only have 1")
 
     def _checkNuclidesMatch(self, expectedNuclideList, newR):
         """Check that the nuclide lists match before and after conversion."""
@@ -211,9 +211,7 @@ class TestHexToRZConverter(unittest.TestCase):
             diffList = sorted(set(expectedNuclideList).difference(actualNuclideList))
             diffList += sorted(set(actualNuclideList).difference(expectedNuclideList))
             runLog.warning(diffList)
-            raise ValueError(
-                "{0} nuclides do not match between the original and converted reactor".format(len(diffList))
-            )
+            raise ValueError(f"{len(diffList)} nuclides do not match between the original and converted reactor")
 
     def _checkNuclideMasses(self, expectedMassDict, newR):
         """Check that all nuclide masses in the new reactor are equivalent to before the conversion."""
@@ -222,14 +220,12 @@ class TestHexToRZConverter(unittest.TestCase):
             expectedMass = expectedMassDict[nuclide]
             actualMass = newR.core.getMass(nuclide) / self._massScaleFactor
             if round(abs(expectedMass - actualMass), 7) != 0.0:
-                print("{:6s} {:10.2f} {:10.2f}".format(nuclide, expectedMass, actualMass))
+                print(f"{nuclide:6s} {expectedMass:10.2f} {actualMass:10.2f}")
                 massMismatchCount += 1
 
         # Raise error if there are any inconsistent masses
         if massMismatchCount > 0:
-            raise ValueError(
-                "{0} nuclides have masses that are not consistent after the conversion".format(massMismatchCount)
-            )
+            raise ValueError(f"{massMismatchCount} nuclides have masses that are not consistent after the conversion")
 
     def test_createHomogenizedRZTBlock(self):
         newBlock = blocks.ThRZBlock("testBlock", self.cs)

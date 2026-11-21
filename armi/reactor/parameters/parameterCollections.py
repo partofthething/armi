@@ -15,7 +15,8 @@
 import copy
 import pickle
 import sys
-from typing import Any, Callable, Iterator, List, Optional, Set
+from collections.abc import Callable, Iterator
+from typing import Any
 
 import numpy as np
 
@@ -113,7 +114,7 @@ class ParameterCollection(metaclass=_ParameterCollectionType):
     """
 
     pDefs: parameterDefinitions.ParameterDefinitionCollection = _getBaseParameterDefinitions()
-    _allFields: List[str] = []
+    _allFields: list[str] = []
 
     _ArmiObject = None
     """The ArmiObject class that this ParameterCollection belongs to.
@@ -129,9 +130,9 @@ class ParameterCollection(metaclass=_ParameterCollectionType):
     # A set of all instance attributes that are settable on an instance. This prevents inadvertent
     # setting of values that aren't proper parameters. Named _slots, as it is used to emulate some
     # of the behaviors of __slots__.
-    _slots: Set[str] = set()
+    _slots: set[str] = set()
 
-    def __init__(self, _state: Optional[List[Any]] = None):
+    def __init__(self, _state: list[Any] | None = None):
         """
         Create a new ParameterCollection instance.
 
@@ -151,8 +152,8 @@ class ParameterCollection(metaclass=_ParameterCollectionType):
 
         assert self.pDefs.locked, (
             "It looks like parameter definitions haven't been "
-            "set up yet for {}; be sure that applyAllParameters() is being called "
-            "somewhere.".format(type(self))
+            f"set up yet for {type(self)}; be sure that applyAllParameters() is being called "
+            "somewhere."
         )
 
         self._backup = None
@@ -176,7 +177,7 @@ class ParameterCollection(metaclass=_ParameterCollectionType):
         self.serialNum = GLOBAL_SERIAL_NUM = GLOBAL_SERIAL_NUM + 1
 
         if self.serialNum > sys.maxsize:
-            runLog.warning("Created serial number larger than an integer. Current serial: {}".format(GLOBAL_SERIAL_NUM))
+            runLog.warning(f"Created serial number larger than an integer. Current serial: {GLOBAL_SERIAL_NUM}")
 
     @classmethod
     def applyParameters(cls):
@@ -229,15 +230,15 @@ class ParameterCollection(metaclass=_ParameterCollectionType):
                 seen.add(name)
             if duplicates:
                 raise exceptions.ParameterDefinitionError(
-                    "The following parameters were multiply-defined:\n    {}".format(duplicates)
+                    f"The following parameters were multiply-defined:\n    {duplicates}"
                 )
             overriddenParameters = set(cls.pDefs.names).intersection(set(basePDefs.names))
             if overriddenParameters:
                 raise exceptions.ParameterDefinitionError(
                     "The following parameters "
-                    "have been redefined in a subclass: {}\n"
-                    "current type: {}\n"
-                    "bases: {}".format(overriddenParameters, cls, cls.__bases__)
+                    f"have been redefined in a subclass: {overriddenParameters}\n"
+                    f"current type: {cls}\n"
+                    f"bases: {cls.__bases__}"
                 )
 
         # Bind the parameter definitions as descriptors to the collection
@@ -257,10 +258,10 @@ class ParameterCollection(metaclass=_ParameterCollectionType):
         cls._slots.add("readOnly")
 
     def __repr__(self):
-        return "<{} assigned:{}>".format(self.__class__.__name__, self.assigned)
+        return f"<{self.__class__.__name__} assigned:{self.assigned}>"
 
     def __setattr__(self, key, value):
-        assert key in self._slots, "Trying to set undefined attribute `{}` on a ParameterCollection!".format(key)
+        assert key in self._slots, f"Trying to set undefined attribute `{key}` on a ParameterCollection!"
 
         if getattr(self, "readOnly", False):
             if key == "readOnly":
@@ -300,8 +301,8 @@ class ParameterCollection(metaclass=_ParameterCollectionType):
         instance of its associated ParameterCollection class, then setting its state.
         """
         assert type(self)._ArmiObject is not None, (
-            "Cannot reduce {}, since it does not have an associated ArmiObject, and is "
-            "therefore not tied to the world of the living.".format(type(self))
+            f"Cannot reduce {type(self)}, since it does not have an associated ArmiObject, and is "
+            "therefore not tied to the world of the living."
         )
         return type(self)._ArmiObject.getParameterCollection, (), self.__getstate__()
 
@@ -326,7 +327,7 @@ class ParameterCollection(metaclass=_ParameterCollectionType):
         except TypeError:  # allows for history parameter tuples
             return self._hist[name]
         except AttributeError:
-            raise exceptions.UnknownParameterError("Parameter {} is not defined for {}".format(name, type(self)))
+            raise exceptions.UnknownParameterError(f"Parameter {name} is not defined for {type(self)}")
 
     def __setitem__(self, name, value):
         try:
@@ -337,9 +338,7 @@ class ParameterCollection(metaclass=_ParameterCollectionType):
             else:
                 raise
         except AttributeError:  # for clarity
-            raise exceptions.UnknownParameterError(
-                "Cannot locate definition for parameter {} in {}".format(name, type(self))
-            )
+            raise exceptions.UnknownParameterError(f"Cannot locate definition for parameter {name} in {type(self)}")
 
     def __delitem__(self, name):
         if isinstance(name, str):
@@ -455,7 +454,7 @@ class ParameterCollection(metaclass=_ParameterCollectionType):
             # this reads as assigned & everything_but(SINCE_BACKUP)
             self.assigned &= ~SINCE_BACKUP
         except:
-            runLog.error("Attempted to pickle {}.".format(self))
+            runLog.error(f"Attempted to pickle {self}.")
             raise
 
     def restoreBackup(self, paramsToApply):

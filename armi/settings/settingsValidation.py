@@ -229,9 +229,7 @@ class Inspector:
         """Add a query indicating the current path for ``settingName`` does not exist and will likely fail."""
         self.addQuery(
             lambda: not os.path.exists(pathTools.armiAbsPath(self.cs[settingName])),
-            "Setting {} points to nonexistent location\n{}\nFailure extremely likely".format(
-                settingName, self.cs[settingName]
-            ),
+            f"Setting {settingName} points to nonexistent location\n{self.cs[settingName]}\nFailure extremely likely",
             "",
             self.NO_ACTION,
         )
@@ -240,12 +238,8 @@ class Inspector:
         """Add a query that the current value for ``settingName`` may not support certain features."""
         self.addQuery(
             lambda: self.cs[settingName] != self.cs.getSetting(settingName).default,
-            "{} set as:\n{}\nUsing this location instead of the default location\n{}\n"
-            "may not support certain functions.".format(
-                settingName,
-                self.cs[settingName],
-                self.cs.getSetting(settingName).default,
-            ),
+            f"{settingName} set as:\n{self.cs[settingName]}\nUsing this location instead of the default location\n{self.cs.getSetting(settingName).default}\n"
+            "may not support certain functions.",
             "Revert to default location?",
             lambda: self._assignCS(settingName, self.cs.getSetting(settingName).default),
         )
@@ -416,9 +410,7 @@ class Inspector:
                 and not self._csRelativePathExists(self.cs[CONF_EXPLICIT_REPEAT_SHUFFLES])
                 and not _willBeCopiedFrom(self.cs[CONF_EXPLICIT_REPEAT_SHUFFLES])
             ),
-            "The specified repeat shuffle file `{0}` does not exist, and won't be copied. Run will crash.".format(
-                self.cs[CONF_EXPLICIT_REPEAT_SHUFFLES]
-            ),
+            f"The specified repeat shuffle file `{self.cs[CONF_EXPLICIT_REPEAT_SHUFFLES]}` does not exist, and won't be copied. Run will crash.",
             "",
             self.NO_ACTION,
         )
@@ -429,9 +421,7 @@ class Inspector:
                 and not self._csRelativePathExists(self.cs[CONF_SHUFFLE_SEQUENCE_FILE])
                 and not _willBeCopiedFrom(self.cs[CONF_SHUFFLE_SEQUENCE_FILE])
             ),
-            "The specified shuffle sequence file `{0}` does not exist. Run will crash.".format(
-                self.cs[CONF_SHUFFLE_SEQUENCE_FILE]
-            ),
+            f"The specified shuffle sequence file `{self.cs[CONF_SHUFFLE_SEQUENCE_FILE]}` does not exist. Run will crash.",
             "",
             self.NO_ACTION,
         )
@@ -587,9 +577,7 @@ class Inspector:
 
         self.addQuery(
             lambda: self.cs["skipCycles"] > 0 and not os.path.exists(self.cs.caseTitle + ".restart.dat"),
-            "This is a restart case, but the required restart file {0}.restart.dat is not found".format(
-                self.cs.caseTitle
-            ),
+            f"This is a restart case, but the required restart file {self.cs.caseTitle}.restart.dat is not found",
             "",
             self.NO_ACTION,
         )
@@ -633,7 +621,7 @@ def createQueryRevertBadPathToDefault(inspector, settingName, initialLambda=None
 
     query = Query(
         initialLambda,
-        "Setting {} points to a nonexistent location:\n{}".format(settingName, inspector.cs[settingName]),
+        f"Setting {settingName} points to a nonexistent location:\n{inspector.cs[settingName]}",
         "Revert to default location?",
         inspector.cs.getSetting(settingName).revertToDefault,
     )
@@ -665,7 +653,7 @@ def validateVersion(versionThis: str, versionRequired: str) -> bool:
         # This default flag means we don't want to check the version.
         return True
     elif re.search(fullV, versionThis) is None:
-        raise ValueError("The input version ({0}) does not match the required format: {1}".format(versionThis, fullV))
+        raise ValueError(f"The input version ({versionThis}) does not match the required format: {fullV}")
     elif re.search(fullV, versionRequired) is not None:
         return versionThis == versionRequired
     elif re.search(medV, versionRequired) is not None:

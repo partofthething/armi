@@ -14,8 +14,6 @@
 
 """Assorted utilities to help with basic density calculations."""
 
-from typing import List, Tuple, Union
-
 import numpy as np
 
 from armi import runLog
@@ -143,13 +141,11 @@ def calculateNumberDensity(nucName, mass, volume):
             return 0
 
         raise ValueError(
-            "Could not calculate number density with input.\nmass : {}\nvolume : {}\natomic weight : {}\n".format(
-                mass, volume, A
-            )
+            f"Could not calculate number density with input.\nmass : {mass}\nvolume : {volume}\natomic weight : {A}\n"
         )
 
 
-def getMassInGrams(nucName: str, volume: float, numberDensity: Union[float, None] = None) -> float:
+def getMassInGrams(nucName: str, volume: float, numberDensity: float | None = None) -> float:
     """
     Gets mass of a nuclide of a known volume and know number density.
 
@@ -225,7 +221,7 @@ def formatMaterialCard(
     if all(isinstance(nuc, (nuclideBases.LumpNuclideBase, nuclideBases.DummyNuclideBase)) for nuc in densities):
         return []  # no valid nuclides to write
     if matNum >= 0:
-        mCard = ["m{matNum}\n".format(matNum=matNum)]
+        mCard = [f"m{matNum}\n"]
     else:
         mCard = ["m{}\n"]
 
@@ -235,7 +231,7 @@ def formatMaterialCard(
             runLog.important("The material card returned will ignore LFPs.", single=True)
             continue
         elif isinstance(nuc, nuclideBases.DummyNuclideBase):
-            runLog.info("Omitting dummy nuclides such as {}".format(nuc), single=True)
+            runLog.info(f"Omitting dummy nuclides such as {nuc}", single=True)
             continue
         mcnpNucName = nuc.getMcnpId()
         newEntry = ("      {nucName:5d} {ndens:." + str(sigFigs) + "e}\n").format(
@@ -244,7 +240,7 @@ def formatMaterialCard(
         mCard.append(newEntry)
 
     if mcnp6Compatible:
-        mCard.append("      nlib={lib}c\n".format(lib=mcnpLibrary))
+        mCard.append(f"      nlib={mcnpLibrary}c\n")
 
     return mCard
 
@@ -268,9 +264,7 @@ def filterNuclideList(nuclideVector, nuclides):
     """
     if not isinstance(list(nuclideVector.keys())[0], nuclides[0].__class__):
         raise ValueError(
-            "nuclide vector is indexed by {} where as the nuclides list is {}".format(
-                nuclideVector.keys()[0].__class__, nuclides[0].__class__
-            )
+            f"nuclide vector is indexed by {nuclideVector.keys()[0].__class__} where as the nuclides list is {nuclides[0].__class__}"
         )
 
     for nucName in list(nuclideVector.keys()):
@@ -306,7 +300,7 @@ def normalizeNuclideList(nuclideVector, normalization=1.0):
 
 def expandElementalMassFracsToNuclides(
     massFracs: dict,
-    elementExpansionPairs: Tuple[elements.Element, List[nuclideBases.NuclideBase]],
+    elementExpansionPairs: tuple[elements.Element, list[nuclideBases.NuclideBase]],
 ):
     """
     Expand elemental mass fractions to natural nuclides.
@@ -352,13 +346,13 @@ def expandElementalMassFracsToNuclides(
 
         total = sum(expandedNucs.values())
         if massFrac > 0.0 and abs(total - massFrac) / massFrac > 1e-6:
-            raise ValueError("Mass fractions not normalized properly {}!".format((total, massFrac)))
+            raise ValueError(f"Mass fractions not normalized properly {(total, massFrac)}!")
 
 
 def expandElementalNuclideMassFracs(
     element: elements.Element,
     massFrac: float,
-    isotopicSubset: List[nuclideBases.NuclideBase] = None,
+    isotopicSubset: list[nuclideBases.NuclideBase] = None,
 ):
     """
     Return a dictionary of nuclide names to isotopic mass fractions.
@@ -383,7 +377,7 @@ def expandElementalNuclideMassFracs(
         expandedNucBases = elementNucBases
     elementalWeightGperMole = sum(nb.weight * nb.abundance for nb in expandedNucBases)
     if not any(expandedNucBases):
-        raise ValueError("Cannot expand element `{}` into isotopes: `{}`".format(element, expandedNucBases))
+        raise ValueError(f"Cannot expand element `{element}` into isotopes: `{expandedNucBases}`")
     expanded = {}
     for nb in expandedNucBases:
         expanded[nb.name] = massFrac * nb.abundance * nb.weight / elementalWeightGperMole

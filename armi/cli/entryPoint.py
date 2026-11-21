@@ -18,7 +18,6 @@ See :doc:`/developer/entrypoints`.
 # limitations under the License.
 
 import argparse
-from typing import Optional, Union
 
 from armi import context, runLog, settings
 
@@ -61,9 +60,9 @@ class EntryPoint(metaclass=_EntryPointEnforcer):
     """
 
     #: The <command-name> that is used to call the command from the command line
-    name: Optional[str] = None
+    name: str | None = None
 
-    description: Optional[str] = None
+    description: str | None = None
     """A string summarizing the command's actions. This is summary that is printed when
     you run `python -m armi --list-commands` or `python -m armi <command-name>
     --help`. If not provided, the docstring of the decorated class will be used
@@ -71,7 +70,7 @@ class EntryPoint(metaclass=_EntryPointEnforcer):
     you to provide a short description of the command while retaining a long and
     detailed docstring."""
 
-    settingsArgument: Union[str, None] = None
+    settingsArgument: str | None = None
     """
     One of {'optional', 'required', None}, or unspecified.
     Specifies whether a settings file argument is to be added to the
@@ -90,7 +89,7 @@ class EntryPoint(metaclass=_EntryPointEnforcer):
 
     #: One of {armi.Mode.BATCH, armi.Mode.INTERACTIVE, armi.Mode.GUI}, optional.
     #: Specifies the ARMI mode in which the command is run. Default is armi.Mode.BATCH.
-    mode: Optional[int] = None
+    mode: int | None = None
 
     def __init__(self):
         if self.name is None:
@@ -99,7 +98,7 @@ class EntryPoint(metaclass=_EntryPointEnforcer):
         self.cs = self._initSettings()
 
         self.parser = argparse.ArgumentParser(
-            prog="{} {}".format(context.APP_NAME, self.name),
+            prog=f"{context.APP_NAME} {self.name}",
             description=self.description or self.__doc__,
             formatter_class=argparse.ArgumentDefaultsHelpFormatter,
         )
@@ -178,7 +177,7 @@ class EntryPoint(metaclass=_EntryPointEnforcer):
         self.addOptions()
         self.parse_args(args)
 
-    def invoke(self) -> Optional[int]:
+    def invoke(self) -> int | None:
         """
         Body of the entry point.
 
@@ -273,7 +272,7 @@ class EntryPoint(metaclass=_EntryPointEnforcer):
 def storeBool(boolDefault, ep):
     class _StoreBoolAction(argparse.Action):
         def __init__(self, option_strings, dest, help=None):
-            super(_StoreBoolAction, self).__init__(
+            super().__init__(
                 option_strings=option_strings,
                 dest=dest,
                 nargs=0,

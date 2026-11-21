@@ -27,7 +27,7 @@ import importlib
 import importlib.util
 import os
 import sys
-from typing import Dict, Iterable, List, Optional, Tuple, Type
+from collections.abc import Iterable
 
 from armi import context, meta, pluginManager, plugins, settings
 from armi.reactor import parameters
@@ -76,8 +76,8 @@ class App:
         For a description of the things that an ARMI plugin can do, see the :py:mod:`armi.plugins` module.
         """
         self._pluginFlagsRegistered: bool = False
-        self._pm: Optional[pluginManager.ArmiPluginManager] = None
-        self._paramRenames: Optional[Tuple[Dict[str, str], int]] = None
+        self._pm: pluginManager.ArmiPluginManager | None = None
+        self._paramRenames: tuple[dict[str, str], int] | None = None
         self.__initNewPlugins()
 
     def __initNewPlugins(self):
@@ -122,7 +122,7 @@ class App:
         """Return the App's PluginManager."""
         return self._pm
 
-    def getSettings(self) -> Dict[str, Setting]:
+    def getSettings(self) -> dict[str, Setting]:
         """Return a dictionary containing all Settings defined by the framework and all plugins."""
         # Start with framework settings
         settingDefs = {setting.name: setting for setting in fwSettings.getFrameworkSettings()}
@@ -132,8 +132,8 @@ class App:
         # options in the cache, popping them out and adding them to the setting. If all plugins'
         # settings have been processed and the cache is not empty, that's an error, because a plugin
         # must have provided options to a setting that doesn't exist.
-        optionsCache: Dict[str, List[settings.Option]] = collections.defaultdict(list)
-        defaultsCache: Dict[str, settings.Default] = {}
+        optionsCache: dict[str, list[settings.Option]] = collections.defaultdict(list)
+        defaultsCache: dict[str, settings.Default] = {}
 
         for pluginSettings in self._pm.hook.defineSettings():
             for pluginSetting in pluginSettings:
@@ -162,27 +162,25 @@ class App:
                         # no setting yet, cache it and apply when it arrives
                         defaultsCache[pluginSetting.settingName] = pluginSetting
                 else:
-                    raise TypeError(
-                        "Invalid setting definition found: {} ({})".format(pluginSetting, type(pluginSetting))
-                    )
+                    raise TypeError(f"Invalid setting definition found: {pluginSetting} ({type(pluginSetting)})")
 
         if optionsCache:
             raise ValueError(
                 "The following options were provided for settings that do "
                 "not exist. Make sure that the set of active plugins is "
-                "consistent.\n{}".format(optionsCache)
+                f"consistent.\n{optionsCache}"
             )
 
         if defaultsCache:
             raise ValueError(
                 "The following defaults were provided for settings that do "
                 "not exist. Make sure that the set of active plugins is "
-                "consistent.\n{}".format(defaultsCache)
+                f"consistent.\n{defaultsCache}"
             )
 
         return settingDefs
 
-    def getParamRenames(self) -> Dict[str, str]:
+    def getParamRenames(self) -> dict[str, str]:
         """
         Return the parameter renames from all registered plugins.
 
@@ -208,14 +206,12 @@ class App:
                 if collisions:
                     raise plugins.PluginError(
                         "The following parameter renames from a plugin collide with "
-                        "currently-defined parameters:\n{}".format(collisions)
+                        f"currently-defined parameters:\n{collisions}"
                     )
                 pluginCollisions = renames.keys() & pluginRenames.keys()
                 if pluginCollisions:
                     raise plugins.PluginError(
-                        "The following parameter renames are already defined by another plugin:\n{}".format(
-                            pluginCollisions
-                        )
+                        f"The following parameter renames are already defined by another plugin:\n{pluginCollisions}"
                     )
                 renames.update(pluginRenames)
             self._paramRenames = renames, self._pm.counter
@@ -301,7 +297,7 @@ class App:
         is produced, with extra data on the App name and version, if available.
         """
         # typical ARMI splash text
-        splash = r"""
+        splash = rf"""
 +===================================================+
 |            _      ____     __  __    ___          |
 |           / \    |  _ \   |  \/  |  |_ _|         |
@@ -310,16 +306,16 @@ class App:
 |        /_/   \_\ |_| \_\  |_|  |_|  |___|         |
 |        Advanced  Reactor  Modeling Interface      |
 |                                                   |
-|                    version {0:10s}             |
-|                                                   |""".format(meta.__version__)
+|                    version {meta.__version__:10s}             |
+|                                                   |"""
 
         # add the name/version of the current App, if it's not the default
         if context.APP_NAME != "armi":
             from armi import getApp
 
-            splash += r"""
+            splash += rf"""
 |---------------------------------------------------|
-|   {0:>17s} app version {1:10s}        |""".format(context.APP_NAME, getApp().version)
+|   {context.APP_NAME:>17s} app version {getApp().version:10s}        |"""
 
         # bottom border of the splash
         splash += r"""
@@ -329,7 +325,7 @@ class App:
         return splash
 
 
-def importPlugin(pluginPath: str) -> Type[plugins.ArmiPlugin]:
+def importPlugin(pluginPath: str) -> type[plugins.ArmiPlugin]:
     r"""
     Import and return the plugin class named by a string path.
 
@@ -357,7 +353,7 @@ def importPlugin(pluginPath: str) -> Type[plugins.ArmiPlugin]:
     return plugin
 
 
-def readPluginsFromSettingsFile(fName: str) -> List[str]:
+def readPluginsFromSettingsFile(fName: str) -> list[str]:
     """
     Return the ``plugins`` listed in a settings file, without loading the rest of it.
 
@@ -368,14 +364,14 @@ def readPluginsFromSettingsFile(fName: str) -> List[str]:
 
     from armi.settings.fwSettings.globalSettings import CONF_PLUGINS
 
-    with open(fName, "r") as f:
+    with open(fName) as f:
         tree = YAML(typ="safe").load(f)
     if not isinstance(tree, dict) or not isinstance(tree.get("settings"), dict):
         return []
     return [str(p) for p in tree["settings"].get(CONF_PLUGINS) or []]
 
 
-def findRequestedPlugins(args: Iterable[str] = ()) -> List[str]:
+def findRequestedPlugins(args: Iterable[str] = ()) -> list[str]:
     """
     Gather the extra plugins requested for an App, without duplicates.
 

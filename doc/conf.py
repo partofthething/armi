@@ -74,7 +74,7 @@ class PatchedPythonDomain(PythonDomain):
     def resolve_xref(self, env, fromdocname, builder, typ, target, node, contnode):
         if "refspecific" in node:
             del node["refspecific"]
-        return super(PatchedPythonDomain, self).resolve_xref(env, fromdocname, builder, typ, target, node, contnode)
+        return super().resolve_xref(env, fromdocname, builder, typ, target, node, contnode)
 
 
 class ExecDirective(Directive):
@@ -149,9 +149,9 @@ class PyReverse(Directive):
             args.append("-opng")
 
             # NOTE: cannot use "pylint.pyreverse.main.Run" because it calls `sys.exit`.
-            fig_name = self.options.get("filename", "classes_{}.png".format(args[0]))
+            fig_name = self.options.get("filename", f"classes_{args[0]}.png")
             command = [sys.executable, "-m", "pylint.pyreverse.main"]
-            print("Running {}".format(command + args))
+            print(f"Running {command + args}")
             env = dict(os.environ)
             # apply any runtime path mods to the pythonpath env variable (e.g. sys.path mods made during doc confs)
             env["PYTHONPATH"] = os.pathsep.join(sys.path)
@@ -172,7 +172,7 @@ class PyReverse(Directive):
 
             # assume we don't need the packages, and delete.
             try:
-                os.remove("packages_{}.png".format(args[0]))
+                os.remove(f"packages_{args[0]}.png")
             except OSError:
                 pass
 
@@ -180,7 +180,7 @@ class PyReverse(Directive):
             for opt, val in self.options.items():
                 if opt in ("filename",):
                     continue
-                new_content.append("    :{}: {}".format(opt, val))
+                new_content.append(f"    :{opt}: {val}")
 
             new_content.append("")
 
@@ -195,9 +195,7 @@ class PyReverse(Directive):
             docname = self.state.document.settings.env.docname
             # add the error message directly to the built documentation and also tell the builder
             raise self.error(
-                "Unable to execute embedded doc code at {}:{} ... {}\n{}".format(
-                    docname, self.lineno, datetime.datetime.now(), str(e)
-                )
+                f"Unable to execute embedded doc code at {docname}:{self.lineno} ... {datetime.datetime.now()}\n{str(e)}"
             )
 
 

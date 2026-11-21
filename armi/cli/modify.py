@@ -78,7 +78,7 @@ class ModifyCaseSettingsCommand(EntryPoint):
         messages = ("found", "listing") if self.args.list_setting_files else ("writing", "modifying")
 
         for cs in csInstances:
-            runLog.important("{} settings file {}".format(messages[0], cs.path))
+            runLog.important(f"{messages[0]} settings file {cs.path}")
             for settingName in self.settingsProvidedOnCommandLine:
                 if cs[settingName] != self.cs[settingName]:
                     runLog.info(
@@ -99,4 +99,4 @@ class ModifyCaseSettingsCommand(EntryPoint):
             if not self.args.list_setting_files:
                 cs.writeToYamlFile(cs.path, style=self.args.settingsWriteStyle)
 
-        runLog.important("Finished {} {} settings files.".format(messages[1], len(csInstances)))
+        runLog.important(f"Finished {messages[1]} {len(csInstances)} settings files.")

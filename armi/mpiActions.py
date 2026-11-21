@@ -125,7 +125,7 @@ class MpiAction:
         try:
             return mpiFunction(obj, root=0)
         except pickle.PicklingError as error:
-            runLog.error("Failed to {} {}.".format(mpiFunction.__name__, obj))
+            runLog.error(f"Failed to {mpiFunction.__name__} {obj}.")
             runLog.error(error)
             raise
         finally:
@@ -336,9 +336,7 @@ class DistributeStateAction(MpiAction):
 
         stop = timeit.default_timer()
         runLog.extra(
-            "Distributed state in {}s, garbage collection took {}s".format(
-                beforeCollection - start, stop - beforeCollection
-            )
+            f"Distributed state in {beforeCollection - start}s, garbage collection took {stop - beforeCollection}s"
         )
 
     def _distributeSettings(self):
@@ -349,7 +347,7 @@ class DistributeStateAction(MpiAction):
             runLog.setVerbosity(cs["verbosity"] if context.MPI_RANK == 0 else cs["branchVerbosity"])
             runLog.debug("Received settings object")
         else:
-            raise RuntimeError("Failed to transmit settings, received: {}".format(cs))
+            raise RuntimeError(f"Failed to transmit settings, received: {cs}")
 
         if context.MPI_RANK != 0:
             self.o.cs = cs
@@ -362,7 +360,7 @@ class DistributeStateAction(MpiAction):
         if isinstance(r, reactors.Reactor):
             runLog.debug("Received reactor")
         else:
-            raise RuntimeError("Failed to transmit reactor, received: {}".format(r))
+            raise RuntimeError(f"Failed to transmit reactor, received: {r}")
 
         if context.MPI_RANK == 0:
             # on the primary node this unfortunately created a __deepcopy__ of the reactor, delete it
@@ -421,7 +419,7 @@ class DistributeStateAction(MpiAction):
             toRestore = {}
             for i in self.o.getInterfaces():
                 if i.distributable() == interfaces.Interface.Distribute.DUPLICATE:
-                    runLog.debug("detaching interface {0}".format(i.name))
+                    runLog.debug(f"detaching interface {i.name}")
                     i.detachReactor()
                     toRestore[i] = i.preDistributeState()
 
@@ -433,7 +431,7 @@ class DistributeStateAction(MpiAction):
             for i in self.o.getInterfaces():
                 # avoid sending things that don't pickle, like the database.
                 if i.distributable() == interfaces.Interface.Distribute.DUPLICATE:
-                    runLog.debug("Sending the interface {0}".format(i))
+                    runLog.debug(f"Sending the interface {i}")
                     _idum = self.broadcast(i)  # don't send the reactor or operator
                     i.postDistributeState(toRestore[i])
                     i.attachReactor(self.o, self.r)
@@ -446,16 +444,16 @@ class DistributeStateAction(MpiAction):
                 iOld = self.o.getInterface(iName)
                 if distributable == interfaces.Interface.Distribute.DUPLICATE:
                     # expect a transmission of the interface as a whole.
-                    runLog.debug("Receiving new {0}".format(iName))
+                    runLog.debug(f"Receiving new {iName}")
                     iNew = self.broadcast(None)
-                    runLog.debug("Received {0}".format(iNew))
+                    runLog.debug(f"Received {iNew}")
                     if iNew == "quit":
                         return
                     self.o.removeInterface(iOld)
                     self.o.addInterface(iNew)
                     iNew.interactDistributeState()
                 elif distributable == interfaces.Interface.Distribute.NEW:
-                    runLog.debug("Initializing new interface {0}".format(iName))
+                    runLog.debug(f"Initializing new interface {iName}")
                     # make a fresh instance of the non-transmittable interface.
                     self.o.removeInterface(iOld)
                     iNew = iOld.__class__(self.r, self.cs)
@@ -463,14 +461,14 @@ class DistributeStateAction(MpiAction):
                         for i in self.o.getInterfaces():
                             runLog.warning(i)
                         raise RuntimeError(
-                            "Non-distributable interface {0} exists on the primary MPI process "
+                            f"Non-distributable interface {iName} exists on the primary MPI process "
                             "but not on the workers. "
-                            "Cannot distribute state.".format(iName)
+                            "Cannot distribute state."
                         )
                     self.o.addInterface(iNew)
                     iNew.interactInit()
                     iNew.interactBOL()
                 else:
-                    runLog.debug("Skipping broadcast of interface {0}".format(iName))
+                    runLog.debug(f"Skipping broadcast of interface {iName}")
                     if iOld:
                         iOld.interactDistributeState()

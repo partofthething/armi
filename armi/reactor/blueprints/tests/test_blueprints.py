@@ -528,7 +528,7 @@ assemblies:
             try:
                 self.assertAlmostEqual(n1, n2)
             except AssertionError:
-                errorMessage += "\nnuc {} not equal. unmerged: {} merged: {}".format(nucName, n1, n2)
+                errorMessage += f"\nnuc {nucName} not equal. unmerged: {n1} merged: {n2}"
         self.assertTrue(not errorMessage, errorMessage)
         self.assertAlmostEqual(mergedBlock.getMass(), unmergedBlock.getMass())
 

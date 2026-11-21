@@ -213,14 +213,14 @@ def isHeavyMetal(name):
     try:
         return getNuclide(name).isHeavyMetal()
     except AttributeError:
-        raise AttributeError("The nuclide {0} is not found in the nuclide directory".format(name))
+        raise AttributeError(f"The nuclide {name} is not found in the nuclide directory")
 
 
 def isFissile(name):
     try:
         return getNuclide(name).isFissile()
     except AttributeError:
-        raise AttributeError("The nuclide {0} is not found in the nuclide directory".format(name))
+        raise AttributeError(f"The nuclide {name} is not found in the nuclide directory")
 
 
 def getThresholdDisplacementEnergy(nuc):
@@ -246,11 +246,7 @@ def getThresholdDisplacementEnergy(nuc):
     try:
         ed = eDisplacement[el.symbol]
     except KeyError:
-        print(
-            "The element {0} of nuclide {1} does not have a displacement energy in the library. Please add one.".format(
-                el, nuc
-            )
-        )
+        print(f"The element {el} of nuclide {nuc} does not have a displacement energy in the library. Please add one.")
         raise
 
     return ed

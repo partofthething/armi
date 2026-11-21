@@ -65,18 +65,12 @@ class ReportInterface(interfaces.Interface):
 
         runLog.important(f"Cycle {cycle}, node {node} Summary: ")
         runLog.important(
-            "  time= {0:8.2f} years, keff= {1:.12f} maxPD= {2:-8.2f} MW/m^2, maxBuI= {3:-8.4f} maxBuF= {4:8.4f}".format(
-                self.r.p.time,
-                self.r.core.p.keff,
-                self.r.core.p.maxPD,
-                self.r.core.p.maxBuI,
-                self.r.core.p.maxBuF,
-            )
+            f"  time= {self.r.p.time:8.2f} years, keff= {self.r.core.p.keff:.12f} maxPD= {self.r.core.p.maxPD:-8.2f} MW/m^2, maxBuI= {self.r.core.p.maxBuI:-8.4f} maxBuF= {self.r.core.p.maxBuF:8.4f}"
         )
 
         if self.cs["plots"]:
             adjoint = self.cs[CONF_NEUTRONICS_TYPE] == neutronics.ADJREAL_CALC
-            figName = self.cs.caseTitle + "_{0}_{1}".format(cycle, node) + ".mgFlux." + self.cs["outputFileExtension"]
+            figName = self.cs.caseTitle + f"_{cycle}_{node}" + ".mgFlux." + self.cs["outputFileExtension"]
 
             if self.r.core.getFirstBlock(Flags.FUEL).p.mgFlux is not None:
                 from armi.reactor import blocks
@@ -123,7 +117,7 @@ class ReportInterface(interfaces.Interface):
         """Report Interface Specific."""
         str_ = ""
         for report_ in self.reports:
-            str_ += re.sub("\n", "\n\t", "{}".format(report_))
+            str_ += re.sub("\n", "\n\t", f"{report_}")
 
         return "---------- REPORTS BEGIN ----------\n" + str_ + "\n----------- REPORTS END -----------"
 
@@ -161,7 +155,7 @@ class ReportInterface(interfaces.Interface):
             )
             totFis += a.getFissileMass() * a.p.multiplicity / 1000  # convert to kg
 
-        runLog.important("Total SFP fissile inventory of {0} is {1:.4E} MT".format(sfp, totFis / 1000.0))
+        runLog.important(f"Total SFP fissile inventory of {sfp} is {totFis / 1000.0:.4E} MT")
 
     @staticmethod
     def countAssembliesSFP(sfp):
@@ -180,9 +174,7 @@ class ReportInterface(interfaces.Interface):
 
             if thisTime != lastTime:
                 runLog.important(
-                    "Number of assemblies moved at t={0:6.2f}: {1:04d}. Cumulative: {2:04d}".format(
-                        lastTime, thisTimeCount, totCount
-                    )
+                    f"Number of assemblies moved at t={lastTime:6.2f}: {thisTimeCount:04d}. Cumulative: {totCount:04d}"
                 )
                 lastTime = thisTime
                 thisTimeCount = 0

@@ -67,7 +67,7 @@ class Mode(enum.Enum):
     def setMode(cls, mode):
         """Set the run mode of the current ARMI case."""
         global CURRENT_MODE
-        assert isinstance(mode, cls), "Invalid mode {}".format(mode)
+        assert isinstance(mode, cls), f"Invalid mode {mode}"
         CURRENT_MODE = mode
 
 
@@ -155,7 +155,7 @@ if MPI_NODENAMES.index(MPI_NODENAME) == MPI_RANK:
         except OSError:
             pass
     if not os.path.isdir(APP_DATA):
-        raise OSError("Directory doesn't exist {0}".format(APP_DATA))
+        raise OSError(f"Directory doesn't exist {APP_DATA}")
 
 if MPI_COMM is not None:
     # Make sure app data exists before workers proceed.
@@ -238,7 +238,7 @@ def cleanFastPathAfterSimulation():
     if _FAST_PATH_IS_TEMPORARY and os.path.exists(_FAST_PATH):
         if printMsg:
             print(
-                "Cleaning up temporary files in: {}".format(_FAST_PATH),
+                f"Cleaning up temporary files in: {_FAST_PATH}",
                 file=sys.stdout,
             )
         try:
@@ -247,7 +247,7 @@ def cleanFastPathAfterSimulation():
             for outputStream in (sys.stderr, sys.stdout):
                 if printMsg:
                     print(
-                        "Failed to delete temporary files in: {}\n    error: {}".format(_FAST_PATH, error),
+                        f"Failed to delete temporary files in: {_FAST_PATH}\n    error: {error}",
                         file=outputStream,
                     )
 

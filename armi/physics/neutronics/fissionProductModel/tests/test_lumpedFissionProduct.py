@@ -68,7 +68,7 @@ class TestFissionProductDefinitionFile(unittest.TestCase):
 
     def test_createReferenceLFPs(self):
         """Test of the reference fission product model creation."""
-        with open(REFERENCE_LUMPED_FISSION_PRODUCT_FILE, "r") as LFP_FILE:
+        with open(REFERENCE_LUMPED_FISSION_PRODUCT_FILE) as LFP_FILE:
             LFP_TEXT = LFP_FILE.read()
         fpd = lumpedFissionProduct.FissionProductDefinitionFile(io.StringIO(LFP_TEXT))
         fpd.fName = REFERENCE_LUMPED_FISSION_PRODUCT_FILE

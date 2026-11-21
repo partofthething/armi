@@ -19,8 +19,6 @@ These are advanced/compound settings that are carried along in the normal cs
 object but aren't simple key/value pairs.
 """
 
-from typing import Dict, Union
-
 import voluptuous as vol
 
 from armi.settings import Setting
@@ -56,7 +54,7 @@ class TightCouplingSettings(dict):
         return f"<{self.__class__.__name__} with Interface functions {self.keys()}>"
 
 
-def serializeTightCouplingSettings(tightCouplingSettingsDict: Union[TightCouplingSettings, Dict]) -> Dict[str, Dict]:
+def serializeTightCouplingSettings(tightCouplingSettingsDict: TightCouplingSettings | dict) -> dict[str, dict]:
     """
     Return a serialized form of the ``TightCouplingSettings`` as a dictionary.
 
@@ -120,7 +118,7 @@ class TightCouplingSettingDef(Setting):
         return serializeTightCouplingSettings(self._value)
 
 
-def tightCouplingSettingsValidator(tightCouplingSettingsDict: Dict[str, Dict]) -> TightCouplingSettings:
+def tightCouplingSettingsValidator(tightCouplingSettingsDict: dict[str, dict]) -> TightCouplingSettings:
     """Returns a ``TightCouplingSettings`` object if validation is successful."""
     tightCouplingSettingsDict = serializeTightCouplingSettings(tightCouplingSettingsDict)
     tightCouplingSettingsDict = _SCHEMA(tightCouplingSettingsDict)

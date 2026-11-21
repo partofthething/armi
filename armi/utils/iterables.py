@@ -79,7 +79,7 @@ def split(a, n, padWith=()):
     a = list(a)  # in case `a` is not list-like
     N = len(a)
 
-    assert n > 0, "Cannot chunk into less than 1 chunks. You requested {0}".format(n)
+    assert n > 0, f"Cannot chunk into less than 1 chunks. You requested {n}"
 
     k, m = divmod(N, n)
     chunked = [a[i * k + min(i, m) : (i + 1) * k + min(i + 1, m)] or padWith for i in range(n)]
@@ -187,7 +187,7 @@ class Sequence:
         return self
 
     def __repr__(self):
-        return "<{:s} at 0x{:x}>".format(self.__class__.__name__, id(self))
+        return f"<{self.__class__.__name__:s} at 0x{id(self):x}>"
 
     def __next__(self):
         return next(self._iter)

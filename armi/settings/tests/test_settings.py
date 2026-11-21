@@ -193,10 +193,10 @@ class TestSettings2(unittest.TestCase):
         newSettings = FuelHandlerPlugin.defineSettings()
 
         good_input = io.StringIO(
-            """
+            f"""
 assemblyRotationAlgorithm: buReducingAssemblyRotation
-shuffleLogic: {}
-""".format(__file__)
+shuffleLogic: {__file__}
+"""
         )
 
         bad_input = io.StringIO(

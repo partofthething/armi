@@ -50,7 +50,8 @@ import subprocess
 import sys
 import traceback
 import warnings
-from typing import Iterable, List, Optional, Type
+from collections.abc import Iterable
+from typing import List, Optional, Type
 
 import __main__ as main
 
@@ -86,9 +87,9 @@ from armi.reactor import flags, parameters
 # ARMI does not configure its own application by default. This is mostly to catch issues involving calling code that
 # requires the framework to be configured before that has explicitly taken place. An application should call
 # `configure()` with its App class in order for ARMI to work properly
-_app: Optional[apps.App] = None
+_app: apps.App | None = None
 
-_ARMI_CONFIGURE_CONTEXT: Optional[str] = None
+_ARMI_CONFIGURE_CONTEXT: str | None = None
 
 # Advanced flag used in documentation builds to avoid isConfigured guards.
 _ignoreConfigures = False
@@ -157,7 +158,7 @@ def init(fName=None, cs=None, skipInspection=False, choice=None):
         raise
 
 
-def getDefaultPlugins() -> List[Type[plugins.ArmiPlugin]]:
+def getDefaultPlugins() -> list[type[plugins.ArmiPlugin]]:
     """
     Return a list containing the default set of ARMI Framework plugins.
 
@@ -196,7 +197,7 @@ def isConfigured():
     return _app is not None
 
 
-def getPluginManager() -> Optional[pluginManager.ArmiPluginManager]:
+def getPluginManager() -> pluginManager.ArmiPluginManager | None:
     """Return the plugin manager, if there is one."""
     global _app
     if _app is None:
@@ -215,7 +216,7 @@ def getPluginManagerOrFail() -> pluginManager.ArmiPluginManager:
     return _app.pluginManager
 
 
-def getApp() -> Optional[apps.App]:
+def getApp() -> apps.App | None:
     global _app
     return _app
 
@@ -234,7 +235,7 @@ def _liveInterpreter():
     return not hasattr(main, "__file__")
 
 
-def configure(app: Optional[apps.App] = None, permissive=False, settingsFiles: Optional[Iterable[str]] = None):
+def configure(app: apps.App | None = None, permissive=False, settingsFiles: Iterable[str] | None = None):
     """
     Set the plugin manager for the Framework and configure internals to those plugins.
 

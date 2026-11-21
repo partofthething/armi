@@ -137,7 +137,7 @@ def loadFromCs(cs, roundTrip=False):
                 # not all reactors need to be created from blueprints, so they may not exist
                 bp = None
         else:
-            with open(cs[CONF_LOADING_FILE], "r") as bpYaml:
+            with open(cs[CONF_LOADING_FILE]) as bpYaml:
                 root = bpPath.parent.absolute()
                 bpYaml = textProcessors.resolveMarkupInclusions(bpYaml, root)
                 try:
@@ -145,9 +145,8 @@ def loadFromCs(cs, roundTrip=False):
                 except YamlSchemaError as err:
                     if "cross sections" in err.args[0]:
                         runLog.error(
-                            "The loading file {} contains invalid `cross sections` input. "
+                            f"The loading file {cs[CONF_LOADING_FILE]} contains invalid `cross sections` input. "
                             "Please run the `modify` entry point on this case to automatically convert."
-                            "".format(cs[CONF_LOADING_FILE])
                         )
                     raise
     return bp
@@ -177,7 +176,7 @@ class _BlueprintsPluginCollector(type(YamlObject)):
                     assert isinstance(section, Field)
                     if attrName in attrs:
                         raise plugins.PluginError(
-                            "There is already a section called '{}' in the reactor blueprints".format(attrName)
+                            f"There is already a section called '{attrName}' in the reactor blueprints"
                         )
                     attrs[attrName] = section
                     attrs["_resolveFunctions"].append(resolver)
@@ -473,9 +472,7 @@ class Blueprints(YamlObject, metaclass=_BlueprintsPluginCollector):
                 runLog.error("CURRENT COMPARISON ASSEMBLY:")
                 a[0].printContents()
                 raise InputError(
-                    "Assembly {} has a different area {} than assembly {} {}.  Check inputs for accuracy".format(
-                        a, assemblyArea, references[0], references[1]
-                    )
+                    f"Assembly {a} has a different area {assemblyArea} than assembly {references[0]} {references[1]}.  Check inputs for accuracy"
                 )
 
             blockArea = a[0].getArea()
@@ -487,14 +484,10 @@ class Blueprints(YamlObject, metaclass=_BlueprintsPluginCollector):
                     b.printContents(includeNuclides=False)
 
                     for c in b:
-                        runLog.error(
-                            "{0} area {1} effective area {2}".format(c, c.getArea(), c.getVolume() / b.getHeight())
-                        )
+                        runLog.error(f"{c} area {c.getArea()} effective area {c.getVolume() / b.getHeight()}")
 
                     raise InputError(
-                        "Block {} has a different area {} than block {} {}. Check inputs for accuracy".format(
-                            b, b.getArea(), a[0], blockArea
-                        )
+                        f"Block {b} has a different area {b.getArea()} than block {a[0]} {blockArea}. Check inputs for accuracy"
                     )
 
     @classmethod

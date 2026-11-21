@@ -366,7 +366,7 @@ class TestCaseSuiteDependencies(unittest.TestCase):
             self.assertEqual(
                 isIn,
                 self.c1 in self.c2.dependencies,
-                "where p1: {} p2: {} dbPath: {}".format(p1, p2, dbPath),
+                f"where p1: {p1} p2: {p2} dbPath: {dbPath}",
             )
 
     def test_dependencyFromDBName(self):

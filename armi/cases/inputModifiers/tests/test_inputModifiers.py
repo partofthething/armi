@@ -168,12 +168,12 @@ class TestsuiteBuilderIntegrations(unittest.TestCase):
         builder = suiteBuilder.FullFactorialSuiteBuilder(self.baseCase)
 
         builder.addDegreeOfFreedom(
-            [inputModifiers.BluePrintBlockModifier("fuel 1", "clad", "od", float("{:.2f}".format(22 / 7)))]
+            [inputModifiers.BluePrintBlockModifier("fuel 1", "clad", "od", float(f"{22 / 7:.2f}"))]
         )
         builder.addDegreeOfFreedom([inputModifiers.BluePrintBlockModifier("block 5", "clad", "od", 3.14159)])
 
         def SuiteNaming(index, _case, _mods):
-            uniquePart = "{:0>4}".format(index + case_nbr)
+            uniquePart = f"{index + case_nbr:0>4}"
             return os.path.join(
                 ".",
                 "case-suite-testBPBM",
@@ -189,7 +189,6 @@ class TestsuiteBuilderIntegrations(unittest.TestCase):
 
             yamlfile = open(
                 f"case-suite-testBPBM/000{case_nbr}/armi-000{case_nbr}-blueprints.yaml",
-                "r",
             )
             bp_dict = yaml.YAML().load(yamlfile)
             yamlfile.close()

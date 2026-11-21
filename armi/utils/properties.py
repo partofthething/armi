@@ -98,7 +98,7 @@ def createImmutableProperty(name, dependencyAction, doc):
             if getattr(self, "-unlocked", False):
                 return None
             raise ImmutablePropertyError(
-                "Attribute {} on {} has not been set, must read {} file first.".format(name, self, dependencyAction)
+                f"Attribute {name} on {self} has not been set, must read {dependencyAction} file first."
             )
 
     def _setter(self, value):
@@ -108,9 +108,9 @@ def createImmutableProperty(name, dependencyAction, doc):
                 setattr(self, privateName, value if currentVal is None else currentVal)
             elif not numpyHackForEqual(currentVal, value):
                 raise ImmutablePropertyError(
-                    "{} on {} has already been set by reading {} file.\n"
-                    "The original value:           ({})\n"
-                    "does not match the new value: ({}).".format(name, self, dependencyAction, currentVal, value)
+                    f"{name} on {self} has already been set by reading {dependencyAction} file.\n"
+                    f"The original value:           ({currentVal})\n"
+                    f"does not match the new value: ({value})."
                 )
         else:
             setattr(self, privateName, value)

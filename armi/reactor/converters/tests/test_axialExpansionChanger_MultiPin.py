@@ -16,7 +16,7 @@ import collections
 import copy
 import io
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Optional, Tuple
+from typing import TYPE_CHECKING
 from unittest.mock import MagicMock
 
 from numpy import array, array_equal, dtype, float32, float64, full, ndarray
@@ -85,8 +85,8 @@ class StoreMassAndTemp:
     HMmolesBOL: float
     temp: float
     volume: float
-    pinNDens: Optional[ndarray[Tuple[int, int], dtype[float32]]]
-    detailedNDens: Optional[ndarray[Tuple[int], dtype[float64]]]
+    pinNDens: ndarray[tuple[int, int], dtype[float32]] | None
+    detailedNDens: ndarray[tuple[int], dtype[float64]] | None
 
     @classmethod
     def fromComponent(cls, c: Component):
@@ -436,7 +436,7 @@ class TestRedistributeMass(TestMultiPinConservationBase):
             self.redistributedBOLMass = self.originalC1.HMmassBOL * abs(self.deltaZTop) / fromHeight
             self.redistributedBOLMoles = self.originalC1.HMmolesBOL * abs(self.deltaZTop) / fromHeight
 
-    def _getReferenceData(self, fromComp: Component, toComp: Optional[Component]):
+    def _getReferenceData(self, fromComp: Component, toComp: Component | None):
         """Pull the reference data needed for ``fromComp`` and ``toComp``."""
         fromCompRefData = self.originalC0 if fromComp.parent.name == self.originalC0.cType else self.originalC1
         if toComp is None:

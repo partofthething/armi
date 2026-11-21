@@ -88,8 +88,8 @@ class AxialExpansionChanger:
       block has 1) uniform expansion rates and 2) axially isothermal fluid temperatures.
     """
 
-    linked: typing.Optional[AssemblyAxialLinkage]
-    expansionData: typing.Optional[ExpansionData]
+    linked: AssemblyAxialLinkage | None
+    expansionData: ExpansionData | None
     topMostBlock: typing.Optional["Block"]
 
     DIF3D_MIN_BLOCK_HEIGHT: float = 3.0

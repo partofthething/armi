@@ -40,7 +40,7 @@ class TestNuclideBases(unittest.TestCase):
 
         # Ensure that the burn chain data is initialized before running these tests.
         cls.nuclideBases.burnChainImposed = False
-        with open(os.path.join(RES, "burn-chain.yaml"), "r") as burnChainStream:
+        with open(os.path.join(RES, "burn-chain.yaml")) as burnChainStream:
             cls.nuclideBases.imposeBurnChain(burnChainStream)
 
     def test_nucBases_fromNameBadNameRaisesException(self):

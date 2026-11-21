@@ -43,8 +43,9 @@ import shlex
 import subprocess
 import sys
 import tempfile
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Callable, Dict, List, Optional, Sequence
+from typing import TYPE_CHECKING
 
 from armi import runLog
 from armi.cases import tasks
@@ -71,8 +72,8 @@ class Job:
     case: "Case"
     directory: str
     settingsFile: str
-    inputFiles: List[str]
-    dependencies: List["Job"] = field(default_factory=list)
+    inputFiles: list[str]
+    dependencies: list["Job"] = field(default_factory=list)
     hash: str = ""
 
     @property
@@ -83,7 +84,7 @@ class Job:
     def task(self) -> str:
         return self.case.task or tasks.DEFAULT_TASK
 
-    def result(self) -> Optional[dict]:
+    def result(self) -> dict | None:
         """The result in the case directory, if any."""
         return worker.readJson(os.path.join(self.directory, worker.RESULT_FILE))
 
@@ -92,7 +93,7 @@ class Job:
         result = self.result()
         return bool(result) and result["status"] == "ok" and result["hash"] == self.hash
 
-    def spec(self, app: Optional[str], timeout: Optional[float]) -> dict:
+    def spec(self, app: str | None, timeout: float | None) -> dict:
         return {
             "title": self.title,
             "hash": self.hash,
@@ -122,12 +123,12 @@ class SuiteRunner:
     #: The interpreter that runs case workers, wherever this runner runs them.
     python = "python3"
 
-    def __init__(self, maxWorkers: int = 1, timeout: Optional[float] = None, rerun: bool = False):
+    def __init__(self, maxWorkers: int = 1, timeout: float | None = None, rerun: bool = False):
         self.maxWorkers = maxWorkers
         self.timeout = timeout
         self.rerun = rerun
 
-    def run(self, suite) -> Dict[str, dict]:
+    def run(self, suite) -> dict[str, dict]:
         """Run the suite and return each case's result, by title."""
         jobs = self.plan(suite)
         app = _appSpec()
@@ -148,7 +149,7 @@ class SuiteRunner:
 
         return {job.title: self._finalResult(job, statuses[job.title]) for job in jobs}
 
-    def _runJob(self, job: Job, app: Optional[str]) -> str:
+    def _runJob(self, job: Job, app: str | None) -> str:
         """Write the job file, run the job and return its status."""
         with open(os.path.join(job.directory, worker.JOB_FILE), "w") as f:
             json.dump(job.spec(app, self.timeout), f, indent=1)
@@ -176,7 +177,7 @@ class SuiteRunner:
             return dict(result, outcome=status)
         return {"title": job.title, "hash": job.hash, "status": status, "outcome": status}
 
-    def plan(self, suite) -> List[Job]:
+    def plan(self, suite) -> list[Job]:
         """Jobs for every enabled case, in dependency order, with their hashes."""
         cases = [c for c in suite if c.enabled]
         jobs = {}
@@ -193,7 +194,7 @@ class SuiteRunner:
         for case, job in jobs.items():
             job.dependencies = [jobs[d] for d in case.dependencies if d in jobs]
 
-        ordered: List[Job] = []
+        ordered: list[Job] = []
         visiting = set()
 
         def visit(job):
@@ -228,9 +229,9 @@ class SuiteRunner:
         self,
         directory: str,
         argv: Sequence[str],
-        timeout: Optional[float] = None,
-        stdin: Optional[str] = None,
-        stdout: Optional[str] = None,
+        timeout: float | None = None,
+        stdin: str | None = None,
+        stdout: str | None = None,
     ) -> int:
         """
         Run ``argv`` in ``directory`` (wherever this runner runs things) and return its exit code.
@@ -242,7 +243,7 @@ class SuiteRunner:
         """
         raise NotImplementedError
 
-    def runCommands(self, commands: Sequence[dict]) -> List[int]:
+    def runCommands(self, commands: Sequence[dict]) -> list[int]:
         """
         Run many commands, ``maxWorkers`` at a time, and return their exit codes in order.
 
@@ -281,7 +282,7 @@ class LocalRunner(SuiteRunner):
         not exceed the cores, or the codes compete for them.
     """
 
-    def __init__(self, maxWorkers: Optional[int] = None, timeout=None, rerun=False, env=None, threadsPerJob=None):
+    def __init__(self, maxWorkers: int | None = None, timeout=None, rerun=False, env=None, threadsPerJob=None):
         cores = os.cpu_count() or 1
         super().__init__(maxWorkers or max(1, cores // (threadsPerJob or 1)), timeout, rerun)
         self.python = sys.executable
@@ -343,13 +344,13 @@ class SshRunner(SuiteRunner):
         host: str,
         remoteRoot: str,
         python: str = "python3",
-        setup: Optional[str] = None,
-        pythonPath: Optional[List[str]] = None,
-        localRoot: Optional[str] = None,
+        setup: str | None = None,
+        pythonPath: list[str] | None = None,
+        localRoot: str | None = None,
         maxWorkers: int = 1,
         timeout=None,
         rerun=False,
-        syncEvery: Optional[float] = None,
+        syncEvery: float | None = None,
     ):
         super().__init__(maxWorkers, timeout, rerun)
         self.host = host
@@ -465,11 +466,11 @@ class SlurmRunner(SuiteRunner):
         maxWorkers: int = 100,
         timeout=None,
         rerun=False,
-        python: Optional[str] = None,
-        setup: Optional[str] = None,
-        pythonPath: Optional[List[str]] = None,
+        python: str | None = None,
+        setup: str | None = None,
+        pythonPath: list[str] | None = None,
         cpusPerJob: int = 1,
-        walltime: Optional[float] = None,
+        walltime: float | None = None,
         sbatchArgs: Sequence[str] = (),
         useArrays: bool = True,
     ):
@@ -516,7 +517,7 @@ class SlurmRunner(SuiteRunner):
         self._sbatch(script, [f"--job-name={name}", f"--output={os.path.join(directory, 'slurm-%j.out')}"], timeout)
         return self._exitCode(directory)
 
-    def runCommands(self, commands: Sequence[dict]) -> List[int]:
+    def runCommands(self, commands: Sequence[dict]) -> list[int]:
         """Run the commands as one job array, unless they are ordered (``"after"``) or arrays are off."""
         if len(commands) < 2 or not self.useArrays or any(c.get("after") for c in commands):
             return super().runCommands(commands)
@@ -542,7 +543,7 @@ class SlurmRunner(SuiteRunner):
         )
         return [self._exitCode(d) for d in directories]
 
-    def _sbatch(self, script: str, extra: List[str], timeout: Optional[float]) -> int:
+    def _sbatch(self, script: str, extra: list[str], timeout: float | None) -> int:
         """Submit ``script`` and wait for it (or, for an array, all of it) to end."""
         args = ["sbatch", "--wait", "--parsable", f"--cpus-per-task={self.cpusPerJob}"]
         walltime = self.walltime or (timeout + 2 * worker.GRACE_SECONDS + 60 if timeout else None)
@@ -604,7 +605,7 @@ def runGraph(
     return outcomes
 
 
-def resultRow(title: str, result: Optional[dict], independentVariables: Optional[dict] = None) -> dict:
+def resultRow(title: str, result: dict | None, independentVariables: dict | None = None) -> dict:
     """
     A table row for one result: its title, status and wall time, independent variables, then scalar results.
 
@@ -631,7 +632,7 @@ def writeTable(rows: Sequence[dict], path: str) -> str:
     return path
 
 
-def linkProducts(source: str, destination: str, patterns: Sequence[str]) -> List[str]:
+def linkProducts(source: str, destination: str, patterns: Sequence[str]) -> list[str]:
     """
     Symlink the files in ``source`` matching ``patterns`` into ``destination``, for a task to reuse a dependency's
     products (e.g. cross section libraries) instead of recomputing them. Returns the links made.
@@ -650,7 +651,7 @@ def linkProducts(source: str, destination: str, patterns: Sequence[str]) -> List
     return links
 
 
-def _inputFiles(case) -> List[str]:
+def _inputFiles(case) -> list[str]:
     """The settings, blueprints and any extra input files of a case, as absolute paths."""
     from armi.settings.fwSettings.globalSettings import CONF_LOADING_FILE
 
@@ -677,7 +678,7 @@ def _hashJob(job: Job) -> str:
     return digest.hexdigest()
 
 
-def _appSpec() -> Optional[str]:
+def _appSpec() -> str | None:
     """``module:Class`` of the configured application, for the workers to configure it too."""
     import armi
 

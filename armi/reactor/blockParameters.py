@@ -149,7 +149,7 @@ def getBlockParameterDefinitions():
         def envGroupNum(self, envGroupNum):
             # support capital and lowercase alpha chars (52= 26*2)
             if envGroupNum > 52:
-                raise RuntimeError("Invalid env group number ({}): too many groups. 52 is the max.".format(envGroupNum))
+                raise RuntimeError(f"Invalid env group number ({envGroupNum}): too many groups. 52 is the max.")
             self._p_envGroupNum = envGroupNum
             lowerCaseOffset = ASCII_LETTER_Z - ASCII_LETTER_A
             if envGroupNum > lowerCaseOffset:

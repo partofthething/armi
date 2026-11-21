@@ -50,10 +50,10 @@ class TestSynchronization(unittest.TestCase):
         self.r.core = makeComp("core")
         self.r.add(self.r.core)
         for ai in range(context.MPI_SIZE * 3):
-            a = makeComp("assembly{}".format(ai))
+            a = makeComp(f"assembly{ai}")
             self.r.core.add(a)
             for bi in range(3):
-                a.add(makeComp("block{}-{}".format(ai, bi)))
+                a.add(makeComp(f"block{ai}-{bi}"))
 
         self.comps = [self.r.core] + self.r.core.getChildren(deep=True)
 

@@ -410,14 +410,14 @@ class TestFuelHandler(FuelHandlerTestHelper):
         self.assertEqual(
             ring,
             4,
-            "The highest power ring returned is {0}. It should be {1}".format(ring, 4),
+            f"The highest power ring returned is {ring}. It should be {4}",
         )
         a = fh.findAssembly(targetRing=3, width=(1, 0), param=paramName, blockLevelMax=True, compareTo=0)
         ring = a.spatialLocator.getRingPos()[0]
         self.assertEqual(
             ring,
             2,
-            "The lowest power ring returned is {0}. It should be {1}".format(ring, 2),
+            f"The lowest power ring returned is {ring}. It should be {2}",
         )
 
         # 2 rings outer from ring 3
@@ -432,14 +432,14 @@ class TestFuelHandler(FuelHandlerTestHelper):
         self.assertEqual(
             ring,
             5,
-            "The highest power ring returned is {0}. It should be {1}".format(ring, 5),
+            f"The highest power ring returned is {ring}. It should be {5}",
         )
         a = fh.findAssembly(targetRing=3, width=(2, 1), param=paramName, blockLevelMax=True, compareTo=0)
         ring = a.spatialLocator.getRingPos()[0]
         self.assertEqual(
             ring,
             3,
-            "The lowest power ring returned is {0}. It should be {1}".format(ring, 3),
+            f"The lowest power ring returned is {ring}. It should be {3}",
         )
 
         # 2 rings inner from ring 3
@@ -454,7 +454,7 @@ class TestFuelHandler(FuelHandlerTestHelper):
         self.assertEqual(
             ring,
             3,
-            "The highest power ring returned is {0}. It should be {1}".format(ring, 3),
+            f"The highest power ring returned is {ring}. It should be {3}",
         )
         a = fh.findAssembly(
             targetRing=3,
@@ -467,7 +467,7 @@ class TestFuelHandler(FuelHandlerTestHelper):
         self.assertEqual(
             ring,
             1,
-            "The lowest power ring returned is {0}. It should be {1}".format(ring, 1),
+            f"The lowest power ring returned is {ring}. It should be {1}",
         )
 
     def test_findMany(self):
@@ -481,17 +481,17 @@ class TestFuelHandler(FuelHandlerTestHelper):
         self.assertEqual(
             len(igniters),
             self.nigniter,
-            "Found {0} igniters. Should have found {1}".format(len(igniters), self.nigniter),
+            f"Found {len(igniters)} igniters. Should have found {self.nigniter}",
         )
         self.assertEqual(
             len(feeds),
             self.nfeed,
-            "Found {0} feeds. Should have found {1}".format(len(igniters), self.nfeed),
+            f"Found {len(igniters)} feeds. Should have found {self.nfeed}",
         )
         self.assertEqual(
             len(fewFeeds),
             4,
-            "Reduced findMany returned {0} assemblies instead of {1}".format(len(fewFeeds), 4),
+            f"Reduced findMany returned {len(fewFeeds)} assemblies instead of {4}",
         )
 
     def test_findInSFP(self):
@@ -507,14 +507,14 @@ class TestFuelHandler(FuelHandlerTestHelper):
         self.assertEqual(
             len(spent),
             self.nSfp,
-            "Found {0} assems in SFP. Should have found {1}".format(len(spent), self.nSfp),
+            f"Found {len(spent)} assems in SFP. Should have found {self.nSfp}",
         )
         burnups = [a.getMaxParam("percentBu") for a in spent]
         bu = spent[0].getMaxParam("percentBu")
         self.assertEqual(
             bu,
             max(burnups),
-            "First assembly does not have the highest burnup ({0}). It has ({1})".format(max(burnups), bu),
+            f"First assembly does not have the highest burnup ({max(burnups)}). It has ({bu})",
         )
 
     def test_findByCoords(self):
@@ -886,7 +886,7 @@ class TestFuelHandler(FuelHandlerTestHelper):
             fh.outage()
             assem = self.r.core.getAssemblyWithStringLocation("009-045")
             self.assertEqual(assem.getName(), sfpAssem.getName())
-            cycle0Loc = ("2".encode(), "3".encode())
+            cycle0Loc = (b"2", b"3")
             self.assertEqual(assem.p.ringPosHist[0], cycle0Loc)
             self.assertEqual(assem.p.ringPosHist[1], (9, 45))
             self.assertEqual(len(assem.p.ringPosHist), 2)  # truncated by logic in fuelHandlers

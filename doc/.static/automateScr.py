@@ -209,7 +209,7 @@ def parseAuthorsFile():
 
     # loop through the lines in the ARMI AUTHORS file
     filePath = os.path.join(os.path.dirname(__file__), "..", "..", "AUTHORS")
-    with open(filePath, "r") as f:
+    with open(filePath) as f:
         for ln in f.readlines():
             line = ln.strip()
             if line.startswith("#") or not len(line):

@@ -55,7 +55,7 @@ import threading
 import time
 from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
-from typing import Optional, Union
+from typing import Union
 
 from armi import runLog
 
@@ -100,17 +100,17 @@ def _pattern(name: str) -> re.Pattern:
     return re.compile(rf"(?<![\w-]){re.escape(name)}(?![\w-])")
 
 
-def normalize(text: str, name: Optional[str]) -> str:
+def normalize(text: str, name: str | None) -> str:
     """``text`` with the run's name replaced by :py:data:`NAME`; unchanged without a name."""
     return _pattern(name).sub(NAME, text) if name else text
 
 
-def denormalize(text: str, name: Optional[str]) -> str:
+def denormalize(text: str, name: str | None) -> str:
     """``text`` with :py:data:`NAME` replaced by the run's name; unchanged without a name."""
     return text.replace(NAME, name) if name else text
 
 
-def _text(path: PathLike) -> Optional[str]:
+def _text(path: PathLike) -> str | None:
     """A file's contents if it is UTF-8 text, else None."""
     with open(path, "rb") as f:
         data = f.read()
@@ -147,10 +147,10 @@ class OutputCache:
     def key(
         self,
         executable: PathLike,
-        inputs: Union[Sequence[PathLike], Mapping[str, PathLike]],
+        inputs: Sequence[PathLike] | Mapping[str, PathLike],
         outputs: Sequence = (),
-        name: Optional[str] = None,
-        extra: Optional[dict] = None,
+        name: str | None = None,
+        extra: dict | None = None,
     ) -> str:
         """
         The hash of everything that determines what a run would produce.
@@ -202,7 +202,7 @@ class OutputCache:
         """The directory of the entry filed under ``key``."""
         return os.path.join(self.root, key[:2], key)
 
-    def manifest(self, key: str) -> Optional[dict]:
+    def manifest(self, key: str) -> dict | None:
         """The manifest of the entry under ``key``, or None if there is no complete entry."""
         path = os.path.join(self.entry(key), MANIFEST_NAME)
         if not os.path.exists(path):
@@ -210,7 +210,7 @@ class OutputCache:
         with open(path) as f:
             return json.load(f)
 
-    def retrieve(self, key: str, destination: PathLike, name: Optional[str] = None) -> Optional[list]:
+    def retrieve(self, key: str, destination: PathLike, name: str | None = None) -> list | None:
         """
         Copy the outputs filed under ``key`` into ``destination``, named for the asking run, and return their paths.
 
@@ -238,7 +238,7 @@ class OutputCache:
         return restored
 
     def store(
-        self, key: str, outputs: Sequence[PathLike], name: Optional[str] = None, metadata: Optional[dict] = None
+        self, key: str, outputs: Sequence[PathLike], name: str | None = None, metadata: dict | None = None
     ) -> None:
         """
         File a run's ``outputs`` under ``key``. Outputs that do not exist are skipped, so the list may be greedy.
@@ -271,7 +271,7 @@ class OutputCache:
             shutil.rmtree(scratch, ignore_errors=True)
 
 
-def fromSettings(cs) -> Optional[OutputCache]:
+def fromSettings(cs) -> OutputCache | None:
     """The cache a case uses: its ``outputCacheLocation``, else ``ARMI_OUTPUT_CACHE``, else none."""
     root = cs["outputCacheLocation"] or os.environ.get(ENVIRONMENT_VARIABLE, "")
     return OutputCache(root) if root else None

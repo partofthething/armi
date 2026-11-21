@@ -25,7 +25,6 @@ more complex dictionaries (e.g. XS, rx coeffs).
 import copy
 import datetime
 from collections import namedtuple
-from typing import List, Optional, Tuple
 
 import voluptuous as vol
 
@@ -67,7 +66,7 @@ class Setting:
         enforcedOptions=False,
         subLabels=None,
         isEnvironment=False,
-        oldNames: Optional[List[Tuple[str, Optional[datetime.date]]]] = None,
+        oldNames: list[tuple[str, datetime.date | None]] | None = None,
     ):
         """
         Initialize a Setting object.
@@ -112,7 +111,7 @@ class Setting:
         self.enforcedOptions = enforcedOptions
         self.subLabels = subLabels
         self.isEnvironment = isEnvironment
-        self.oldNames: List[Tuple[str, Optional[datetime.date]]] = oldNames or []
+        self.oldNames: list[tuple[str, datetime.date | None]] = oldNames or []
         self._default = default
         self._value = copy.deepcopy(default)  # break link from _default
         # Retain the passed schema so that we don't accidentally stomp on it in addOptions(), et.al.
@@ -192,7 +191,7 @@ class Setting:
 
         self._value = self._load(val)
 
-    def addOptions(self, options: List[Option]):
+    def addOptions(self, options: list[Option]):
         """Extend this Setting's options with extra options."""
         try:
             self.options.extend([o.option for o in options])
@@ -325,7 +324,7 @@ class FlagListSetting(Setting):
         default,
         description=None,
         label=None,
-        oldNames: Optional[List[Tuple[str, Optional[datetime.date]]]] = None,
+        oldNames: list[tuple[str, datetime.date | None]] | None = None,
     ):
         Setting.__init__(
             self,
@@ -342,7 +341,7 @@ class FlagListSetting(Setting):
         )
 
     @staticmethod
-    def schema(val) -> List[Flags]:
+    def schema(val) -> list[Flags]:
         """
         Return a list of :py:class:`Flags <armi.reactor.flags.Flags`.
 
@@ -367,6 +366,6 @@ class FlagListSetting(Setting):
 
         return flagVals
 
-    def dump(self) -> List[str]:
+    def dump(self) -> list[str]:
         """Return a list of strings converted from the flag values."""
         return [Flags.toString(v) for v in self.value]

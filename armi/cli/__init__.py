@@ -113,11 +113,7 @@ class ArmiCLI:
             for entryPoint in pluginEntryPoints:
                 if entryPoint.name in self._entryPoints:
                     raise KeyError(
-                        "Duplicate entry points defined for `{}`: {} and {}".format(
-                            entryPoint.name,
-                            self._entryPoints[entryPoint.name],
-                            entryPoint,
-                        )
+                        f"Duplicate entry points defined for `{entryPoint.name}`: {self._entryPoints[entryPoint.name]} and {entryPoint}"
                     )
                 self._entryPoints[entryPoint.name] = entryPoint
 
@@ -145,9 +141,9 @@ class ArmiCLI:
         prog = context.APP_NAME
         app = getApp()
         if app is None or prog == "armi":
-            print("{0} {1}".format(prog, meta.__version__))
+            print(f"{prog} {meta.__version__}")
         else:
-            print("{0} {1}".format(prog, app.version))
+            print(f"{prog} {app.version}")
 
     def listCommands(self):
         """List commands with a short description."""
@@ -175,7 +171,7 @@ class ArmiCLI:
             desc = condense(cmd.description or cmd.__doc__ or "")
             print(wrapper.fill(formatter(width=indent, name=cmd.name, desc=desc)))
 
-    def run(self) -> Optional[int]:
+    def run(self) -> int | None:
         args = self.parser.parse_args()
 
         if args.list_commands:
@@ -190,11 +186,11 @@ class ArmiCLI:
 
         return self.executeCommand(args.command, args.args)
 
-    def executeCommand(self, command, args) -> Optional[int]:
+    def executeCommand(self, command, args) -> int | None:
         """Execute `command` with arguments `args`, return optional exit code."""
         command = command.lower()
         if command not in self._entryPoints:
-            print('Unrecognized command "{}". Valid commands are listed below.'.format(command))
+            print(f'Unrecognized command "{command}". Valid commands are listed below.')
             self.listCommands()
 
             return 1

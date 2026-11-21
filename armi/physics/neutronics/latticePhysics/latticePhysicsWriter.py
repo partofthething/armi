@@ -51,7 +51,7 @@ _NUCLIDE_VALUES_TEMPERATURE_INDEX = 1
 
 @warn_when_root
 def nuclideNameFoundMultipleTimes(nuclideName):
-    return "Nuclide `{}' was found multiple times.".format(nuclideName)
+    return f"Nuclide `{nuclideName}' was found multiple times."
 
 
 class LatticePhysicsWriter(interfaces.InputWriter):
@@ -87,11 +87,11 @@ class LatticePhysicsWriter(interfaces.InputWriter):
         self.cs = self.eci.cs
         self.block = representativeBlock
         if not isinstance(xsLibrarySuffix, str):
-            raise TypeError("xsLibrarySuffix should be a string; got {}".format(type(xsLibrarySuffix)))
+            raise TypeError(f"xsLibrarySuffix should be a string; got {type(xsLibrarySuffix)}")
         self.xsLibrarySuffix = xsLibrarySuffix
         self.generateExclusiveGammaXS = generateExclusiveGammaXS
         if self.generateExclusiveGammaXS and not neutronics.gammaXsAreRequested(self.cs):
-            raise ValueError("Invalid `{}` setting to generate gamma XS for {}.".format(CONF_GEN_XS, self.block))
+            raise ValueError(f"Invalid `{CONF_GEN_XS}` setting to generate gamma XS for {self.block}.")
         self.xsId = representativeBlock.getMicroSuffix()
         self.xsSettings = self.cs[CONF_CROSS_SECTION][self.xsId]
         self.mergeIntoClad = self.xsSettings.mergeIntoClad
@@ -119,19 +119,19 @@ class LatticePhysicsWriter(interfaces.InputWriter):
         self._allNuclideObjects = None
 
     def __repr__(self):
-        suffix = " with Suffix:`{}`".format(self.xsLibrarySuffix) if self.xsLibrarySuffix else ""
+        suffix = f" with Suffix:`{self.xsLibrarySuffix}`" if self.xsLibrarySuffix else ""
         if self.generateExclusiveGammaXS:
             xsFlag = neutronics.GAMMA
         elif neutronics.gammaXsAreRequested(self.cs) and self._isGammaXSGenerationEnabled:
             xsFlag = neutronics.NEUTRONGAMMA
         else:
             xsFlag = neutronics.NEUTRON
-        return "<{} - XS ID {} ({} XS){}>".format(self.__class__.__name__, self.xsId, xsFlag, suffix)
+        return f"<{self.__class__.__name__} - XS ID {self.xsId} ({xsFlag} XS){suffix}>"
 
     def _writeTitle(self, fileObj):
         self._writeComment(
             fileObj,
-            "ARMI generated case for caseTitle {}, block {}\n".format(self.cs.caseTitle, self.block),
+            f"ARMI generated case for caseTitle {self.cs.caseTitle}, block {self.block}\n",
         )
 
     def write(self):
@@ -283,11 +283,7 @@ class LatticePhysicsWriter(interfaces.InputWriter):
 
         if self._unusedNuclides:
             runLog.debug(
-                "The following unused nuclides (defined in the loading file) are being added to {} at {} C: {}".format(
-                    subjectObject,
-                    self._getFuelTemperature(),
-                    list(self._unusedNuclides),
-                )
+                f"The following unused nuclides (defined in the loading file) are being added to {subjectObject} at {self._getFuelTemperature()} C: {list(self._unusedNuclides)}"
             )
 
         # the sortFunc makes orders the nucideDensities and fissionProductDensities by name.
@@ -315,9 +311,7 @@ class LatticePhysicsWriter(interfaces.InputWriter):
         else:
             fuelTemperatureInC = np.mean([fc.temperatureInC for fc in fuelComponents])
         if not fuelTemperatureInC or math.isnan(fuelTemperatureInC):
-            raise ValueError(
-                "The fuel temperature of block {0} is {1} and is not valid".format(self.block, fuelTemperatureInC)
-            )
+            raise ValueError(f"The fuel temperature of block {self.block} is {fuelTemperatureInC} and is not valid")
         return fuelTemperatureInC
 
     def _getDetailedFissionProducts(self, dfpDensities):

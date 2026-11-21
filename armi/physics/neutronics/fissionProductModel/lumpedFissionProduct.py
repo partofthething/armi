@@ -347,7 +347,7 @@ class FissionProductDefinitionFile:
             totalYield += yld
 
         lfp.name = parent  # e.g. LFP38
-        runLog.debug("Loaded {0} {1} nuclides for a total yield of {2}".format(len(lfp.yld), lfp.name, totalYield))
+        runLog.debug(f"Loaded {len(lfp.yld)} {lfp.name} nuclides for a total yield of {totalYield}")
         return lfp
 
 

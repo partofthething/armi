@@ -85,7 +85,7 @@ from armi.reactor.grids.structuredGrid import GridParameters, StructuredGrid, _t
 from armi.reactor.grids.thetarz import TAU, ThetaRZGrid
 
 
-def locatorLabelToIndices(label: str) -> Tuple[int, int, Optional[int]]:
+def locatorLabelToIndices(label: str) -> tuple[int, int, int | None]:
     """
     Convert a locator label to numerical i,j,k indices.
 

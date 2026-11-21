@@ -79,9 +79,7 @@ def plotReactorPerformance(reactor, dbi, buGroups, extension=None, history=None)
             )
         )
     except Exception as ee:
-        runLog.warning(
-            "Cannot plot rxPerformance without the data model present in the database.\nError: {}".format(ee)
-        )
+        runLog.warning(f"Cannot plot rxPerformance without the data model present in the database.\nError: {ee}")
         return
 
     # data is a dict of OrderedDict: { <paramName> : { (<cycle>, <node>) : value } }
@@ -129,7 +127,7 @@ def valueVsTime(name, x, y, key, yaxis, title, ymin=None, extension=None):
     plt.xlabel("Time (yr)")
     plt.ylabel(yaxis)
     plt.grid(color="0.70")
-    plt.title(title + " for {0}".format(name))
+    plt.title(title + f" for {name}")
 
     if ymin is not None and all([yi > ymin for yi in y]):
         # set ymin all values are greater than it and it exists.
@@ -178,7 +176,7 @@ def keffVsTime(name, time, keff, keffUnc=None, ymin=None, extension=None):
     plt.xlabel("Time (yr)")
     plt.ylabel("k-eff")
     plt.grid(color="0.70")
-    plt.title("k-eff vs. time" + " for {0}".format(name))
+    plt.title("k-eff vs. time" + f" for {name}")
 
     if ymin is not None and all([yi > ymin for yi in keff]):
         # set ymin all values are greater than it and it exists.
@@ -215,8 +213,8 @@ def plotCoreOverviewRadar(reactors, reactorNames=None):
     for r, color in zip(reactors, colors):
         for si, scraper in enumerate(scrapers):
             physicsName, physicsLabels, physicsVals = scraper(r)
-            runLog.info("{}".format(physicsName))
-            runLog.info("\n".join(["{:10s} {}".format(label, val) for label, val in zip(physicsLabels, physicsVals)]))
+            runLog.info(f"{physicsName}")
+            runLog.info("\n".join([f"{label:10s} {val}" for label, val in zip(physicsLabels, physicsVals)]))
             physicsVals = np.array(physicsVals)
             theta = thetas.get(physicsName)
             if theta is None:
@@ -401,11 +399,11 @@ def _radarFactory(numVars, frame="circle"):
         def fill(self, *args, **kwargs):
             """Override fill so that line is closed by default."""
             closed = kwargs.pop("closed", True)
-            return super(_RadarAxes, self).fill(closed=closed, *args, **kwargs)
+            return super().fill(closed=closed, *args, **kwargs)
 
         def plot(self, *args, **kwargs):
             """Override plot so that line is closed by default."""
-            lines = super(_RadarAxes, self).plot(*args, **kwargs)
+            lines = super().plot(*args, **kwargs)
             for line in lines:
                 close_line(line)
 

@@ -17,7 +17,6 @@ and/or photon flux.
 """
 
 import math
-from typing import Dict, Optional
 
 import numpy as np
 
@@ -141,10 +140,8 @@ class GlobalFluxInterface(interfaces.Interface):
 
         if not math.isclose(powerGenerated, specifiedPower, rel_tol=self._ENERGY_BALANCE_REL_TOL):
             raise ValueError(
-                "The power generated in {} is {} MW, but the user specified power is {} MW.\n"
-                "This indicates a software bug. Please report to the developers.".format(
-                    self.r.core, powerGenerated, specifiedPower
-                )
+                f"The power generated in {self.r.core} is {powerGenerated} MW, but the user specified power is {specifiedPower} MW.\n"
+                "This indicates a software bug. Please report to the developers."
             )
 
     def getIOFileNames(self, cycle, node, coupledIter=None, additionalLabel=""):
@@ -174,10 +171,10 @@ class GlobalFluxInterface(interfaces.Interface):
         """
         timeId = "{0:" + self.cycleFmt + "}_{1:" + self.nodeFmt + "}"  # build names with proper number of zeros
         if coupledIter is not None:
-            timeId += "_{0:03d}".format(coupledIter)
+            timeId += f"_{coupledIter:03d}"
 
-        inName = self.cs.caseTitle + timeId.format(cycle, node) + "{}.{}.inp".format(additionalLabel, self.name)
-        outName = self.cs.caseTitle + timeId.format(cycle, node) + "{}.{}.out".format(additionalLabel, self.name)
+        inName = self.cs.caseTitle + timeId.format(cycle, node) + f"{additionalLabel}.{self.name}.inp"
+        outName = self.cs.caseTitle + timeId.format(cycle, node) + f"{additionalLabel}.{self.name}.out"
         stdName = outName.strip(".out") + ".stdout"
 
         return inName, outName, stdName
@@ -403,7 +400,7 @@ class GlobalFluxOptions(executers.ExecutionOptions):
         Lattice Physics Kernel, from settings
     """
 
-    def __init__(self, label: Optional[str] = None):
+    def __init__(self, label: str | None = None):
         executers.ExecutionOptions.__init__(self, label)
         # have defaults
         self.adjoint: bool = False
@@ -414,25 +411,25 @@ class GlobalFluxOptions(executers.ExecutionOptions):
         self.real: bool = True
 
         # no defaults
-        self.aclpDoseLimit: Optional[float] = None
-        self.boundaries: Optional[str] = None
-        self.cs: Optional[Settings] = None
-        self.detailedAxialExpansion: Optional[bool] = None
-        self.dpaPerFluence: Optional[float] = None
-        self.energyDepoCalcMethodStep: Optional[str] = None
-        self.epsEigenvalue: Optional[float] = None
-        self.epsFissionSourceAvg: Optional[float] = None
-        self.epsFissionSourcePoint: Optional[float] = None
-        self.geomType: Optional[geometry.GeomType] = None
-        self.hasNonUniformAssems: Optional[bool] = None
-        self.isRestart: Optional[bool] = None
-        self.kernelName: Optional[str] = None
-        self.loadPadElevation: Optional[float] = None
-        self.loadPadLength: Optional[float] = None
-        self.maxOuters: Optional[int] = None
-        self.savePhysicsFilesList: Optional[bool] = None
-        self.symmetry: Optional[str] = None
-        self.xsKernel: Optional[str] = None
+        self.aclpDoseLimit: float | None = None
+        self.boundaries: str | None = None
+        self.cs: Settings | None = None
+        self.detailedAxialExpansion: bool | None = None
+        self.dpaPerFluence: float | None = None
+        self.energyDepoCalcMethodStep: str | None = None
+        self.epsEigenvalue: float | None = None
+        self.epsFissionSourceAvg: float | None = None
+        self.epsFissionSourcePoint: float | None = None
+        self.geomType: geometry.GeomType | None = None
+        self.hasNonUniformAssems: bool | None = None
+        self.isRestart: bool | None = None
+        self.kernelName: str | None = None
+        self.loadPadElevation: float | None = None
+        self.loadPadLength: float | None = None
+        self.maxOuters: int | None = None
+        self.savePhysicsFilesList: bool | None = None
+        self.symmetry: str | None = None
+        self.xsKernel: str | None = None
 
     def fromUserSettings(self, cs: Settings):
         """
@@ -531,7 +528,7 @@ class GlobalFluxExecuter(executers.DefaultExecuter):
     def __init__(self, options: GlobalFluxOptions, reactor):
         executers.DefaultExecuter.__init__(self, options, reactor)
         self.options: GlobalFluxOptions
-        self.geomConverters: Dict[str, geometryConverters.GeometryConverter] = {}
+        self.geomConverters: dict[str, geometryConverters.GeometryConverter] = {}
 
     def _performGeometryTransformations(self, makePlots=False):
         """
@@ -555,7 +552,7 @@ class GlobalFluxExecuter(executers.DefaultExecuter):
         if any(self.geomConverters):
             raise RuntimeError(
                 "The reactor has been transformed, but not restored to the original.\n"
-                + "Geometry converter is set to {} \n.".format(self.geomConverters)
+                + f"Geometry converter is set to {self.geomConverters} \n."
                 + "This is a programming error and requires further investigation."
             )
         neutronicsReactor = self.r
@@ -683,9 +680,9 @@ class GlobalFluxResultMapper(interfaces.OutputReader):
 
         powerRatio = renormalizationCorePower / currentCorePower
         runLog.info(
-            "Renormalizing the neutron flux in {:<s} by a factor of {:<8.5e}, "
-            "which is derived from the current core power of {:<8.5e} W and "
-            "desired power of {:<8.5e} W".format(self.r.core, powerRatio, currentCorePower, renormalizationCorePower)
+            f"Renormalizing the neutron flux in {self.r.core:<s} by a factor of {powerRatio:<8.5e}, "
+            f"which is derived from the current core power of {currentCorePower:<8.5e} W and "
+            f"desired power of {renormalizationCorePower:<8.5e} W"
         )
         for b in self.r.core.iterBlocks():
             b.p.mgFlux *= powerRatio
@@ -738,7 +735,7 @@ class GlobalFluxResultMapper(interfaces.OutputReader):
         try:
             return constants.DPA_CROSS_SECTIONS[dpaXsSetName]
         except KeyError:
-            raise KeyError("DPA cross section set {} does not exist".format(dpaXsSetName))
+            raise KeyError(f"DPA cross section set {dpaXsSetName} does not exist")
 
     def getBurnupPeakingFactor(self, b: Block):
         """

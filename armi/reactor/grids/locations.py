@@ -14,7 +14,8 @@
 
 import math
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Hashable, Iterator, List, Optional, Tuple, Union
+from collections.abc import Hashable, Iterator
+from typing import TYPE_CHECKING, Optional, Union
 
 import numpy as np
 
@@ -23,8 +24,8 @@ if TYPE_CHECKING:
     from armi.reactor.grids import Grid
 
 
-IJType = Tuple[int, int]
-IJKType = Tuple[int, int, int]
+IJType = tuple[int, int]
+IJKType = tuple[int, int, int]
 
 
 class LocationBase(ABC):
@@ -43,7 +44,7 @@ class LocationBase(ABC):
         self._grid = grid
 
     def __repr__(self) -> str:
-        return "<{} @ ({},{:},{})>".format(self.__class__.__name__, self.i, self.j, self.k)
+        return f"<{self.__class__.__name__} @ ({self.i},{self.j},{self.k})>"
 
     def __getstate__(self) -> Hashable:
         """Used in pickling and deepcopy, this detaches the grid."""
@@ -314,7 +315,7 @@ class MultiIndexLocation(IndexLocation):
     # interesting questions of substitutability of the various Location classes, which should be addressed.
     __hash__ = None
 
-    _locations: List[IndexLocation]
+    _locations: list[IndexLocation]
 
     def __init__(self, grid: "Grid"):
         IndexLocation.__init__(self, 0, 0, 0, grid)
@@ -331,11 +332,11 @@ class MultiIndexLocation(IndexLocation):
         # Different objects -> let other.__eq__(self) handle it
         return NotImplemented
 
-    def __getstate__(self) -> List[IndexLocation]:
+    def __getstate__(self) -> list[IndexLocation]:
         """Used in pickling and deepcopy, this detaches the grid."""
         return self._locations
 
-    def __setstate__(self, state: List[IndexLocation]):
+    def __setstate__(self, state: list[IndexLocation]):
         """Unpickle a locator, the grid will attach itself if it was also pickled, otherwise this will be detached."""
         self.__init__(None)
         self._locations = state
@@ -371,14 +372,14 @@ class MultiIndexLocation(IndexLocation):
     def append(self, location: IndexLocation):
         self._locations.append(location)
 
-    def extend(self, locations: List[IndexLocation]):
+    def extend(self, locations: list[IndexLocation]):
         self._locations.extend(locations)
 
     def pop(self, location: IndexLocation):
         self._locations.pop(location)
 
     @property
-    def indices(self) -> List[np.ndarray]:
+    def indices(self) -> list[np.ndarray]:
         """
         Return indices for all locations.
 

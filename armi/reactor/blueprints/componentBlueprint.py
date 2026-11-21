@@ -210,7 +210,7 @@ class ComponentBlueprint(YamlObject):
             if len(constructedObject.material.massFrac) == 0:
                 msg = f"Custom material does not have isotopics: {self}"
                 runLog.error(msg, single=True)
-                raise IOError(msg)
+                raise OSError(msg)
 
         return constructedObject
 

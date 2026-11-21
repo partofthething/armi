@@ -74,9 +74,7 @@ class Fixture:
         elif not self._success:
             missingDependencies = [d for d in self.dependencies if not os.path.exists(d)]
             if any(missingDependencies):
-                self._error = EnvironmentError(
-                    "Missing dependencies:\n    {}".format("\n    ".join(missingDependencies))
-                )
+                self._error = OSError("Missing dependencies:\n    {}".format("\n    ".join(missingDependencies)))
                 raise self._error
 
             # at this point we need to update because
@@ -95,13 +93,7 @@ class Fixture:
                     targetTime = datetime.datetime.fromtimestamp(oldestTarget[0])
                     dependencyTime = datetime.datetime.fromtimestamp(newestDependency[0])
                     runLog.important(
-                        "Fixture is out of date {}\noldest target:     {} {}\nnewest dependency: {} {}".format(
-                            self,
-                            targetTime,
-                            oldestTarget[1],
-                            dependencyTime,
-                            newestDependency[1],
-                        )
+                        f"Fixture is out of date {self}\noldest target:     {targetTime} {oldestTarget[1]}\nnewest dependency: {dependencyTime} {newestDependency[1]}"
                     )
             if needToUpdate:
                 runLog.important(f"Running test fixture: {self}")
@@ -199,7 +191,7 @@ class ArmiTestHelper(unittest.TestCase):
         elif isinstance(falseNegList, str):
             falseNegList = [falseNegList]
 
-        with open(expectedFilePath, "r") as expected, open(actualFilePath, "r") as actual:
+        with open(expectedFilePath) as expected, open(actualFilePath) as actual:
             for lineIndex, (expectedLine, actualLine) in enumerate(itertools.zip_longest(expected, actual)):
                 if expectedLine is None:
                     raise AssertionError("The test-generated file is longer than expected file")
@@ -211,15 +203,13 @@ class ArmiTestHelper(unittest.TestCase):
                         pass
                     else:
                         raise AssertionError(
-                            "Error on line {}:\nE>{}\nA<{}".format(
-                                lineIndex, expectedLine.rstrip(), actualLine.rstrip()
-                            )
+                            f"Error on line {lineIndex}:\nE>{expectedLine.rstrip()}\nA<{actualLine.rstrip()}"
                         )
 
         os.remove(actualFilePath)
 
     @staticmethod
-    def compareLines(actual: str, expected: str, eps: Optional[float] = None):
+    def compareLines(actual: str, expected: str, eps: float | None = None):
         """
         Impl of line comparison for compareFilesLineByLine.
 
@@ -267,7 +257,7 @@ class ArmiTestHelper(unittest.TestCase):
         return True
 
     @staticmethod
-    def _tryFloat(val: str) -> Optional[float]:
+    def _tryFloat(val: str) -> float | None:
         try:
             return float(val)
 

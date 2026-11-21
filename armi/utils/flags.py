@@ -24,7 +24,8 @@ not support extension of ``Flags``. So, we had to make our own. This is a much s
 """
 
 import math
-from typing import Dict, List, Sequence, Tuple, Union
+from collections.abc import Sequence
+from typing import Union
 
 from armi import runLog
 
@@ -184,7 +185,7 @@ class Flag(metaclass=_FlagMeta):
         setattr(cls, name, instance)
 
     @classmethod
-    def _resolveAutos(cls, fields: Sequence[str]) -> List[Tuple[str, int]]:
+    def _resolveAutos(cls, fields: Sequence[str]) -> list[tuple[str, int]]:
         """Assign values to autos, based on the current state of the class."""
         # There is some opportunity for code reuse between this and the metaclass...
         resolved = []
@@ -212,7 +213,7 @@ class Flag(metaclass=_FlagMeta):
         return [i[0] for i in sorted(cls._nameToValue.items(), key=lambda item: item[1])]
 
     @classmethod
-    def extend(cls, fields: Dict[str, Union[int, auto]]):
+    def extend(cls, fields: dict[str, int | auto]):
         """
         Extend the Flags object with new fields.
 

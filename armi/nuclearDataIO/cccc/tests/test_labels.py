@@ -47,7 +47,7 @@ class TestLabels(unittest.TestCase):
         with TemporaryDirectoryChanger():
             labelsData = labels.readBinary(LABELS_FILE_BIN)
             labels.writeAscii(labelsData, self._testMethodName + "labels.ascii")
-            with open(self._testMethodName + "labels.ascii", "r") as f:
+            with open(self._testMethodName + "labels.ascii") as f:
                 actualData = f.read().splitlines()
             with open(LABELS_FILE_ASCII) as f:
                 expectedData = f.read().splitlines()

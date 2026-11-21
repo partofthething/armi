@@ -59,7 +59,7 @@ def parseValue(source, requestedType, allowNone=False, matchingNonetype=True):
     if requestedType is str:
         raise TypeError(
             "Unreliable and unnecessary to use parseValue for strs and unicodes. "
-            "Given parameters are {}, {}, {}.".format(source, requestedType, allowNone)
+            f"Given parameters are {source}, {requestedType}, {allowNone}."
         )
 
     # evaluation and special evaluation for numbers

@@ -29,7 +29,8 @@ armi.reactor.parameters
 import enum
 import functools
 import re
-from typing import Any, Dict, Optional, Sequence, Tuple, Type
+from collections.abc import Sequence
+from typing import Any
 
 import numpy as np
 
@@ -173,10 +174,10 @@ class Serializer:
     # This will accompany the packed data as an attribute when written, and will be provided to the
     # unpack() method when reading. If the underlying format of the data changes, make sure to
     # change this.
-    version: Optional[str] = None
+    version: str | None = None
 
     @staticmethod
-    def pack(data: Sequence[any]) -> Tuple[np.ndarray, Dict[str, any]]:
+    def pack(data: Sequence[any]) -> tuple[np.ndarray, dict[str, any]]:
         """
         Given unpacked data, return packed data and a dictionary of attributes needed to unpack it.
 
@@ -191,7 +192,7 @@ class Serializer:
         raise NotImplementedError()
 
     @classmethod
-    def unpack(cls, data: np.ndarray, version: Any, attrs: Dict[str, any]) -> Sequence[any]:
+    def unpack(cls, data: np.ndarray, version: Any, attrs: dict[str, any]) -> Sequence[any]:
         """Given packed data and attributes, return the unpacked data."""
         raise NotImplementedError()
 
@@ -311,12 +312,12 @@ class Parameter:
         default,
         setter,
         categories,
-        serializer: Optional[Type[Serializer]] = None,
+        serializer: type[Serializer] | None = None,
     ):
         # nonsensical to have a serializer with no intention of saving to DB
         assert not (serializer is not None and not saveToDB)
         assert serializer is None or saveToDB
-        assert self._validName.match(name), "{} is not a valid param name".format(name)
+        assert self._validName.match(name), f"{name} is not a valid param name"
         assert len(description), f"Parameter {name} defined without description."
 
         self.collectionType = _Undefined
@@ -343,8 +344,8 @@ class Parameter:
                 value = getattr(p_self, self.fieldName)
                 if value is NoDefault:
                     raise ParameterError(
-                        "Cannot get value for parameter `{}` in `{}` as no default has been "
-                        "defined, and no value has been assigned.".format(self.name, type(p_self))
+                        f"Cannot get value for parameter `{self.name}` in `{type(p_self)}` as no default has been "
+                        "defined, and no value has been assigned."
                     )
                 return value
 
@@ -353,9 +354,7 @@ class Parameter:
         self.setter(setter)
 
     def __repr__(self):
-        return "<ParamDef name:{} collectionType:{} units:{} assigned:{}>".format(
-            self.name, self.collectionType.__name__, self.units, self.assigned
-        )
+        return f"<ParamDef name:{self.name} collectionType:{self.collectionType.__name__} units:{self.units} assigned:{self.assigned}>"
 
     def __eq__(self, other):
         """Name defines equality."""
@@ -428,9 +427,7 @@ class Parameter:
 
             def paramSetter(p_self, value):
                 raise ParameterError(
-                    "Cannot set value for parameter `{}` on {} to `{}`, it has a restricted setter.".format(
-                        self.name, p_self, value
-                    )
+                    f"Cannot set value for parameter `{self.name}` on {p_self} to `{value}`, it has a restricted setter."
                 )
 
         elif callable(setter):
@@ -442,7 +439,7 @@ class Parameter:
 
         else:
             raise ParameterDefinitionError(
-                "The setter for parameter `{}` must be callable. Setter attribute: {}".format(self.name, setter)
+                f"The setter for parameter `{self.name}` must be callable. Setter attribute: {setter}"
             )
 
         self._setter = paramSetter
@@ -539,9 +536,7 @@ class ParameterDefinitionCollection:
 
     def extend(self, other):
         """Grow a parameter definition collection by another parameter definition collection."""
-        assert not self._locked, "This ParameterDefinitionCollection ({}) has been locked.".format(
-            self._representedTypes
-        )
+        assert not self._locked, f"This ParameterDefinitionCollection ({self._representedTypes}) has been locked."
         assert self is not other
         if other is None:
             raise ValueError(
@@ -632,7 +627,7 @@ class ParameterDefinitionCollection:
     def locked(self):
         return self._locked
 
-    def toWriteToDB(self, assignedMask: Optional[int] = None):
+    def toWriteToDB(self, assignedMask: int | None = None):
         """
         Get a list of acceptable parameters to store to the database for a level of the data model.
 
@@ -700,8 +695,8 @@ class ParameterBuilder:
         if default in (NoDefault, None) or isinstance(default, (int, str, float, bool, Flags)):
             return
         raise AssertionError(
-            "Cannot specify a default mutable type ({}) value to a parameter; all instances would "
-            "share the same list.".format(type(default))
+            f"Cannot specify a default mutable type ({type(default)}) value to a parameter; all instances would "
+            "share the same list."
         )
 
     def associateParameterDefinitionCollection(self, paramDefs):
@@ -724,7 +719,7 @@ class ParameterBuilder:
         default=NoDefault,
         setter=NoDefault,
         categories=None,
-        serializer: Optional[Type[Serializer]] = None,
+        serializer: type[Serializer] | None = None,
     ):
         r"""Create a parameter as a property (with get/set) on a class.
 
@@ -777,7 +772,7 @@ class ParameterBuilder:
         self._assertDefaultIsProperType(default)
         if location is None and self._defaultLocation is None:
             raise ParameterDefinitionError(
-                "The default location is not specified for {}; a parameter-specific location is required.".format(self)
+                f"The default location is not specified for {self}; a parameter-specific location is required."
             )
 
         paramDef = Parameter(

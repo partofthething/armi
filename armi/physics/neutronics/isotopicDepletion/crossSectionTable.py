@@ -22,7 +22,6 @@ means that the composite model doesn't need to import the isotopicDepletionInter
 """
 
 import collections
-from typing import List
 
 import numpy as np
 
@@ -157,7 +156,7 @@ class CrossSectionTable(collections.OrderedDict):
         return output
 
 
-def makeReactionRateTable(obj, nuclides: List = None):
+def makeReactionRateTable(obj, nuclides: list = None):
     """
     Generate a reaction rate table for given nuclides.
 

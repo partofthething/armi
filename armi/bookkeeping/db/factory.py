@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import pathlib
-from typing import Optional
 
 import h5py
 
@@ -21,7 +20,7 @@ from armi.bookkeeping.db import permissions
 from armi.bookkeeping.db.database import Database
 
 
-def databaseFactory(dbName: str, permission: str, version: Optional[str] = None):
+def databaseFactory(dbName: str, permission: str, version: str | None = None):
     """
     Return an appropriate object for interacting with a database file.
 
@@ -47,14 +46,14 @@ def databaseFactory(dbName: str, permission: str, version: Optional[str] = None)
 
     # if it's not an hdf5 file, we dont even know where to start...
     if dbPath.suffix != ".h5":
-        raise RuntimeError("Unknown database format for {}".format(dbName))
+        raise RuntimeError(f"Unknown database format for {dbName}")
 
     if permission in permissions.Permissions.read:
         if version is not None:
             raise ValueError("Cannot specify version when reading a database.")
 
         if not dbPath.exists() or not dbPath.is_file():
-            raise ValueError("Database file `{}` does not appear to be a file.".format(dbName))
+            raise ValueError(f"Database file `{dbName}` does not appear to be a file.")
 
         # probe for the database version. We started adding these with "database 3", so if
         # databaseVersion is not present, assume it's the "old" version
@@ -74,7 +73,7 @@ def databaseFactory(dbName: str, permission: str, version: Optional[str] = None)
         if majorversion == "3":
             return Database(dbPath, permission)
 
-        raise ValueError("Unable to determine Database version for {}".format(dbName))
+        raise ValueError(f"Unable to determine Database version for {dbName}")
     elif permission in permissions.Permissions.write:
         majorversion = version.split(".")[0] if version else "3"
         if majorversion == "2":

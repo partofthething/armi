@@ -24,7 +24,7 @@ import copy
 import itertools
 import os
 import time
-from typing import Callable, Iterator, Optional
+from collections.abc import Callable, Iterator
 
 import numpy as np
 from ruamel.yaml import YAML
@@ -143,7 +143,7 @@ class Core(composites.Composite):
         return newC
 
     def __repr__(self):
-        return "<{}: {} id:{}>".format(self.__class__.__name__, self.name, id(self))
+        return f"<{self.__class__.__name__}: {self.name} id:{id(self)}>"
 
     def __iter__(self):
         """Override the base Composite __iter__ to produce stable sort order."""
@@ -210,7 +210,7 @@ class Core(composites.Composite):
         return self.symmetry.symmetryFactor()
 
     @property
-    def lib(self) -> Optional[xsLibraries.IsotxsLibrary]:
+    def lib(self) -> xsLibraries.IsotxsLibrary | None:
         """
         Return the microscopic cross section library, if one exists.
 
@@ -318,7 +318,7 @@ class Core(composites.Composite):
         heavyMetalMass = heavyMetalMass * self.powerMultiplier / 1000.0
         totalVolume = totalVolume * self.powerMultiplier
         runLog.extra(
-            "Summary of {}\n".format(self)
+            f"Summary of {self}\n"
             + tabulate.tabulate(
                 [
                     ("Number of Blocks", numBlocks),
@@ -453,7 +453,7 @@ class Core(composites.Composite):
                 del self.blocksByName[b.getName()]
             except KeyError:
                 runLog.info(
-                    "Cannot delete block {0}. It is not in the Core.blocksByName structure".format(b),
+                    f"Cannot delete block {b}. It is not in the Core.blocksByName structure",
                     single=True,
                     label="cannot dereference: lost block",
                 )
@@ -537,7 +537,7 @@ class Core(composites.Composite):
                 paramDef.assigned = parameters.SINCE_ANYTHING
 
         # could speed up output by passing format args as an arg and only process if verb good.
-        runLog.debug("Adding   {0} to {1}".format(a, self))
+        runLog.debug(f"Adding   {a} to {self}")
         composites.Composite.add(self, a)
         aName = a.getName()
 
@@ -545,9 +545,7 @@ class Core(composites.Composite):
 
         if spatialLocator is not None and spatialLocator in self.childrenByLocator:
             raise ValueError(
-                "Cannot add {} because location {} is already filled by {}.".format(
-                    aName, a.spatialLocator, self.childrenByLocator[a.spatialLocator]
-                )
+                f"Cannot add {aName} because location {a.spatialLocator} is already filled by {self.childrenByLocator[a.spatialLocator]}."
             )
 
         if spatialLocator is not None:
@@ -555,9 +553,7 @@ class Core(composites.Composite):
             spatialLocator = self.spatialGrid[tuple(spatialLocator.indices)]
             if not self.spatialGrid.locatorInDomain(spatialLocator, symmetryOverlap=True):
                 raise LookupError(
-                    "Location `{}` outside of the represented domain: `{}`".format(
-                        spatialLocator, self.spatialGrid.symmetry.domain
-                    )
+                    f"Location `{spatialLocator}` outside of the represented domain: `{self.spatialGrid.symmetry.domain}`"
                 )
             a.moveTo(spatialLocator)
 
@@ -566,9 +562,8 @@ class Core(composites.Composite):
         if aName in self.assembliesByName and self.assembliesByName[aName] != a:
             # try to keep assem numbering correct
             runLog.error(
-                "The assembly {1} in the reactor already has the name {0}.\nCannot add {2}. "
-                "Current assemNum is {3}"
-                "".format(aName, self.assembliesByName[aName], a, self.r.p.maxAssemNum)
+                f"The assembly {self.assembliesByName[aName]} in the reactor already has the name {aName}.\nCannot add {a}. "
+                f"Current assemNum is {self.r.p.maxAssemNum}"
             )
             raise RuntimeError("Core already contains an assembly with the same name.")
 
@@ -895,7 +890,7 @@ class Core(composites.Composite):
         ringPitch : float, optional
             The relative pitch that should be used to define the spacing between each ring.
         """
-        runLog.extra("Building a circular ring dictionary with ring pitch {}".format(ringPitch))
+        runLog.extra(f"Building a circular ring dictionary with ring pitch {ringPitch}")
         referenceAssembly = self.childrenByLocator[self.spatialGrid[0, 0, 0]]
         refLocation = referenceAssembly.spatialLocator
         pitchFactor = ringPitch / self.spatialGrid.pitch
@@ -929,7 +924,7 @@ class Core(composites.Composite):
                 # includeAll lists that is also in the core and that's ok.
                 runLog.error(
                     "Two (or more) assemblies in the reactor (and associated lists) have the name "
-                    "{0},\nincluding {1} and {2}.".format(aName, assem, assymap[aName])
+                    f"{aName},\nincluding {assem} and {assymap[aName]}."
                 )
                 raise RuntimeError("Assembly name collision.")
 
@@ -1301,7 +1296,7 @@ class Core(composites.Composite):
             # now look 'em up
             return [locContents[str(loc)] for loc in locs]
         except KeyError as e:
-            raise KeyError("There is nothing in core location {0}.".format(e))
+            raise KeyError(f"There is nothing in core location {e}.")
 
     def makeLocationLookup(self, assemblyLevel=False):
         """
@@ -1717,7 +1712,7 @@ class Core(composites.Composite):
                 # make endlessly iterable if float was passed in
                 enrichList = itertools.cycle([enrichList])
             elif len(a) != len(enrichList):
-                raise RuntimeError("{0} and enrichment list do not have the same number of blocks.".format(a))
+                raise RuntimeError(f"{a} and enrichment list do not have the same number of blocks.")
 
             for b, enrich in zip(a, enrichList):
                 if enrich == 0.0:
@@ -1742,18 +1737,10 @@ class Core(composites.Composite):
             for block in self.iterBlocks():
                 for gi in groups:
                     f.write(
-                        "{:10s} {:10d} {:12.5E} {:12.5E} {:12.5E}\n".format(
-                            block.getName(),
-                            gi,
-                            block.p.mgFlux[gi],
-                            block.p.adjMgFlux[gi],
-                            block.getVolume(),
-                        )
+                        f"{block.getName():10s} {gi:10d} {block.p.mgFlux[gi]:12.5E} {block.p.adjMgFlux[gi]:12.5E} {block.getVolume():12.5E}\n"
                     )
                 if len(block.p.mgFlux) > len(groups) or len(block.p.adjMgFlux) > len(groups):
-                    raise ValueError(
-                        "Too many flux values: {}\n{}\n{}".format(block, block.p.mgFlux, block.p.adjMgFlux)
-                    )
+                    raise ValueError(f"Too many flux values: {block}\n{block.p.mgFlux}\n{block.p.adjMgFlux}")
 
     def getAssembliesOnSymmetryLine(self, symmetryLineID):
         """Find assemblies that are on a symmetry line in a symmetric core."""
@@ -1905,9 +1892,7 @@ class Core(composites.Composite):
             if currentHeightCm >= heightCm:
                 return zi
         raise ValueError(
-            "The value {} cm is not within range of the reactor axial mesh with max {}".format(
-                heightCm, currentHeightCm
-            )
+            f"The value {heightCm} cm is not within range of the reactor axial mesh with max {currentHeightCm}"
         )
 
     def addMoreNodes(self, meshList):
@@ -2067,7 +2052,7 @@ class Core(composites.Composite):
         if denom:
             return num / denom
         else:
-            raise RuntimeError("no temperature average for {0}".format(typeSpec))
+            raise RuntimeError(f"no temperature average for {typeSpec}")
 
     def growToFullCore(self, cs):
         """Copies symmetric assemblies to build a full core model out of a 1/3 core model.
@@ -2280,7 +2265,7 @@ class Core(composites.Composite):
 
     def iterBlocks(
         self,
-        typeSpec: Optional[flags.TypeSpec] = None,
+        typeSpec: flags.TypeSpec | None = None,
         exact=False,
         predicate: Callable[[blocks.Block], bool] = None,
     ) -> Iterator[blocks.Block]:

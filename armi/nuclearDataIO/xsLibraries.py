@@ -48,7 +48,7 @@ def compare(lib1, lib2):
 def _checkLabels(llib1, llib2):
     mismatch = set(llib1.nuclideLabels) - set(llib2.nuclideLabels)
     if any(mismatch):
-        runLog.important("{} has nuclides that are not in {}: {}".format(llib1, llib2, mismatch))
+        runLog.important(f"{llib1} has nuclides that are not in {llib2}: {mismatch}")
         return False
     return True
 
@@ -58,9 +58,7 @@ def compareXSLibraryAttribute(lib1, lib2, attributeName, tolerance=0.0):
     val1 = getattr(lib1, "_" + attributeName, None)
     val2 = getattr(lib2, "_" + attributeName, None)
     if not properties.areEqual(val1, val2, tolerance):
-        runLog.important(
-            "{} and {} have different `{}` attributes:\n{}\n{}".format(lib1, lib2, attributeName, val1, val2)
-        )
+        runLog.important(f"{lib1} and {lib2} have different `{attributeName}` attributes:\n{val1}\n{val2}")
         return False
     return True
 
@@ -184,9 +182,9 @@ def mergeXSLibrariesInWorkingDirectory(
             continue
 
         xsFileTypes = "ISOTXS" if not mergeGammaLibs else "ISOTXS, GAMISO, and PMATRX"
-        runLog.info("Retrieving {} data for XS ID {}{}".format(xsFileTypes, xsID, xsLibrarySuffix))
+        runLog.info(f"Retrieving {xsFileTypes} data for XS ID {xsID}{xsLibrarySuffix}")
         if xsLibFilePath in lib.isotxsMetadata.fileNames:
-            runLog.extra("Skipping merge of {} because data already exists in the library".format(xsLibFilePath))
+            runLog.extra(f"Skipping merge of {xsLibFilePath} because data already exists in the library")
             continue
 
         neutronLibrary = isotxs.readBinary(xsLibFilePath)
@@ -288,7 +286,7 @@ class _XSLibrary:
 
     def __setitem__(self, key, value):
         if key in self._orderedNuclideLabels:
-            raise AttributeError("{} already contains {}".format(self, key))
+            raise AttributeError(f"{self} already contains {key}")
         value.container = self
         self._orderedNuclideLabels.append(key)
 
@@ -459,7 +457,7 @@ class IsotxsLibrary(_XSLibrary):
         try:
             return self[libLabel]
         except KeyError:
-            runLog.error("Error in {}.\nSee stderr.".format(self))
+            runLog.error(f"Error in {self}.\nSee stderr.")
             raise
 
     def __delitem__(self, key):
@@ -490,7 +488,7 @@ class IsotxsLibrary(_XSLibrary):
 
     def merge(self, other):
         """Merge two XSLibraries."""
-        runLog.debug("Merging XS library {} into XS library {}".format(other, self))
+        runLog.debug(f"Merging XS library {other} into XS library {self}")
         self._mergeProperties(other)
         # merging meta data may raise an exception before knowing anything about the contained nuclides
         # if it raises an exception, nothing has been modified in two objects
@@ -561,7 +559,7 @@ class IsotxsLibrary(_XSLibrary):
         scatterWeights : dict
             (xsID, fromGroup) : weight column (sparse Gx1)
         """
-        runLog.info("Building {0} weights on cross section library".format(scatterMatrixKey))
+        runLog.info(f"Building {scatterMatrixKey} weights on cross section library")
         scatterWeights = {}
         for nucName, nuc in self.items():
             nucScatterWeights = nuc.buildNormalizedScatterColumns(scatterMatrixKey)
@@ -580,7 +578,7 @@ class IsotxsLibrary(_XSLibrary):
 
         .. warning:: Sometimes worker nodes do not have a reactor, fission products will not be purged.
         """
-        runLog.info("Purging detailed fission products from {}".format(self))
+        runLog.info(f"Purging detailed fission products from {self}")
         modeledNucs = r.blueprints.allNuclidesInProblem
         for key, nuc in list(self.items()):
             if nuc.name not in modeledNucs:

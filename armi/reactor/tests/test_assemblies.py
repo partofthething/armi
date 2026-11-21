@@ -162,7 +162,7 @@ class TestAssemblyReadOnly(unittest.TestCase):
             :tests: R_ARMI_ASSEM_POSI
         """
         cur = self.assembly.getLocation()
-        ref = str("005-003")
+        ref = "005-003"
         self.assertEqual(cur, ref)
 
     def test_getArea(self):
@@ -664,7 +664,7 @@ class TestAssembly(unittest.TestCase):
             newSettings = {CONF_LOADING_FILE: filename}
             self.cs = self.cs.modified(newSettings=newSettings)
 
-            with open(self.cs[CONF_LOADING_FILE], "r") as y:
+            with open(self.cs[CONF_LOADING_FILE]) as y:
                 y = textProcessors.resolveMarkupInclusions(y, pathlib.Path(self.cs.inputDirectory))
                 self.r.blueprints = blueprints.Blueprints.load(y)
 
@@ -714,7 +714,7 @@ class TestAssembly(unittest.TestCase):
                     self.assertEqual(
                         cur,
                         ref,
-                        msg="The {} param differs: {} vs. {}".format(refParam, cur, ref),
+                        msg=f"The {refParam} param differs: {cur} vs. {ref}",
                     )
 
         # Block level height
@@ -751,7 +751,7 @@ class TestAssembly(unittest.TestCase):
     def test_renameBlocksAccordingToAssemblyNum(self):
         self.assembly.p.assemNum = 55
         self.assembly.renameBlocksAccordingToAssemblyNum()
-        self.assertIn("{0:04d}".format(self.assembly.getNum()), self.assembly[1].getName())
+        self.assertIn(f"{self.assembly.getNum():04d}", self.assembly[1].getName())
 
     def test_getBlockData(self):
         paramDict = {

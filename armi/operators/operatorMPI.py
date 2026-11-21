@@ -72,7 +72,7 @@ class OperatorMPI(Operator):
                 Operator.operate(self)
                 runLog.important(time.ctime())
             except Exception as ee:
-                runLog.error("Error in Primary Node. Check STDERR for a traceback.\n{}".format(ee))
+                runLog.error(f"Error in Primary Node. Check STDERR for a traceback.\n{ee}")
                 raise
             finally:
                 # If there are other processes, tell them to stop
@@ -126,9 +126,9 @@ class OperatorMPI(Operator):
         """
         while True:
             # sit around waiting for a command from the primary
-            runLog.extra("Node {0} ready and waiting".format(context.MPI_RANK))
+            runLog.extra(f"Node {context.MPI_RANK} ready and waiting")
             cmd = context.MPI_COMM.bcast(None, root=0)
-            runLog.extra("worker received command {0}".format(cmd))
+            runLog.extra(f"worker received command {cmd}")
             # got a command. go use it.
             if isinstance(cmd, mpiActions.MpiAction):
                 cmd.invoke(self, self.r, self.cs)

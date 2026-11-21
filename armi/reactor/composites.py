@@ -35,16 +35,10 @@ import collections
 import itertools
 import operator
 import timeit
+from collections.abc import Callable, Iterator
 from typing import (
     TYPE_CHECKING,
-    Callable,
-    Dict,
-    Iterator,
-    List,
     Optional,
-    Tuple,
-    Type,
-    Union,
 )
 
 import numpy as np
@@ -89,7 +83,7 @@ class FlagSerializer(parameters.Serializer):
         return FlagSerializer._packImpl(data, Flags)
 
     @staticmethod
-    def _packImpl(data, flagCls: Type[utils.Flag]):
+    def _packImpl(data, flagCls: type[utils.Flag]):
         """
         Implement the pack operation given a target output Flag class.
 
@@ -102,7 +96,7 @@ class FlagSerializer(parameters.Serializer):
         return npa, {"flag_order": flagCls.sortedFields()}
 
     @staticmethod
-    def _remapBits(inp: int, mapping: Dict[int, int]):
+    def _remapBits(inp: int, mapping: dict[int, int]):
         """
         Given an input bitfield, map each bit to the appropriate new bit position based
         on the passed mapping.
@@ -138,7 +132,7 @@ class FlagSerializer(parameters.Serializer):
         return cls._unpackImpl(data, version, attrs, Flags)
 
     @classmethod
-    def _unpackImpl(cls, data, version, attrs, flagCls: Type[utils.Flag]):
+    def _unpackImpl(cls, data, version, attrs, flagCls: type[utils.Flag]):
         """
         Implement the unpack operation given a target output Flag class.
 
@@ -244,7 +238,7 @@ class CompositeModelType(resolveCollections.ResolveParametersMeta):
     subclasses, called TYPES.
     """
 
-    TYPES: Dict[str, Type] = dict()
+    TYPES: dict[str, type] = dict()
     """
     Dictionary mapping class name to class object for all subclasses.
 
@@ -321,7 +315,7 @@ class ArmiObject(metaclass=CompositeModelType):
     armi.reactor.parameters
     """
 
-    paramCollectionType: Optional[Type[parameters.ParameterCollection]] = None
+    paramCollectionType: type[parameters.ParameterCollection] | None = None
     pDefs = _defineBaseParameters()
 
     def __init__(self, name):
@@ -678,7 +672,7 @@ class ArmiObject(metaclass=CompositeModelType):
         """Return the object type."""
         return self.p.type
 
-    def setType(self, typ, flags: Optional[Flags] = None):
+    def setType(self, typ, flags: Flags | None = None):
         """
         Set the object type.
 
@@ -738,7 +732,7 @@ class ArmiObject(metaclass=CompositeModelType):
         """
         raise NotImplementedError()
 
-    def getMass(self, nuclideNames: Union[None, str, list[str]] = None) -> float:
+    def getMass(self, nuclideNames: None | str | list[str] = None) -> float:
         """
         Determine the mass in grams of nuclide(s) and/or elements in this object.
 
@@ -774,7 +768,7 @@ class ArmiObject(metaclass=CompositeModelType):
             " of composite such as Blocks or Components have the concept of micro suffixes."
         )
 
-    def _getNuclidesFromSpecifier(self, nucSpec: Union[None, str, list[str]]):
+    def _getNuclidesFromSpecifier(self, nucSpec: None | str | list[str]):
         """
         Convert a nuclide specification to a list of valid nuclide/element keys.
 
@@ -1151,7 +1145,7 @@ class ArmiObject(metaclass=CompositeModelType):
         else:
             return self.parent.getAncestor(fn)
 
-    def getAncestorAndDistance(self, fn, _distance=0) -> Optional[Tuple["ArmiObject", int]]:
+    def getAncestorAndDistance(self, fn, _distance=0) -> tuple["ArmiObject", int] | None:
         """
         Return the first ancestor that satisfies the supplied predicate, along with how
         many levels above self the ancestor lies.
@@ -1739,7 +1733,7 @@ class Composite(ArmiObject):
         fracs = [(ci, nu / denom) for ci, nu in zip(children, numerator)]
         return fracs
 
-    def getMass(self, nuclideNames: Union[None, str, list[str]] = None) -> float:
+    def getMass(self, nuclideNames: None | str | list[str] = None) -> float:
         """
         Determine the mass in grams of nuclide(s) and/or elements in this object.
 
@@ -1766,7 +1760,7 @@ class Composite(ArmiObject):
 
     def getFuelMass(self):
         """Returns mass of fuel in grams."""
-        return sum((c.getFuelMass() for c in self))
+        return sum(c.getFuelMass() for c in self)
 
     def getNumberDensity(self, nucName):
         """
@@ -2248,7 +2242,7 @@ class Composite(ArmiObject):
         self,
         deep=False,
         generationNum=1,
-        predicate: Optional[Callable[["Composite"], bool]] = None,
+        predicate: Callable[["Composite"], bool] | None = None,
     ) -> Iterator["Composite"]:
         """Iterate over children objects of this composite.
 
@@ -2337,7 +2331,7 @@ class Composite(ArmiObject):
         deep=False,
         generationNum=1,
         includeMaterials=False,
-        predicate: Optional[Callable[["Composite"], bool]] = None,
+        predicate: Callable[["Composite"], bool] | None = None,
     ) -> list["Composite"]:
         """
         Return the children objects of this composite.
@@ -2611,7 +2605,7 @@ class Composite(ArmiObject):
                 componentsWithThisMat.append(c)
         return componentsWithThisMat
 
-    def hasComponents(self, typeSpec: Union[TypeSpec, List[TypeSpec]], exact=False):
+    def hasComponents(self, typeSpec: TypeSpec | list[TypeSpec], exact=False):
         """
         Return true if components matching all TypeSpec exist in this object.
 
@@ -3293,7 +3287,7 @@ class StateRetainer:
             func(paramDef)
 
 
-def gatherMaterialsByVolume(objects: List[ArmiObject], typeSpec: TypeSpec = None, exact=False):
+def gatherMaterialsByVolume(objects: list[ArmiObject], typeSpec: TypeSpec = None, exact=False):
     """
     Compute the total volume of each material in a set of objects and give samples.
 
@@ -3332,7 +3326,7 @@ def gatherMaterialsByVolume(objects: List[ArmiObject], typeSpec: TypeSpec = None
     return volumes, samples
 
 
-def getDominantMaterial(objects: List[ArmiObject], typeSpec: TypeSpec = None, exact=False):
+def getDominantMaterial(objects: list[ArmiObject], typeSpec: TypeSpec = None, exact=False):
     """
     Return the first sample of the most dominant material (by volume) in a set of objects.
 

@@ -48,7 +48,8 @@ import collections
 import os
 import re
 import traceback
-from typing import Optional, Pattern, Sequence, Tuple
+from collections.abc import Sequence
+from re import Pattern
 
 import h5py
 import numpy as np
@@ -115,13 +116,13 @@ class DiffResults:
     def addDiff(self, compType: str, paramName: str, absMean: float, mean: float, absMax: float) -> None:
         """Add a collection of diffs to the diff dictionary if they exceed the tolerance."""
         absMean = absMean if absMean > self.tolerance else None
-        self.diffs["{}/{} mean(abs(diff))".format(compType, paramName)].append(absMean)
+        self.diffs[f"{compType}/{paramName} mean(abs(diff))"].append(absMean)
 
         mean = mean if abs(mean) > self.tolerance else None
-        self.diffs["{}/{} mean(diff)".format(compType, paramName)].append(mean)
+        self.diffs[f"{compType}/{paramName} mean(diff)"].append(mean)
 
         absMax = absMax if absMax > self.tolerance else None
-        self.diffs["{}/{} max(abs(diff))".format(compType, paramName)].append(absMax)
+        self.diffs[f"{compType}/{paramName} max(abs(diff))"].append(absMax)
 
     def addStructureDiffs(self, nDiffs: int) -> None:
         if not self._structureDiffs:
@@ -157,10 +158,10 @@ class DiffResults:
 def compareDatabases(
     refFileName: str,
     srcFileName: str,
-    exclusions: Optional[Sequence[str]] = None,
+    exclusions: Sequence[str] | None = None,
     tolerance: float = 0.0,
-    timestepCompare: Optional[Sequence[Tuple[int, int]]] = None,
-) -> Optional[DiffResults]:
+    timestepCompare: Sequence[tuple[int, int]] | None = None,
+) -> DiffResults | None:
     """High-level method to compare two ARMI H5 files, given file paths."""
     compiledExclusions = None
     if exclusions is not None:
@@ -174,9 +175,7 @@ def compareDatabases(
         src = databaseFactory(srcFileName, Permissions.READ_ONLY_FME)
         if not isinstance(ref, Database) or not isinstance(src, Database):
             raise TypeError(
-                "This database comparer only knows how to deal with database version 3; received {} and {}".format(
-                    type(ref), type(src)
-                )
+                f"This database comparer only knows how to deal with database version 3; received {type(ref)} and {type(src)}"
             )
 
         with ref, src:
@@ -185,9 +184,9 @@ def compareDatabases(
 
                 if nDiff > 0:
                     runLog.warning(
-                        "{} and {} have differing timestep groups, and are "
+                        f"{ref} and {src} have differing timestep groups, and are "
                         "probably not safe to compare. This is likely due to one of "
-                        "the cases having failed to complete.".format(ref, src)
+                        "the cases having failed to complete."
                     )
                     return None
 
@@ -207,7 +206,7 @@ def compareDatabases(
     return diffResults
 
 
-def _compareH5Groups(out: OutputWriter, ref: h5py.Group, src: h5py.Group, name: str) -> Tuple[Sequence[str], int]:
+def _compareH5Groups(out: OutputWriter, ref: h5py.Group, src: h5py.Group, name: str) -> tuple[Sequence[str], int]:
     refGroups = set(ref.keys())
     srcGroups = set(src.keys())
 
@@ -221,7 +220,7 @@ def _compareTimeStep(
     refGroup: h5py.Group,
     srcGroup: h5py.Group,
     diffResults: DiffResults,
-    exclusions: Optional[Sequence[Pattern]] = None,
+    exclusions: Sequence[Pattern] | None = None,
 ):
     groupNames, structDiffs = _compareH5Groups(out, refGroup, srcGroup, "composite objects/auxiliary data")
     diffResults.addStructureDiffs(structDiffs)
@@ -273,16 +272,16 @@ def _compareAuxData(
         _diffSimpleData(refData[name], srcData[name], diffResults)
 
 
-def _compareSets(src: set, ref: set, out: OutputWriter, name: Optional[str] = None) -> int:
+def _compareSets(src: set, ref: set, out: OutputWriter, name: str | None = None) -> int:
     nDiffs = 0
     printName = "" if name is None else name + " "
     if ref - src:
         nDiffs += len(ref - src)
-        out.writeln("ref has {}not in src: {}".format(printName, list(ref - src)))
+        out.writeln(f"ref has {printName}not in src: {list(ref - src)}")
 
     if src - ref:
         nDiffs += len(src - ref)
-        out.writeln("src has {}not in ref: {}".format(printName, list(src - ref)))
+        out.writeln(f"src has {printName}not in ref: {list(src - ref)}")
 
     return nDiffs
 
@@ -333,9 +332,7 @@ def _diffSpecialData(
         if not same:
             attrsMatch = False
             out.writeln(
-                "Special formatting parameters for {} do not match for {}. Src: {} Ref: {}".format(
-                    name, k, srcData.attrs[k], refData.attrs[k]
-                )
+                f"Special formatting parameters for {name} do not match for {k}. Src: {srcData.attrs[k]} Ref: {refData.attrs[k]}"
             )
             break
 
@@ -356,7 +353,7 @@ def _diffSpecialData(
     for dSrc, dRef in zip(src.tolist(), ref.tolist()):
         if isinstance(dSrc, np.ndarray) and isinstance(dRef, np.ndarray):
             if dSrc.shape != dRef.shape:
-                out.writeln("Shapes did not match for {}".format(refData))
+                out.writeln(f"Shapes did not match for {refData}")
                 diffResults.addDiff(compName, paramName, np.inf, np.inf, np.inf)
                 return
 
@@ -379,7 +376,7 @@ def _diffSpecialData(
             continue
 
         if (dSrc is None) ^ (dRef is None):
-            out.writeln("Mismatched Nones for {} in {}".format(paramName, compName))
+            out.writeln(f"Mismatched Nones for {paramName} in {compName}")
             diff.append([np.inf])
             continue
 
@@ -402,8 +399,8 @@ def _diffSpecialData(
             diff = [np.array(d).flatten() for d in diff]
             diff = np.concatenate(diff)
         except ValueError as e:
-            out.writeln("Failed to concatenate diff data for {} in {}: {}".format(paramName, compName, diff))
-            out.writeln("Because: {}".format(e))
+            out.writeln(f"Failed to concatenate diff data for {paramName} in {compName}: {diff}")
+            out.writeln(f"Because: {e}")
             return
         absDiff = np.abs(diff)
         mean = np.nanmean(diff)
@@ -435,14 +432,14 @@ def _diffSimpleData(ref: h5py.Dataset, src: h5py.Dataset, diffResults: DiffResul
         if src.dtype.kind == ref.dtype.kind and src.dtype.kind in {"U", "S"}:
             return
         else:
-            runLog.error("Failed to compare {} in {}".format(paramName, compName))
-            runLog.error("source: {}".format(src))
-            runLog.error("reference: {}".format(ref))
+            runLog.error(f"Failed to compare {paramName} in {compName}")
+            runLog.error(f"source: {src}")
+            runLog.error(f"reference: {ref}")
             diff = np.array([np.inf])
     except ValueError:
-        runLog.error("Failed to compare {} in {}".format(paramName, compName))
-        runLog.error("source: {}".format(src))
-        runLog.error("reference: {}".format(ref))
+        runLog.error(f"Failed to compare {paramName} in {compName}")
+        runLog.error(f"source: {src}")
+        runLog.error(f"reference: {ref}")
         diff = np.array([np.inf])
 
     if 0 in diff.shape:
@@ -462,17 +459,17 @@ def _compareComponentData(
     refGroup: h5py.Group,
     srcGroup: h5py.Group,
     diffResults: DiffResults,
-    exclusions: Optional[Sequence[Pattern]] = None,
+    exclusions: Sequence[Pattern] | None = None,
 ):
     exclusions = exclusions or []
     compName = refGroup.name
-    paramNames, nDiff = _compareH5Groups(out, refGroup, srcGroup, "{} parameters".format(compName))
+    paramNames, nDiff = _compareH5Groups(out, refGroup, srcGroup, f"{compName} parameters")
     diffResults.addStructureDiffs(nDiff)
 
     for paramName in paramNames:
         fullName = "/".join((refGroup.name, paramName))
         if any(pattern.match(fullName) for pattern in exclusions):
-            runLog.debug("Skipping comparison of {} since it is being ignored.".format(fullName))
+            runLog.debug(f"Skipping comparison of {fullName} since it is being ignored.")
             continue
         refDataset = refGroup[paramName]
         srcDataset = srcGroup[paramName]
@@ -482,8 +479,8 @@ def _compareComponentData(
 
         if srcSpecial ^ refSpecial:
             out.writeln(
-                "Could not compare data for parameter {} because one uses special "
-                "formatting, and the other does not. Ref: {} Src: {}".format(paramName, refSpecial, srcSpecial)
+                f"Could not compare data for parameter {paramName} because one uses special "
+                f"formatting, and the other does not. Ref: {refSpecial} Src: {srcSpecial}"
             )
             diffResults.addDiff(refGroup.name, paramName, np.inf, np.inf, np.inf)
             continue

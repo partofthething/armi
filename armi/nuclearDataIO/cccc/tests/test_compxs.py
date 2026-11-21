@@ -43,7 +43,7 @@ class TestCompxs(unittest.TestCase):
         try:
             cls.lib = compxs.readAscii(COMPXS_PATH)
         except Exception as ee:
-            raise Exception("Failed to load COMPXS ascii.\n{}".format(ee))
+            raise Exception(f"Failed to load COMPXS ascii.\n{ee}")
         cls.fissileRegion = cls.lib.regions[1]
         cls.numGroups = cls.lib.compxsMetadata["numGroups"]
 

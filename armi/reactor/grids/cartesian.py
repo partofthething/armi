@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import itertools
-from typing import NoReturn, Optional, Tuple
+from typing import NoReturn
 
 import numpy as np
 
@@ -198,7 +198,7 @@ class CartesianGrid(StructuredGrid):
                 ringPositions += 4
         return ringPositions
 
-    def locatorInDomain(self, locator, symmetryOverlap: Optional[bool] = False):
+    def locatorInDomain(self, locator, symmetryOverlap: bool | None = False):
         if self.symmetry.domain == geometry.DomainType.QUARTER_CORE:
             return locator.i >= 0 and locator.j >= 0
         else:
@@ -268,7 +268,7 @@ class CartesianGrid(StructuredGrid):
         return all(self._offset == [0, 0, 0])
 
     @property
-    def pitch(self) -> Tuple[float, float]:
+    def pitch(self) -> tuple[float, float]:
         """Grid pitch in the x and y dimension.
 
         Returns

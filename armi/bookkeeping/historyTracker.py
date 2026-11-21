@@ -67,7 +67,7 @@ See :ref:`detail-assems`.
 """
 
 import traceback
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING
 
 from armi import interfaces, operators, runLog
 from armi.reactor import grids
@@ -242,9 +242,7 @@ class HistoryTrackerInterface(interfaces.Interface):
                 if name in {a.name for a in self.r.core}:
                     raise Exception("Found it")
                 runLog.extra(
-                    "Cannot find detail assembly {} in assemblies-by-name lookup table, which has {} entries".format(
-                        name, len(self.r.core.assembliesByName)
-                    )
+                    f"Cannot find detail assembly {name} in assemblies-by-name lookup table, which has {len(self.r.core.assembliesByName)} entries"
                 )
         return assems
 
@@ -255,7 +253,7 @@ class HistoryTrackerInterface(interfaces.Interface):
     def nonStationaryBlocks(self, a: "Assembly"):
         return [b for b in a if not any(b.hasFlags(sbf) for sbf in self.r.core.stationaryBlockFlagsList)]
 
-    def getAssemHistories(self, assemList: List["Assembly"]):
+    def getAssemHistories(self, assemList: list["Assembly"]):
         """Get the histories for all blocks in detailed assemblies."""
         return self.getInterface("database").getHistories(
             [b for a in assemList for b in self.nonStationaryBlocks(a)],
@@ -284,7 +282,7 @@ class HistoryTrackerInterface(interfaces.Interface):
                 out.write("\n")
 
                 for param in params:
-                    out.write("\n\nkey: {0}\n".format(param))
+                    out.write(f"\n\nkey: {param}\n")
 
                     data = [allBlockHistories[b][param].values() for b in self.nonStationaryBlocks(a)]
                     out.write(tabulate.tabulate(data, tableFmt="plain", floatFmt="11.5E"))

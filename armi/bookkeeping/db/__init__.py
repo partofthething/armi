@@ -181,4 +181,4 @@ def _getH5File(db):
     if isinstance(db, Database):
         return db.h5db
     else:
-        raise TypeError("Unsupported Database type ({})!".format(type(db)))
+        raise TypeError(f"Unsupported Database type ({type(db)})!")

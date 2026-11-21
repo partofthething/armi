@@ -44,9 +44,9 @@ class Report:
         return specialsRemovedOrder
 
     def __str__(self):
-        str_ = "\n{} - (REPORT) {}\n".format(self.title, self.description)
+        str_ = f"\n{self.title} - (REPORT) {self.description}\n"
         for global_group in self.groups.values():
-            str_ += re.sub("\n", "\n\t", "{}".format(Group.__str__(global_group)))  # Don't use subclassed methods
+            str_ += re.sub("\n", "\n\t", f"{Group.__str__(global_group)}")  # Don't use subclassed methods
         return str_
 
     def addToReport(self, group, name, value):
@@ -78,7 +78,7 @@ class Group:
     def __str__(self):
         str_ = f"\n{self.title} - (GROUP) {self.description}\n"
         for name, value in self.data.items():
-            str_ += "\t{:<30} {}\n".format(name, value)
+            str_ += f"\t{name:<30} {value}\n"
         return str_
 
     def __getitem__(self, name):
@@ -111,18 +111,18 @@ class Table(Group):
 
         # create header
         str_ = border_dashes
-        str_ += "{} - {}\n".format(self.title, self.description)
+        str_ += f"{self.title} - {self.description}\n"
         if self.header:
             for column_title in self.header:
-                str_ += "{:<30} ".format(column_title)
+                str_ += f"{column_title:<30} "
             str_ += "\n"
         str_ += border_dashes
 
         # create table body
         for name, value in sorted(self.data.items(), key=self._lowerCaseSortForTuples):
-            str_ += "{:<30} ".format(name)
+            str_ += f"{name:<30} "
             for item in value:
-                str_ += "{:<30} ".format(item)
+                str_ += f"{item:<30} "
             str_ += "\n"
 
         return str_

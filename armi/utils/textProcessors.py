@@ -17,7 +17,7 @@ import io
 import os
 import pathlib
 import re
-from typing import List, Optional, TextIO, Tuple, Union
+from typing import TextIO
 
 from armi import runLog
 
@@ -58,13 +58,13 @@ class FileMark:
         self.relativeTo = relativeTo
 
     def __str__(self):
-        return "{}, line {}, column {}".format(self.path, self.line, self.column)
+        return f"{self.path}, line {self.line}, column {self.column}"
 
 
 def _processIncludes(
-    src: Union[TextIO, pathlib.Path],
+    src: TextIO | pathlib.Path,
     out,
-    includes: List[Tuple[pathlib.Path, FileMark]],
+    includes: list[tuple[pathlib.Path, FileMark]],
     root: pathlib.Path,
     indentation=0,
     currentFile="<stream>",
@@ -122,10 +122,10 @@ def _processIncludes(
             fName = pathlib.Path(os.path.expandvars(m.group(2)))
             path = root / fName
             if not path.exists():
-                raise ValueError("The !included file, `{}` does not exist from {}!".format(fName, root))
+                raise ValueError(f"The !included file, `{fName}` does not exist from {root}!")
             includes.append((fName, FileMark(currentFile, i, m.start(2), root)))
 
-            with open(path, "r") as includedFile:
+            with open(path) as includedFile:
                 _processIncludes(
                     includedFile,
                     out,
@@ -139,7 +139,7 @@ def _processIncludes(
             out.write(leadingSpace + line)
 
 
-def resolveMarkupInclusions(src: Union[TextIO, pathlib.Path], root: Optional[pathlib.Path] = None) -> io.StringIO:
+def resolveMarkupInclusions(src: TextIO | pathlib.Path, root: pathlib.Path | None = None) -> io.StringIO:
     r"""
     Process a text stream, appropriately handling ``!include`` tags.
 
@@ -209,21 +209,21 @@ def resolveMarkupInclusions(src: Union[TextIO, pathlib.Path], root: Optional[pat
     return _resolveMarkupInclusions(src, root)[0]
 
 
-def _getRootFromSrc(src: Union[TextIO, pathlib.Path], root: Optional[pathlib.Path]) -> pathlib.Path:
+def _getRootFromSrc(src: TextIO | pathlib.Path, root: pathlib.Path | None) -> pathlib.Path:
     if isinstance(src, pathlib.Path):
         root = root or src.parent.absolute()
     elif isinstance(src, io.TextIOBase):
         if root is None:
             raise ValueError("A stream was provided without a root directory.")
     else:
-        raise TypeError("Unsupported source type: `{}`!".format(type(src)))
+        raise TypeError(f"Unsupported source type: `{type(src)}`!")
 
     return root
 
 
 def findYamlInclusions(
-    src: Union[TextIO, pathlib.Path], root: Optional[pathlib.Path] = None
-) -> List[Tuple[pathlib.Path, FileMark]]:
+    src: TextIO | pathlib.Path, root: pathlib.Path | None = None
+) -> list[tuple[pathlib.Path, FileMark]]:
     """
     Return a list containing all of the !included YAML files from a root file.
 
@@ -253,13 +253,13 @@ def findYamlInclusions(
 
 
 def _resolveMarkupInclusions(
-    src: Union[TextIO, pathlib.Path], root: Optional[pathlib.Path] = None
-) -> Tuple[io.StringIO, List[Tuple[pathlib.Path, FileMark]]]:
+    src: TextIO | pathlib.Path, root: pathlib.Path | None = None
+) -> tuple[io.StringIO, list[tuple[pathlib.Path, FileMark]]]:
     root = _getRootFromSrc(src, root)
 
     if isinstance(src, pathlib.Path):
         # this is inefficient, but avoids having to play with io buffers
-        with open(src, "r") as rootFile:
+        with open(src) as rootFile:
             src = io.StringIO(rootFile.read())
 
     out = io.StringIO()
@@ -382,8 +382,8 @@ class SequentialReader:
 
     def __enter__(self):
         if not os.path.exists(self._filePath):
-            raise OSError("Cannot open non-existing file {}".format(self._filePath))
-        self._stream = open(self._filePath, "r")
+            raise OSError(f"Cannot open non-existing file {self._filePath}")
+        self._stream = open(self._filePath)
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
@@ -580,7 +580,7 @@ class TextProcessor:
         self.f.seek(0)
 
     def __repr__(self):
-        return "<Text file at {0}>".format(self.f.name)
+        return f"<Text file at {self.f.name}>"
 
     def errorChecking(self, checkForErrors):
         self.eChecking = checkForErrors

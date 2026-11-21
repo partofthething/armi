@@ -41,7 +41,6 @@ import math
 import pathlib
 import xml.dom.minidom
 import xml.etree.ElementTree as ET
-from typing import Dict, List, Optional, Set, Tuple
 
 import h5py
 import numpy as np
@@ -87,7 +86,7 @@ _HEX_PRISM_FACE_SIZE_IDX = np.array([0, 7, 14, 19, 24, 29, 34, 39])
 _HEX_PRISM_FACE_SIZES = np.array([6, 6, 4, 4, 4, 4, 4, 4])
 
 
-def _getAttributesFromDataset(d: h5py.Dataset) -> Dict[str, str]:
+def _getAttributesFromDataset(d: h5py.Dataset) -> dict[str, str]:
     dataType = {
         np.dtype("int32"): "Int",
         np.dtype("int64"): "Int",
@@ -122,7 +121,7 @@ class XdmfDumper(dumper.VisFileDumper):
     written to an ``.xdmf`` file.
     """
 
-    def __init__(self, baseName: str, inputName: Optional[str] = None):
+    def __init__(self, baseName: str, inputName: str | None = None):
         self._baseName = baseName
         if inputName is None:
             runLog.warning("No input database name was given, so only an XMDF mesh will be created")
@@ -161,7 +160,7 @@ class XdmfDumper(dumper.VisFileDumper):
             dbVersion = db.version
 
         if math.floor(float(dbVersion)) != 3:
-            raise ValueError("XDMF output requires Database version 3. Got version `{}`".format(dbVersion))
+            raise ValueError(f"XDMF output requires Database version 3. Got version `{dbVersion}`")
 
         self._times = []
         self._blockGrids = []
@@ -218,7 +217,7 @@ class XdmfDumper(dumper.VisFileDumper):
                 f.write(dom.toprettyxml())
 
     @staticmethod
-    def _dedupTimes(times: List[float]) -> List[float]:
+    def _dedupTimes(times: list[float]) -> list[float]:
         """
         Make sure that no two times are the same.
 
@@ -256,8 +255,8 @@ class XdmfDumper(dumper.VisFileDumper):
     def dumpState(
         self,
         r: reactors.Reactor,
-        includeParams: Optional[Set[str]] = None,
-        excludeParams: Optional[Set[str]] = None,
+        includeParams: set[str] | None = None,
+        excludeParams: set[str] | None = None,
     ):
         """Produce a ``<Grid>`` for a single timestep, as well as supporting HDF5 datasets."""
         cycle = r.p.cycle
@@ -292,7 +291,7 @@ class XdmfDumper(dumper.VisFileDumper):
         self._assemGrids.append(assemGrid)
         self._times.append(r.p.time)
 
-    def _collectObjectData(self, objs: List[composites.ArmiObject], timeGroupName, node: ET.Element):
+    def _collectObjectData(self, objs: list[composites.ArmiObject], timeGroupName, node: ET.Element):
         """
         Scan for things that look plottable in the input database.
 
@@ -336,7 +335,7 @@ class XdmfDumper(dumper.VisFileDumper):
         blks = r.getChildren(deep=True, predicate=lambda o: isinstance(o, blocks.Block))
         blks = sorted(blks, key=lambda b: indexMap[b.p.serialNum])
 
-        groupName = "c{}n{}".format(cycle, node)
+        groupName = f"c{cycle}n{node}"
 
         # VTK stuff turns out to be pretty flexible
         blockMesh = utils.VtkMesh.empty()
@@ -366,7 +365,7 @@ class XdmfDumper(dumper.VisFileDumper):
         asys = r.getChildren(deep=True, predicate=lambda o: isinstance(o, assemblies.Assembly))
         asys = sorted(asys, key=lambda b: indexMap[b.p.serialNum])
 
-        groupName = "c{}n{}".format(cycle, node)
+        groupName = f"c{cycle}n{node}"
 
         # VTK stuff turns out to be pretty flexible
         assemMesh = utils.VtkMesh.empty()
@@ -414,7 +413,7 @@ class XdmfDumper(dumper.VisFileDumper):
         topoData = ET.Element(
             "DataItem",
             attrib={
-                "Dimensions": "{}".format(topologyData.size),
+                "Dimensions": f"{topologyData.size}",
                 "NumberType": "Int",
                 "Format": "HDF",
             },
@@ -428,7 +427,7 @@ class XdmfDumper(dumper.VisFileDumper):
         return grid
 
 
-def _getTopologyFromShape(b: blocks.Block, offset: int) -> Tuple[int, List[int]]:
+def _getTopologyFromShape(b: blocks.Block, offset: int) -> tuple[int, list[int]]:
     """
     Returns the number of vertices used to make the shape, and XDMF topology values.
 
@@ -456,4 +455,4 @@ def _getTopologyFromShape(b: blocks.Block, offset: int) -> Tuple[int, List[int]]
         return 20, [_QUADRATIC_HEXAHEDRON] + list(range(offset, offset + 20))
 
     else:
-        raise TypeError("Unsupported block type `{}`".format(type(b)))
+        raise TypeError(f"Unsupported block type `{type(b)}`")

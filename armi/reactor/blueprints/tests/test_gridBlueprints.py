@@ -643,7 +643,7 @@ class TestGridBlueprintsSection(unittest.TestCase):
             saveToStream(stream, bp, True)
 
         # test that the output looks valid, and includes a lattice map
-        with open(filePath, "r") as f:
+        with open(filePath) as f:
             outText = f.read()
             self.assertIn("blocks:", outText)
             self.assertIn("shape: Circle", outText)
@@ -676,7 +676,7 @@ class TestGridBlueprintsSection(unittest.TestCase):
             saveToStream(stream, bp, True)
 
         # test that the output looks valid, and includes a lattice map
-        with open(filePath, "r") as f:
+        with open(filePath) as f:
             outText = f.read()
             self.assertIn("blocks:", outText)
             self.assertIn("shape: Circle", outText)

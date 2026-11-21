@@ -40,7 +40,6 @@ https://docs.python.org/3/library/gc.html#gc.garbage
 import gc
 import sys
 from os import cpu_count
-from typing import Optional
 
 from armi import context, interfaces, mpiActions, runLog
 from armi.reactor.composites import ArmiObject
@@ -110,7 +109,7 @@ class MemoryProfiler(interfaces.Interface):
         mp = PrintSystemMemoryUsageAction()
         mp.broadcast()
         mp.invoke(self.o, self.r, self.cs)
-        mp.printUsage("c{} n{} SYS_MEM".format(cycle, node))
+        mp.printUsage(f"c{cycle} n{node} SYS_MEM")
 
         self.r.core.p.minProcessMemoryInMB = round(mp.minProcessMemoryInMB * 10) / 10.0
         self.r.core.p.maxProcessMemoryInMB = round(mp.maxProcessMemoryInMB * 10) / 10.0
@@ -153,10 +152,10 @@ class MemoryProfiler(interfaces.Interface):
 
         Turn these on as appropriate to find all your problems.
         """
-        runLog.important("----- Memory Usage Report at {} -----".format(timeDescription))
+        runLog.important(f"----- Memory Usage Report at {timeDescription} -----")
         self._printFullMemoryBreakdown(reportSize=self.cs["debugMemSize"])
         self._reactorAssemblyTrackingBreakdown()
-        runLog.important("----- End Memory Usage Report at {} -----".format(timeDescription))
+        runLog.important(f"----- End Memory Usage Report at {timeDescription} -----")
 
     def _reactorAssemblyTrackingBreakdown(self):
         runLog.important("Reactor attribute ArmiObject tracking count")
@@ -165,10 +164,10 @@ class MemoryProfiler(interfaces.Interface):
                 continue
 
             if isinstance(attrObj, list) and isinstance(attrObj[0], ArmiObject):
-                runLog.important("List {:30s} has {:4d} ArmiObjects".format(attrName, len(attrObj)))
+                runLog.important(f"List {attrName:30s} has {len(attrObj):4d} ArmiObjects")
 
             if isinstance(attrObj, dict) and isinstance(list(attrObj.values())[0], ArmiObject):
-                runLog.important("Dict {:30s} has {:4d} ArmiObjects".format(attrName, len(attrObj)))
+                runLog.important(f"Dict {attrName:30s} has {len(attrObj):4d} ArmiObjects")
 
         if self.r.excore.get("sfp") is not None:
             runLog.important("SFP has {:4d} ArmiObjects".format(len(self.r.excore["sfp"])))
@@ -200,7 +199,7 @@ class MemoryProfiler(interfaces.Interface):
                     checkAttr(block)
 
         if len(uniqueIds) == 0:
-            runLog.important("There are no duplicate `.{}` attributes".format(attrName))
+            runLog.important(f"There are no duplicate `.{attrName}` attributes")
         else:
             runLog.error(
                 "There are {} unique objects stored as `.{}` attributes!\n"
@@ -239,32 +238,28 @@ class MemoryProfiler(interfaces.Interface):
 
         gc.collect()
         allObjects = gc.get_objects()
-        runLog.info("GC returned {} objects".format(len(allObjects)))
+        runLog.info(f"GC returned {len(allObjects)} objects")
 
         instanceCounters = KlassCounter(reportSize)
         instanceCounters.countObjects(allObjects)
 
         for counter in sorted(instanceCounters.counters.values()):
             runLog.info(
-                "UNIQUE_INSTANCE_COUNT: {:60s} {:10d}     {:10.1f} MB".format(
-                    counter.classType.__name__,
-                    counter.count,
-                    counter.memSize / (1024**2.0),
-                )
+                f"UNIQUE_INSTANCE_COUNT: {counter.classType.__name__:60s} {counter.count:10d}     {counter.memSize / (1024**2.0):10.1f} MB"
             )
             if printReferrers and counter.memSize / (1024**2.0) > 100:
                 referrers = gc.get_referrers(counter.first)
                 runLog.info("          Referrers of first one: ")
                 for referrer in referrers:
-                    runLog.info("             {}".format(repr(referrer)[:150]))
+                    runLog.info(f"             {repr(referrer)[:150]}")
 
-        runLog.info("gc garbage: {}".format(gc.garbage))
+        runLog.info(f"gc garbage: {gc.garbage}")
         if printReferrers:
             # if you want more info on the garbage referrers, run this. WARNING, it's generally like 1000000 lines.
             runLog.info("referrers")
             for o in gc.garbage:
                 for r in gc.get_referrers(o):
-                    runLog.info("ref for {}: {}".format(o, r))
+                    runLog.info(f"ref for {o}: {r}")
 
         if reportSize:
             operator.reattach(reactor, cs)
@@ -274,7 +269,7 @@ class MemoryProfiler(interfaces.Interface):
         """Print referrers in a useful way (as opposed to gigabytes of text."""
         runLog.info("Printing first 100 character of first 100 referrers")
         for ref in gc.get_referrers(obj)[:100]:
-            runLog.important("ref for {}: {}".format(obj, repr(ref)[:100]))
+            runLog.important(f"ref for {obj}: {repr(ref)[:100]}")
 
 
 class KlassCounter:
@@ -306,7 +301,7 @@ class KlassCounter:
         if counter.add(ao):
             self.count += 1
             if self.count % REPORT_COUNT == 0:
-                runLog.info("Counted {} items".format(self.count))
+                runLog.info(f"Counted {self.count} items")
 
             if isinstance(ao, dict):
                 for k, v in ao.items():
@@ -364,9 +359,9 @@ class ProfileMemoryUsageAction(mpiActions.MpiAction):
 class SystemAndProcessMemoryUsage:
     def __init__(self):
         self.nodeName = context.MPI_NODENAME
-        self.percentNodeRamUsed: Optional[float] = None
-        self.processMemoryInMB: Optional[float] = None
-        self.processVirtualMemoryInMB: Optional[float] = None
+        self.percentNodeRamUsed: float | None = None
+        self.processMemoryInMB: float | None = None
+        self.processVirtualMemoryInMB: float | None = None
         # no psutil, no memory diagnostics
         if _havePsutil:
             self.percentNodeRamUsed = psutil.virtual_memory().percent
@@ -385,7 +380,7 @@ class PrintSystemMemoryUsageAction(mpiActions.MpiAction):
     def __init__(self):
         mpiActions.MpiAction.__init__(self)
         self.usages = []
-        self.percentNodeRamUsed: Optional[float] = None
+        self.percentNodeRamUsed: float | None = None
 
     def __iter__(self):
         return iter(self.usages)
@@ -437,14 +432,14 @@ class PrintSystemMemoryUsageAction(mpiActions.MpiAction):
 
             memoryData.append(
                 (
-                    "{:<24}".format(memoryUsage.nodeName),
-                    "{:5.1f}%".format(sysMemAvg),
-                    "{}".format(" ".join("{:5.0f}".format(mu.processMemoryInMB or 0.0) for mu in nodeUsages)),
+                    f"{memoryUsage.nodeName:<24}",
+                    f"{sysMemAvg:5.1f}%",
+                    "{}".format(" ".join(f"{mu.processMemoryInMB or 0.0:5.0f}" for mu in nodeUsages)),
                 )
             )
 
         runLog.info(
-            "Summary of the system memory usage at `{}`:\n".format(prefix)
+            f"Summary of the system memory usage at `{prefix}`:\n"
             + tabulate.tabulate(
                 memoryData,
                 headers=[

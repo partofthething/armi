@@ -27,7 +27,6 @@ See detailed docs in `:doc: Lattice Physics <reference/physics/neutronics/lattic
 """
 
 from enum import Enum
-from typing import Dict, Union
 
 import voluptuous as vol
 
@@ -739,7 +738,7 @@ class XSModelingOptions:
         self.validate()
 
 
-def serializeXSSettings(xsSettingsDict: Union[XSSettings, Dict]) -> Dict[str, Dict]:
+def serializeXSSettings(xsSettingsDict: XSSettings | dict) -> dict[str, dict]:
     """
     Return a serialized form of the ``XSSettings`` as a dictionary.
 
@@ -814,7 +813,7 @@ class XSSettingDef(Setting):
         return serializeXSSettings(self._value)
 
 
-def xsSettingsValidator(xsSettingsDict: Dict[str, Dict]) -> XSSettings:
+def xsSettingsValidator(xsSettingsDict: dict[str, dict]) -> XSSettings:
     """
     Returns a ``XSSettings`` object if validation is successful.
 

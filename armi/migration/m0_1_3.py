@@ -49,12 +49,12 @@ class UpdateElementalNuclides(BlueprintsMigration):
         migrated = []
         for line in self.stream.read().split("\n"):
             for deletion in self.deletions:
-                if re.search(r"^\s*{0}: ".format(deletion), line):
+                if re.search(rf"^\s*{deletion}: ", line):
                     continue
             for swapFrom, swapTo in self.swaps:
                 line = re.sub(
-                    r"^(\s+)({0})(:.+)".format(swapFrom),
-                    r"\1{0}\3".format(swapTo),
+                    rf"^(\s+)({swapFrom})(:.+)",
+                    rf"\1{swapTo}\3",
                     line,
                 )
             migrated.append(line)

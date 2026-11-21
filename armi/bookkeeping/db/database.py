@@ -39,17 +39,10 @@ import re
 import shutil
 import subprocess
 import sys
+from collections.abc import Generator, Sequence
 from platform import uname
 from typing import (
     Any,
-    Dict,
-    Generator,
-    List,
-    Optional,
-    Sequence,
-    Tuple,
-    Type,
-    Union,
 )
 
 import h5py
@@ -134,9 +127,9 @@ class Database:
         """
         self._fileName = fileName
         # No full path yet; we will determine this based on FAST_PATH and permissions
-        self._fullPath: Optional[str] = None
+        self._fullPath: str | None = None
         self._permission = permission
-        self.h5db: Optional[h5py.File] = None
+        self.h5db: h5py.File | None = None
 
         # Allows context management on open files. If context management is used on a file that is already open, it will
         # not reopen and it will also not close after leaving that context. This allows the treatment of all databases
@@ -196,7 +189,7 @@ class Database:
             raise ValueError(f"Cannot open database with permission `{self._permission}`")
 
         # open the database, and write a bunch of metadata to it
-        runLog.info("Opening database file at {}".format(os.path.abspath(filePath)))
+        runLog.info(f"Opening database file at {os.path.abspath(filePath)}")
         self.h5db = h5py.File(filePath, self._permission)
         self.h5db.attrs["successfulCompletion"] = False
         self.h5db.attrs["version"] = meta.__version__
@@ -301,7 +294,7 @@ class Database:
             newPath = safeMove(self._fullPath, self._fileName)
             self._fullPath = os.path.abspath(newPath)
 
-    def splitDatabase(self, keepTimeSteps: Sequence[Tuple], label: str) -> str:
+    def splitDatabase(self, keepTimeSteps: Sequence[tuple], label: str) -> str:
         """
         Discard all data except for specific time steps, retaining old data in a separate file.
 
@@ -541,14 +534,14 @@ class Database:
         if self.h5db is not None:
             self.close(False)
 
-    def __delitem__(self, tn: Tuple[int, int, Optional[str]]):
+    def __delitem__(self, tn: tuple[int, int, str | None]):
         cycle, timeNode, statePointName = tn
         name = getH5GroupName(cycle, timeNode, statePointName)
         if self.h5db is not None:
             del self.h5db[name]
 
     def genTimeStepGroups(
-        self, timeSteps: Sequence[Tuple[int, int]] = None
+        self, timeSteps: Sequence[tuple[int, int]] = None
     ) -> Generator[h5py._hl.group.Group, None, None]:
         """Returns a generator of HDF5 Groups for all time nodes, or for the passed selection."""
         assert self.h5db is not None, "Must open the database before calling genTimeStepGroups"
@@ -595,7 +588,7 @@ class Database:
                 else:
                     yield (cycle, node)
 
-    def genAuxiliaryData(self, ts: Tuple[int, int]) -> Generator[str, None, None]:
+    def genAuxiliaryData(self, ts: tuple[int, int]) -> Generator[str, None, None]:
         """Returns a generator of names of auxiliary data on the requested time point."""
         assert self.h5db is not None, "Must open the database before calling genAuxiliaryData"
         cycle, node = ts
@@ -606,7 +599,7 @@ class Database:
         return (groupName + "/" + key for key in timeGroup.keys() if key not in exclude)
 
     @staticmethod
-    def getAuxiliaryDataPath(ts: Tuple[int, int], name: str) -> str:
+    def getAuxiliaryDataPath(ts: tuple[int, int], name: str) -> str:
         return getH5GroupName(*ts) + "/" + name
 
     def keys(self):
@@ -635,7 +628,7 @@ class Database:
         assert self.h5db is not None, "Database must be open before writing."
         # _createLayout is recursive
         h5group = self.getH5Group(reactor, statePointName)
-        runLog.info("Writing to database for statepoint: {}".format(h5group.name))
+        runLog.info(f"Writing to database for statepoint: {h5group.name}")
         layout = Layout((self.versionMajor, self.versionMinor), comp=reactor)
         layout.writeToDB(h5group)
         groupedComps = layout.groupedComps
@@ -857,7 +850,7 @@ class Database:
         return comp
 
     @staticmethod
-    def _getArrayShape(arr: Union[np.ndarray, List, Tuple]):
+    def _getArrayShape(arr: np.ndarray | list | tuple):
         """Get the shape of a np.ndarray, list, or tuple."""
         if isinstance(arr, np.ndarray):
             return arr.shape
@@ -887,7 +880,7 @@ class Database:
                 for _, c in enumerate(comps):
                     val = c.p[paramDef.name]
                     if isinstance(val, tuple):
-                        linkedDims.append("{}.{}".format(val[0].name, val[1]))
+                        linkedDims.append(f"{val[0].name}.{val[1]}")
                         data.append(val[0].getDimension(val[1]))
                     else:
                         linkedDims.append("")
@@ -901,8 +894,8 @@ class Database:
                 temp = [c.p.get(paramDef.name, paramDef.default) for c in comps]
                 if paramDef.serializer is not None:
                     data, sAttrs = paramDef.serializer.pack(temp)
-                    assert data.dtype.kind != "O", "{} failed to convert {} to a numpy-supported type.".format(
-                        paramDef.serializer.__name__, paramDef.name
+                    assert data.dtype.kind != "O", (
+                        f"{paramDef.serializer.__name__} failed to convert {paramDef.name} to a numpy-supported type."
                     )
                     attrs.update(sAttrs)
                     attrs[_SERIALIZER_NAME] = paramDef.serializer.__name__
@@ -1001,9 +994,7 @@ class Database:
                     # keep going. Since this may lead to potential correctness issues, raise a warning
                     if allowMissing:
                         runLog.warning(
-                            "Found `{}` parameter `{}` in the database, which is not defined. Ignoring it.".format(
-                                compTypeName, paramName
-                            )
+                            f"Found `{compTypeName}` parameter `{paramName}` in the database, which is not defined. Ignoring it."
                         )
                         continue
                     else:
@@ -1033,12 +1024,10 @@ class Database:
             unpackedData = data.tolist()
             if len(comps) != len(unpackedData):
                 msg = (
-                    "While unpacking special data for {}, encountered composites and parameter "
-                    "data with unmatched sizes.\nLength of composites list = {}\nLength of data "
-                    "list = {}\nThis could indicate an error in data unpacking, which could "
-                    "result in faulty data on the resulting reactor model.".format(
-                        paramName, len(comps), len(unpackedData)
-                    )
+                    f"While unpacking special data for {paramName}, encountered composites and parameter "
+                    f"data with unmatched sizes.\nLength of composites list = {len(comps)}\nLength of data "
+                    f"list = {len(unpackedData)}\nThis could indicate an error in data unpacking, which could "
+                    "result in faulty data on the resulting reactor model."
                 )
                 runLog.error(msg)
                 raise ValueError(msg)
@@ -1062,8 +1051,8 @@ class Database:
     def getHistoryByLocation(
         self,
         comp: ArmiObject,
-        params: Optional[List[str]] = None,
-        timeSteps: Optional[Sequence[Tuple[int, int]]] = None,
+        params: list[str] | None = None,
+        timeSteps: Sequence[tuple[int, int]] | None = None,
     ) -> History:
         """Get the parameter histories at a specific location."""
         return self.getHistoriesByLocation([comp], params=params, timeSteps=timeSteps)[comp]
@@ -1071,8 +1060,8 @@ class Database:
     def getHistoriesByLocation(
         self,
         comps: Sequence[ArmiObject],
-        params: Optional[List[str]] = None,
-        timeSteps: Optional[Sequence[Tuple[int, int]]] = None,
+        params: list[str] | None = None,
+        timeSteps: Sequence[tuple[int, int]] | None = None,
     ) -> Histories:
         """
         Get the parameter histories at specific locations.
@@ -1187,7 +1176,7 @@ class Database:
                         else:
                             raise ValueError(
                                 "History tracking for non-None, special-formatted parameters is not supported: "
-                                "{}, {}".format(paramName, {k: v for k, v in dataSet.attrs.items()})
+                                f"{paramName}, { ({k: v for k, v in dataSet.attrs.items()}) }"
                             )
                 else:
                     # Nothing in the database for this param, so use the default value
@@ -1210,8 +1199,8 @@ class Database:
     def getHistory(
         self,
         comp: ArmiObject,
-        params: Optional[Sequence[str]] = None,
-        timeSteps: Optional[Sequence[Tuple[int, int]]] = None,
+        params: Sequence[str] | None = None,
+        timeSteps: Sequence[tuple[int, int]] | None = None,
     ) -> History:
         """
         Get parameter history for a single ARMI Object.
@@ -1233,8 +1222,8 @@ class Database:
     def getHistories(
         self,
         comps: Sequence[ArmiObject],
-        params: Optional[Sequence[str]] = None,
-        timeSteps: Optional[Sequence[Tuple[int, int]]] = None,
+        params: Sequence[str] | None = None,
+        timeSteps: Sequence[tuple[int, int]] | None = None,
     ) -> Histories:
         """
         Get the parameter histories for a sequence of ARMI Objects.
@@ -1260,7 +1249,7 @@ class Database:
         """
         histData: Histories = {c: collections.defaultdict(collections.OrderedDict) for c in comps}
         types = {c.__class__ for c in comps}
-        compsByTypeThenSerialNum: Dict[Type[ArmiObject], Dict[int, ArmiObject]] = {t: dict() for t in types}
+        compsByTypeThenSerialNum: dict[type[ArmiObject], dict[int, ArmiObject]] = {t: dict() for t in types}
 
         for c in comps:
             compsByTypeThenSerialNum[c.__class__][c.p.serialNum] = c
@@ -1282,7 +1271,7 @@ class Database:
                 try:
                     h5GroupForType = h5TimeNodeGroup[compTypeName]
                 except KeyError as ee:
-                    runLog.error("{} not found in {} of {}".format(compTypeName, h5TimeNodeGroup, self))
+                    runLog.error(f"{compTypeName} not found in {h5TimeNodeGroup} of {self}")
                     raise ee
                 layoutIndicesForType = np.where(layout.type == compTypeName)[0]
                 serialNumsForType = layout.serialNum[layoutIndicesForType].tolist()
@@ -1308,16 +1297,14 @@ class Database:
                     if paramName == "location":
                         locs = []
                         for id in indexInData:
-                            locs.append((layout.location[layoutIndicesForType[id]]))
+                            locs.append(layout.location[layoutIndicesForType[id]])
                         data = np.array(locs)
                     elif paramName in h5GroupForType:
                         dataSet = h5GroupForType[paramName]
                         try:
                             data = dataSet[indexInData]
                         except:
-                            runLog.error(
-                                "Failed to load index {} from {}@{}".format(indexInData, dataSet, (cycle, timeNode))
-                            )
+                            runLog.error(f"Failed to load index {indexInData} from {dataSet}@{(cycle, timeNode)}")
                             raise
 
                         if data.dtype.type is np.bytes_:
@@ -1328,10 +1315,7 @@ class Database:
                                 data = replaceNonsenseWithNones(data, paramName)
                             else:
                                 raise ValueError(
-                                    "History tracking for non-none special formatting not supported: {}, {}".format(
-                                        paramName,
-                                        {k: v for k, v in dataSet.attrs.items()},
-                                    )
+                                    f"History tracking for non-none special formatting not supported: {paramName}, { ({k: v for k, v in dataSet.attrs.items()}) }"
                                 )
                     else:
                         # Nothing in the database, so use the default value
@@ -1396,7 +1380,7 @@ class Database:
                 # using a soft link here allows us to cheaply copy time nodes without needing to crawl through and
                 # update object references.
                 linkName = attrGroup[dataName].name
-                obj.attrs[key] = "@{}".format(linkName)
+                obj.attrs[key] = f"@{linkName}"
 
     @staticmethod
     def _resolveAttrs(attrs, group):
@@ -1495,9 +1479,7 @@ class Database:
         return cycleNodes
 
 
-def packSpecialData(
-    arrayData: [np.ndarray, JaggedArray], paramName: str
-) -> Tuple[Optional[np.ndarray], Dict[str, Any]]:
+def packSpecialData(arrayData: [np.ndarray, JaggedArray], paramName: str) -> tuple[np.ndarray | None, dict[str, Any]]:
     """
     Reduce data that wouldn't otherwise play nicely with HDF5/numpy arrays to a format that will.
 
@@ -1544,7 +1526,7 @@ def packSpecialData(
         else:
             data = arrayData
 
-    attrs: Dict[str, Any] = {"specialFormatting": True}
+    attrs: dict[str, Any] = {"specialFormatting": True}
 
     # make a copy of the data, so that the original is unchanged
     data = copy.copy(data)
@@ -1629,7 +1611,7 @@ def unpackSpecialData(data: np.ndarray, attrs, paramName: str) -> np.ndarray:
         assert data.dtype != "O"
         return data
 
-    unpackedData: List[Any]
+    unpackedData: list[Any]
     if attrs.get("nones", False) and not attrs.get("jagged", False):
         data = replaceNonsenseWithNones(data, paramName)
         return data
@@ -1648,13 +1630,11 @@ def unpackSpecialData(data: np.ndarray, attrs, paramName: str) -> np.ndarray:
         return np.array(unpackedData)
 
     raise ValueError(
-        "Do not recognize the type of special formatting that was applied to {}. Attrs: {}".format(
-            paramName, {k: v for k, v in attrs.items()}
-        )
+        f"Do not recognize the type of special formatting that was applied to {paramName}. Attrs: { ({k: v for k, v in attrs.items()}) }"
     )
 
 
-def collectBlockNumberDensities(blocks) -> Dict[str, np.ndarray]:
+def collectBlockNumberDensities(blocks) -> dict[str, np.ndarray]:
     """
     Collect block-by-block homogenized number densities for each nuclide.
 

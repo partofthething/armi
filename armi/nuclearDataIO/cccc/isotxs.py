@@ -69,16 +69,16 @@ def compareSet(fileNames, tolerance=0.0, verbose=False):
     xsLibs = [readBinary(fileName) for fileName in fileNames]
     for thisXSLib, thatXSLib in itertools.combinations(xsLibs, 2):
         # all unique combinations with 2 items
-        runLog.info("\n*****\n*****comparing {} and {}\n*****".format(thisXSLib, thatXSLib))
+        runLog.info(f"\n*****\n*****comparing {thisXSLib} and {thatXSLib}\n*****")
         comparisons.append((compare(thisXSLib, thatXSLib, tolerance, verbose), thisXSLib, thatXSLib))
 
     sameFileNames = "\n"
     for comparison in comparisons:
         if comparison[0]:
-            sameFileNames += "\t{} and {}\n".format(comparison[1], comparison[2])
+            sameFileNames += f"\t{comparison[1]} and {comparison[2]}\n"
 
     sameFileNames = sameFileNames + "None were the same" if sameFileNames == "\n" else sameFileNames
-    runLog.info("the following libraries are the same within the specified tolerance:{}".format(sameFileNames))
+    runLog.info(f"the following libraries are the same within the specified tolerance:{sameFileNames}")
 
 
 def compare(lib1, lib2, tolerance=0.0, verbose=False):
@@ -140,12 +140,10 @@ def addDummyNuclidesToLibrary(lib, dummyNuclides):
     :py:class:`~armi.nuclearDataIO.xsLibraries.XSLibrary`.
     """
     if not dummyNuclides:
-        runLog.important("No dummy nuclide data provided to be added to {}".format(lib))
+        runLog.important(f"No dummy nuclide data provided to be added to {lib}")
         return False
     elif len(lib.xsIDs) > 1:
-        runLog.warning(
-            "Cannot add dummy nuclide data to ISOTXS library {} containing data for more than 1 XS ID.".format(lib)
-        )
+        runLog.warning(f"Cannot add dummy nuclide data to ISOTXS library {lib} containing data for more than 1 XS ID.")
         return False
 
     dummyNuclideKeysAddedToLibrary = []
@@ -308,7 +306,7 @@ class IsotxsIO(cccc.Stream):
                 nuclideIO = self._getNuclideIO()(nuc, self, self._lib)
                 nuclideIO.rwNuclide()
         except Exception:
-            raise OSError("Failed to read/write {} \n\n\n{}".format(self, traceback.format_exc()))
+            raise OSError(f"Failed to read/write {self} \n\n\n{traceback.format_exc()}")
         finally:
             properties.lockImmutableProperties(self._lib)
 
@@ -526,7 +524,7 @@ class _IsotxsNuclideIO:
                 micros.chi = record.rwMatrix(micros.chi, numGroups)
             elif self._metadata["fisFlag"] > 0:
                 if self._fileWideChiFlag != 1:
-                    raise OSError("Fissile nuclide {} in library but no individual or global chi!".format(nuc))
+                    raise OSError(f"Fissile nuclide {nuc} in library but no individual or global chi!")
                 micros.chi = self._fileWideChi
             else:
                 micros.chi = micros.getDefaultXs(numGroups)

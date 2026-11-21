@@ -81,7 +81,7 @@ class XSNuclide(nuclideBases.NuclideWrapper):
             # FP, DUMMY, DUMP
             nuclideBase = nuclideBases.byLabel.get(self.nucLabel, None)
             if nuclideBase is None:
-                raise OSError("Could not determine NuclideBase for label {}".format(self.nucLabel))
+                raise OSError(f"Could not determine NuclideBase for label {self.nucLabel}")
         if self.nucLabel != nuclideBase.label:
             NuclideLabelDoesNotMatchNuclideLabel(nuclideBase, self.nucLabel, self.xsId)
             nuclideBases.changeLabel(nuclideBase, self.nucLabel)

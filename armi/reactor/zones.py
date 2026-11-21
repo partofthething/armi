@@ -18,7 +18,7 @@ A Zones object is a collection of Zone objects.
 Together, they are used to conceptually divide the Core for analysis.
 """
 
-from typing import Iterator, List, Optional, Set, Union
+from collections.abc import Iterator
 
 from armi import runLog
 from armi.reactor.assemblies import Assembly
@@ -48,12 +48,12 @@ class Zone:
 
     VALID_TYPES = (Assembly, Block)
 
-    def __init__(self, name: str, locations: Optional[List] = None, zoneType: type = Assembly):
+    def __init__(self, name: str, locations: list | None = None, zoneType: type = Assembly):
         self.name = name
 
         # A single Zone must contain items of the same type
         if zoneType not in Zone.VALID_TYPES:
-            raise TypeError("Invalid Type {0}; A Zone can only be of type {1}".format(zoneType, Zone.VALID_TYPES))
+            raise TypeError(f"Invalid Type {zoneType}; A Zone can only be of type {Zone.VALID_TYPES}")
         self.zoneType = zoneType
 
         # a Zone is mostly just a collection of locations in the Reactor
@@ -80,7 +80,7 @@ class Zone:
         if self.zoneType == Block:
             zType = "Blocks"
 
-        return "<Zone {0} with {1} {2}>".format(self.name, len(self), zType)
+        return f"<Zone {self.name} with {len(self)} {zType}>"
 
     def addLoc(self, loc: str) -> None:
         """
@@ -98,7 +98,7 @@ class Zone:
         would require heavier computation, and would add some chicken-and-the-egg problems into
         instantiating a new Reactor.
         """
-        assert isinstance(loc, str), "The location must be a str: {0}".format(loc)
+        assert isinstance(loc, str), f"The location must be a str: {loc}"
         self.locs.add(loc)
 
     def removeLoc(self, loc: str) -> None:
@@ -121,10 +121,10 @@ class Zone:
         -------
         None
         """
-        assert isinstance(loc, str), "The location must be a str: {0}".format(loc)
+        assert isinstance(loc, str), f"The location must be a str: {loc}"
         self.locs.remove(loc)
 
-    def addLocs(self, locs: List) -> None:
+    def addLocs(self, locs: list) -> None:
         """
         Adds the locations to this Zone.
 
@@ -136,7 +136,7 @@ class Zone:
         for loc in locs:
             self.addLoc(loc)
 
-    def removeLocs(self, locs: List) -> None:
+    def removeLocs(self, locs: list) -> None:
         """
         Removes the locations from this Zone.
 
@@ -148,7 +148,7 @@ class Zone:
         for loc in locs:
             self.removeLoc(loc)
 
-    def addItem(self, item: Union[Assembly, Block]) -> None:
+    def addItem(self, item: Assembly | Block) -> None:
         """
         Adds the location of an Assembly or Block to a zone.
 
@@ -157,12 +157,10 @@ class Zone:
         item : Assembly or Block
             A single item with Core location (Assembly or Block)
         """
-        assert issubclass(type(item), self.zoneType), "The item ({0}) but be have a type in: {1}".format(
-            item, Zone.VALID_TYPES
-        )
+        assert issubclass(type(item), self.zoneType), f"The item ({item}) but be have a type in: {Zone.VALID_TYPES}"
         self.addLoc(item.getLocation())
 
-    def removeItem(self, item: Union[Assembly, Block]) -> None:
+    def removeItem(self, item: Assembly | Block) -> None:
         """
         Removes the location of an Assembly or Block from a zone.
 
@@ -171,12 +169,10 @@ class Zone:
         item : Assembly or Block
             A single item with Core location (Assembly or Block)
         """
-        assert issubclass(type(item), self.zoneType), "The item ({0}) but be have a type in: {1}".format(
-            item, Zone.VALID_TYPES
-        )
+        assert issubclass(type(item), self.zoneType), f"The item ({item}) but be have a type in: {Zone.VALID_TYPES}"
         self.removeLoc(item.getLocation())
 
-    def addItems(self, items: List) -> None:
+    def addItems(self, items: list) -> None:
         """
         Adds the locations of a list of Assemblies or Blocks to a zone.
 
@@ -188,7 +184,7 @@ class Zone:
         for item in items:
             self.addItem(item)
 
-    def removeItems(self, items: List) -> None:
+    def removeItems(self, items: list) -> None:
         """
         Removes the locations of a list of Assemblies or Blocks from a zone.
 
@@ -222,7 +218,7 @@ class Zones:
         self._zones = {}
 
     @property
-    def names(self) -> List:
+    def names(self) -> list:
         """Ordered names of contained zones.
 
         Returns
@@ -260,10 +256,10 @@ class Zones:
             A new Zone to add to this collection.
         """
         if zone.name in self._zones:
-            raise ValueError("Cannot add {} because a zone of that name already exists.".format(zone.name))
+            raise ValueError(f"Cannot add {zone.name} because a zone of that name already exists.")
         self._zones[zone.name] = zone
 
-    def addZones(self, zones: List) -> None:
+    def addZones(self, zones: list) -> None:
         """
         Add multiple zones to the collection, and validate the Zones collection still make sense.
 
@@ -287,7 +283,7 @@ class Zones:
         """
         del self[name]
 
-    def removeZones(self, names: List) -> None:
+    def removeZones(self, names: list) -> None:
         """
         Delete multiple zones by name.
 
@@ -320,9 +316,9 @@ class Zones:
 
         # there are duplicates, so raise an error
         locs = sorted(set(allLocs))
-        raise RuntimeError("Duplicate items found in Zones: {0}".format(locs))
+        raise RuntimeError(f"Duplicate items found in Zones: {locs}")
 
-    def getZoneLocations(self, zoneNames: List) -> Set:
+    def getZoneLocations(self, zoneNames: list) -> set:
         """
         Get the location labels of a particular (or a few) zone(s).
 
@@ -344,13 +340,13 @@ class Zones:
             try:
                 thisZoneLocs = set(self[zn])
             except KeyError:
-                runLog.error("The zone {0} does not exist. Please define it.".format(zn))
+                runLog.error(f"The zone {zn} does not exist. Please define it.")
                 raise
             zoneLocs.update(thisZoneLocs)
 
         return zoneLocs
 
-    def getAllLocations(self) -> Set:
+    def getAllLocations(self) -> set:
         """Return all locations across every Zone in this Zones object.
 
         Returns
@@ -364,7 +360,7 @@ class Zones:
 
         return locs
 
-    def findZoneItIsIn(self, a: Union[Assembly, Block]) -> Optional[Zone]:
+    def findZoneItIsIn(self, a: Assembly | Block) -> Zone | None:
         """
         Return the zone object that this Assembly/Block is in.
 
@@ -418,5 +414,5 @@ class Zones:
         # log the zone definitions in a way that can be copy/pasted back into a settings file
         for name in sorted(self._zones.keys()):
             locs = sorted(self._zones[name].locs)
-            line = "- {0}: ".format(name) + ", ".join(locs)
+            line = f"- {name}: " + ", ".join(locs)
             runLog.info(line)

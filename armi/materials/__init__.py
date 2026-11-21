@@ -251,7 +251,7 @@ def iterAllMaterialClassesInNamespace(namespace):
                 yield obj
 
 
-def createMaterialByName(name: str, namespaceOrder: List[str] = None):
+def createMaterialByName(name: str, namespaceOrder: list[str] = None):
     """
     Find the first material that matches a name in an ordered namespace.
 

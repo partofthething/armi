@@ -152,7 +152,7 @@ class XSCollection:
         self.removal = None
         self.nuSigF = None
         self.higherOrderScatter = {}
-        self.source = "{}".format(parent)
+        self.source = f"{parent}"
 
     def __getitem__(self, key):
         """
@@ -226,8 +226,8 @@ class XSCollection:
                 scatters.append(sMatrix)
             else:
                 runLog.warning(
-                    "{} scattering matrix in {} is not defined. Generating total scattering matrix"
-                    " without this data".format(sType.title(), self),
+                    f"{sType.title()} scattering matrix in {self} is not defined. Generating total scattering matrix"
+                    " without this data",
                     single=True,
                 )
         return sum(scatters)
@@ -289,13 +289,7 @@ class XSCollection:
                 for actualList, expectedList in zip(myXsData, theirXsData):
                     if actualList != expectedList:
                         equal = False
-                        runLog.important(
-                            "  {}{} {:<30} cross section is different.".format(
-                                nuclideIDMsg,
-                                self.source,
-                                xsName,
-                            )
-                        )
+                        runLog.important(f"  {nuclideIDMsg}{self.source} {xsName:<30} cross section is different.")
 
             elif sparse.issparse(myXsData) and sparse.issparse(theirXsData):
                 if not np.allclose(
@@ -304,21 +298,17 @@ class XSCollection:
                     rtol=relativeTolerance,
                     atol=0.0,
                 ):
-                    verboseData = "" if not verbose else "\n{},\n\n{}".format(myXsData, theirXsData)
+                    verboseData = "" if not verbose else f"\n{myXsData},\n\n{theirXsData}"
                     runLog.important(
-                        "  {}{} {:<30} cross section is different.{}".format(
-                            nuclideIDMsg, self.source, xsName, verboseData
-                        )
+                        f"  {nuclideIDMsg}{self.source} {xsName:<30} cross section is different.{verboseData}"
                     )
                     equal = False
             elif isinstance(myXsData, dict) and myXsData != theirXsData:
                 # there are no dicts currently so code is untested
                 raise NotImplementedError("there are no dicts")
             elif not properties.areEqual(myXsData, theirXsData, relativeTolerance):
-                verboseData = "" if not verbose else "\n{},\n\n{}".format(myXsData, theirXsData)
-                runLog.important(
-                    "  {}{} {:<30} cross section is different.{}".format(nuclideIDMsg, self.source, xsName, verboseData)
-                )
+                verboseData = "" if not verbose else f"\n{myXsData},\n\n{theirXsData}"
+                runLog.important(f"  {nuclideIDMsg}{self.source} {xsName:<30} cross section is different.{verboseData}")
                 equal = False
         return equal
 
@@ -398,7 +388,7 @@ class MacroscopicCrossSectionCreator:
         macros : xsCollection.XSCollection
             A new XSCollection full of macroscopic cross sections
         """
-        runLog.debug("Building macroscopic cross sections for {0}".format(block))
+        runLog.debug(f"Building macroscopic cross sections for {block}")
         if nucNames is None:
             nucNames = block.getNuclides()
 
@@ -861,13 +851,13 @@ def computeMacroscopicGroupConstants(
         macroGroupConstants += np.asarray(numberDensity) * microGroupConstants * multiplierVal
 
     if skippedNuclides:
-        msg = "The following nuclides are not in microscopic library {}: {}".format(lib, skippedNuclides)
+        msg = f"The following nuclides are not in microscopic library {lib}: {skippedNuclides}"
         runLog.error(msg, single=True)
         raise ValueError(msg)
 
     if skippedMultNuclides:
         runLog.debug(
-            "The following nuclides are not in multiplier library {}: {}".format(multLib, skippedMultNuclides),
+            f"The following nuclides are not in multiplier library {multLib}: {skippedMultNuclides}",
             single=True,
         )
 
@@ -897,7 +887,7 @@ def _getMicroGroupConstants(libNuclide, constantName, nuclideName, libType):
 
     if not microGroupConstants.any():
         runLog.debug(
-            "Nuclide {} does not have {} microscopic group constants.".format(nuclideName, constantName),
+            f"Nuclide {nuclideName} does not have {constantName} microscopic group constants.",
             single=True,
         )
 

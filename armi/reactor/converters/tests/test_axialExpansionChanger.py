@@ -18,9 +18,9 @@ import collections
 import copy
 import os
 import unittest
+from collections.abc import Callable
 from math import isclose
 from statistics import mean
-from typing import Callable
 
 from numpy import array, linspace, zeros
 
@@ -939,9 +939,7 @@ class TestInputHeightsConsideredHot(unittest.TestCase):
             self.assertAlmostEqual(
                 aStd.getTotalHeight(),
                 aExp.getTotalHeight(),
-                msg="Std Assem {0} ({1}) and Exp Assem {2} ({3}) are not the same height!".format(
-                    aStd, aStd.getTotalHeight(), aExp, aExp.getTotalHeight()
-                ),
+                msg=f"Std Assem {aStd} ({aStd.getTotalHeight()}) and Exp Assem {aExp} ({aExp.getTotalHeight()}) are not the same height!",
             )
             for bStd, bExp in zip(aStd, aExp):
                 if any(isinstance(c.material, custom.Custom) for c in bStd):
@@ -1001,14 +999,7 @@ def checkColdBlockHeight(bStd: HexBlock, bExp: HexBlock, assertType: Callable, s
     assertType(
         bStd.getHeight(),
         bExp.getHeight(),
-        msg="Assembly: {0} -- Std Block {1} ({2}) and Exp Block {3} ({4}) should have {5:s} heights!".format(
-            bStd.parent,
-            bStd,
-            bStd.getHeight(),
-            bExp,
-            bExp.getHeight(),
-            strForAssertion,
-        ),
+        msg=f"Assembly: {bStd.parent} -- Std Block {bStd} ({bStd.getHeight()}) and Exp Block {bExp} ({bExp.getHeight()}) should have {strForAssertion:s} heights!",
     )
 
 

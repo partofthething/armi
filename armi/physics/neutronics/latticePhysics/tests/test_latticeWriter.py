@@ -34,7 +34,7 @@ class FakeLatticePhysicsWriter(LatticePhysicsWriter):
 
     def __init__(self, block, r, eci):
         self.testOut = ""
-        super(FakeLatticePhysicsWriter, self).__init__(block, r, eci, "", False)
+        super().__init__(block, r, eci, "", False)
 
     def write(self):
         pass

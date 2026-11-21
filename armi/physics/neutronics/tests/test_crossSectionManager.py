@@ -952,7 +952,7 @@ class TestXSGM(unittest.TestCase):
         fe = self.csm.getNucTemperature("AA", "FE56")
         na = self.csm.getNucTemperature("AA", "NA23")
 
-        self.assertAlmostEqual(na, 450.0, msg="Na temp was {}, not 450".format(na))
+        self.assertAlmostEqual(na, 450.0, msg=f"Na temp was {na}, not 450")
         self.assertGreater(u235, fe)
         self.assertGreater(fe, na)
         self.assertTrue(0.0 < na < fe)

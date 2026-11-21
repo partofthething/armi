@@ -158,14 +158,7 @@ class _Metadata:
             otherVal = other[propName]
             if not properties.areEqual(selfVal, otherVal, tolerance):
                 runLog.important(
-                    "{} and {} {} have different {}:\n{}\n{}".format(
-                        selfContainer,
-                        otherContainer,
-                        self.__class__.__name__,
-                        propName,
-                        selfVal,
-                        otherVal,
-                    )
+                    f"{selfContainer} and {otherContainer} {self.__class__.__name__} have different {propName}:\n{selfVal}\n{otherVal}"
                 )
                 equal = False
         return equal
@@ -210,11 +203,9 @@ class NuclideXSMetadata(FileMetadata):
                 skippedKeys.add(key)
         if self["chi"] is not None or other["chi"] is not None:
             runLog.warning(
-                "File-wide chi is removed merging libraries {lib1} and {lib2}.\n"
+                f"File-wide chi is removed merging libraries {selfContainer} and {otherContainer}.\n"
                 "This should not impact the calculation, as the file-wide chi is used as"
-                " the nuclide-specific chi.\n The nuclides in {lib2} may be modified as well.".format(
-                    lib1=selfContainer, lib2=otherContainer
-                )
+                f" the nuclide-specific chi.\n The nuclides in {otherContainer} may be modified as well."
             )
             mergedData["fileWideChiFlag"] = 0
             skippedKeys.add("fileWideChiFlag")

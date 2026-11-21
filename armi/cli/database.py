@@ -64,7 +64,7 @@ class ExtractInputs(EntryPoint):
         bail = False
         for path in [settingsPath, bpPath]:
             if os.path.exists(path):
-                runLog.error("`{}` already exists. Aborting.".format(path))
+                runLog.error(f"`{path}` already exists. Aborting.")
                 bail = True
         if bail:
             return
@@ -75,7 +75,7 @@ class ExtractInputs(EntryPoint):
         ]:
             if path is None:
                 continue
-            runLog.info("Writing {} to `{}`".format(inp, path))
+            runLog.info(f"Writing {inp} to `{path}`")
             if isinstance(data, bytes):
                 data = data.decode()
             with open(path, "w") as f:

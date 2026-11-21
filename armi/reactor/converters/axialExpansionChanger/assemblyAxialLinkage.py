@@ -139,8 +139,8 @@ class AxialLink(typing.Generic[Comp]):
     * :attr:`AxialAssemblyLinkage.linkedComponents`
     """
 
-    lower: typing.Optional[Comp] = dataclasses.field(default=None)
-    upper: typing.Optional[Comp] = dataclasses.field(default=None)
+    lower: Comp | None = dataclasses.field(default=None)
+    upper: Comp | None = dataclasses.field(default=None)
 
 
 class AssemblyAxialLinkage:
@@ -214,7 +214,7 @@ class AssemblyAxialLinkage:
             for c in iterSolidComponents(b):
                 self._getLinkedComponents(b, c)
 
-    def _findComponentLinkedTo(self, c: Component, otherBlock: typing.Optional[Block]) -> typing.Optional[Component]:
+    def _findComponentLinkedTo(self, c: Component, otherBlock: Block | None) -> Component | None:
         if otherBlock is None:
             return None
         candidate = None

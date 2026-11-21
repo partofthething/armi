@@ -38,7 +38,6 @@ import shutil
 import time
 from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Optional
 
 from armi import runLog
 from armi.context import MPI_RANK, getFastPath
@@ -77,7 +76,7 @@ class Code:
 
     name: str
     executable: str
-    successMarker: Optional[str] = None
+    successMarker: str | None = None
     retries: int = 0
     inputOnStdin: bool = True
 
@@ -110,7 +109,7 @@ class RunResult:
         self.runDir = runDir
         self.wallSeconds = wallSeconds
         self.cached = cached
-        self._listing: Optional[list] = None
+        self._listing: list | None = None
 
     def __repr__(self):
         how = "cached" if self.cached else f"rc={self.returnCode} {self.wallSeconds:.1f}s"
@@ -174,13 +173,13 @@ class CodeRun:
         self,
         code: Code,
         inputPath: str,
-        dataFiles: Optional[dict] = None,
+        dataFiles: dict | None = None,
         outputs: Sequence = (),
         threads: int = 1,
-        runDir: Optional[str] = None,
-        listingPath: Optional[str] = None,
-        timeoutSeconds: Optional[float] = None,
-        retries: Optional[int] = None,
+        runDir: str | None = None,
+        listingPath: str | None = None,
+        timeoutSeconds: float | None = None,
+        retries: int | None = None,
         runner=None,
         cache=None,
     ):
@@ -317,7 +316,7 @@ class CodeRun:
         outputs = [*self.outputs, os.path.basename(self.listingPath)]
         return self.cache.key(self.code.executable, inputs, outputs=outputs, name=self.stem)
 
-    def restore(self, key: str) -> Optional[RunResult]:
+    def restore(self, key: str) -> RunResult | None:
         """The run filed under ``key``, its listing and outputs put where a run would leave them; or None."""
         if self.cache.retrieve(key, self.directory, name=self.stem) is None:
             return None
@@ -326,7 +325,7 @@ class CodeRun:
             shutil.move(listing, self.listingPath)
         return RunResult(self.code, 0, self.listingPath, self.runDir, 0.0, cached=True)
 
-    def fileInCache(self) -> Optional[str]:
+    def fileInCache(self) -> str | None:
         """
         File a run made without the cache -- its listing and outputs beside its input -- and return its key.
 
@@ -352,8 +351,8 @@ class CodeRun:
 
 def runAll(
     runs: Sequence[CodeRun],
-    maxWorkers: Optional[int] = None,
-    after: Optional[Sequence[Sequence[int]]] = None,
+    maxWorkers: int | None = None,
+    after: Sequence[Sequence[int]] | None = None,
     runner=None,
 ) -> list:
     """
@@ -449,7 +448,7 @@ class ExecutionOptions:
     """
 
     def __init__(self, label=None):
-        self.code: Optional[Code] = None
+        self.code: Code | None = None
         self.inputFile = None
         self.outputFile = None
         self.extraInputFiles = []
@@ -486,7 +485,7 @@ class ExecutionOptions:
 
         Optional: ``runDir`` can be anything. This gives a consistent, short name per case, label and rank.
         """
-        caseString = f"{caseTitle}-{str(self.label)}".encode("utf-8")
+        caseString = f"{caseTitle}-{str(self.label)}".encode()
         caseTitleHash = str(hashlib.sha1(caseString).hexdigest())[:8]
         self.runDir = os.path.join(getFastPath(), f"{caseTitleHash}-{MPI_RANK}")
 
@@ -565,7 +564,7 @@ class DefaultExecuter(Executer):
         runLog.debug(self.options.describe())
         code = self.options.code
         if code and not (os.path.exists(code.executable) or shutil.which(code.executable)):
-            raise IOError(f"Required executable `{code.executable}` not found for {self}")
+            raise OSError(f"Required executable `{code.executable}` not found for {self}")
         self._performGeometryTransformations()
         self.options.workingDir = self._workingDirectory()
         os.makedirs(self.options.workingDir, exist_ok=True)
@@ -586,7 +585,7 @@ class DefaultExecuter(Executer):
     def outputPath(self) -> str:
         return os.path.join(self.options.workingDir, self.options.outputFile)
 
-    def codeRun(self) -> Optional[CodeRun]:
+    def codeRun(self) -> CodeRun | None:
         """The run of the options' code on the input, or None for a calculation that runs no code."""
         options = self.options
         if options.code is None:
@@ -605,12 +604,12 @@ class DefaultExecuter(Executer):
             cache=options.cache,
         )
 
-    def _execute(self) -> Optional[RunResult]:
+    def _execute(self) -> RunResult | None:
         """Run the code; an executer whose calculation is not an external code overrides this."""
         run = self.codeRun()
         return run.run() if run is not None else None
 
-    def finish(self, result: Optional[RunResult]):
+    def finish(self, result: RunResult | None):
         """Everything after the code ran: check it, read and apply the output, undo the geometry; return the output."""
         try:
             if result is not None:
@@ -645,7 +644,7 @@ class DefaultExecuter(Executer):
         pass
 
 
-def runExecuters(executers: Sequence[DefaultExecuter], maxWorkers: Optional[int] = None, runner=None) -> list:
+def runExecuters(executers: Sequence[DefaultExecuter], maxWorkers: int | None = None, runner=None) -> list:
     """
     Run many executers with their codes side by side, and return their outputs in order.
 

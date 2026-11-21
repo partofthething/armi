@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from typing import TYPE_CHECKING, List, NoReturn, Optional
+from typing import TYPE_CHECKING, NoReturn, Optional
 
 import numpy as np
 
@@ -47,11 +47,11 @@ class AxialGrid(StructuredGrid):
         )
 
     @staticmethod
-    def getSymmetricEquivalents(indices: IJType) -> List[IJType]:
+    def getSymmetricEquivalents(indices: IJType) -> list[IJType]:
         return []
 
     @staticmethod
-    def locatorInDomain(locator: LocationBase, symmetryOverlap: Optional[bool] = False) -> NoReturn:
+    def locatorInDomain(locator: LocationBase, symmetryOverlap: bool | None = False) -> NoReturn:
         raise NotImplementedError
 
     @staticmethod

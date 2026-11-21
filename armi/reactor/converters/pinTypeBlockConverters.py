@@ -55,11 +55,11 @@ def adjustSmearDensity(obj, value, bolBlock=None):
 
     """
     if value <= 0.0 or value > 1.0:
-        raise ValueError("Cannot modify smear density of {0} to {1}. Must be a positive fraction".format(obj, value))
+        raise ValueError(f"Cannot modify smear density of {obj} to {value}. Must be a positive fraction")
     fuel = obj.getComponent(Flags.FUEL)
     if not fuel:
         runLog.warning(
-            "Cannot modify smear density of {0} because it is not fuel".format(obj),
+            f"Cannot modify smear density of {obj} because it is not fuel",
             single=True,
             label="adjust smear density",
         )
@@ -75,8 +75,8 @@ def adjustSmearDensity(obj, value, bolBlock=None):
         radicand = fuelOD**2 - value * cladID**2
         if radicand < 0.0:
             raise ValueError(
-                "Cannot modify smear density of {0} to {1}. The annular fuel OD {2} is too small relative to the "
-                "cladding ID {3} to achieve this smear density.".format(obj, value, fuelOD, cladID)
+                f"Cannot modify smear density of {obj} to {value}. The annular fuel OD {fuelOD} is too small relative to the "
+                f"cladding ID {cladID} to achieve this smear density."
             )
         newID = math.sqrt(radicand)
         fuel.setDimension("id", newID)
@@ -115,7 +115,7 @@ def adjustCladThicknessByID(obj, value):
 def _getCladdingComponentToModify(obj, value):
     clad = obj.getComponent(Flags.CLAD)
     if not clad:
-        runLog.warning("{} does not have a cladding component to modify.".format(obj))
+        runLog.warning(f"{obj} does not have a cladding component to modify.")
     if value < 0.0:
-        raise ValueError("Cannot modify {} on {} due to a negative modifier {}".format(clad, obj, value))
+        raise ValueError(f"Cannot modify {clad} on {obj} due to a negative modifier {value}")
     return clad

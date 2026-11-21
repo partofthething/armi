@@ -76,10 +76,10 @@ class AssemblyMove:
 
     fromLoc: str
     toLoc: str
-    enrichList: List[float] = field(default_factory=list)
-    assemType: Optional[str] = None
-    ringPosCycle: Optional[list[int]] = None
-    rotation: Optional[float] = None
+    enrichList: list[float] = field(default_factory=list)
+    assemType: str | None = None
+    ringPosCycle: list[int] | None = None
+    rotation: float | None = None
 
     def __post_init__(self):
         """Perform some data checks."""
@@ -101,14 +101,14 @@ class AssemblyMove:
 class ProcessMoveListResult:
     """Container for the results of :meth:`FuelHandler.processMoveList`."""
 
-    loadChains: List[List[str]]
-    loopChains: List[List[str]]
-    enriches: List[List[float]]
-    loadChargeTypes: List[Optional[str]]
-    ringPosCycles: List[Optional[list[int]]]
-    dischargeDests: List[str]
-    rotations: List[Tuple[str, float]]
-    alreadyDone: List[str]
+    loadChains: list[list[str]]
+    loopChains: list[list[str]]
+    enriches: list[list[float]]
+    loadChargeTypes: list[str | None]
+    ringPosCycles: list[list[int] | None]
+    dischargeDests: list[str]
+    rotations: list[tuple[str, float]]
+    alreadyDone: list[str]
 
 
 class FuelHandler:
@@ -167,11 +167,9 @@ class FuelHandler:
         if self.cs[CONF_SHUFFLE_SEQUENCE_FILE]:
             if not os.path.exists(self.cs[CONF_SHUFFLE_SEQUENCE_FILE]):
                 raise FileNotFoundError(
-                    "Requested shuffle sequence file {0} does not exist. Cannot perform shuffling. ".format(
-                        self.cs[CONF_SHUFFLE_SEQUENCE_FILE]
-                    )
+                    f"Requested shuffle sequence file {self.cs[CONF_SHUFFLE_SEQUENCE_FILE]} does not exist. Cannot perform shuffling. "
                 )
-            runLog.important("Applying shuffle sequence from {}".format(self.cs[CONF_SHUFFLE_SEQUENCE_FILE]))
+            runLog.important(f"Applying shuffle sequence from {self.cs[CONF_SHUFFLE_SEQUENCE_FILE]}")
             # location hist params updated within performShuffle
             self.performShuffle(self.cs[CONF_SHUFFLE_SEQUENCE_FILE], yaml=True)
         elif self.cs["explicitRepeatShuffles"]:
@@ -199,11 +197,7 @@ class FuelHandler:
                 rotationMethod(self)
             else:
                 raise RuntimeError(
-                    "FuelHandler {0} does not have a rotation algorithm called {1}.\nChange your {2} setting".format(
-                        rotAlgos,
-                        self.cs[CONF_ASSEMBLY_ROTATION_ALG],
-                        CONF_ASSEMBLY_ROTATION_ALG,
-                    )
+                    f"FuelHandler {rotAlgos} does not have a rotation algorithm called {self.cs[CONF_ASSEMBLY_ROTATION_ALG]}.\nChange your {CONF_ASSEMBLY_ROTATION_ALG} setting"
                 )
 
         for loc, deg in self.pendingRotations:
@@ -244,15 +238,15 @@ class FuelHandler:
                     )
                 except:
                     runLog.important("A fuel management error has occurred. ")
-                    runLog.important("Trying operation on assembly {}".format(a))
-                    runLog.important("The moved list is {}".format(self.moved))
+                    runLog.important(f"Trying operation on assembly {a}")
+                    runLog.important(f"The moved list is {self.moved}")
                     raise
         else:
             numMoved = 0
 
         self.o.r.core.setBlockMassParams()
 
-        runLog.important("Fuel handler performed {0} assembly shuffles.".format(numMoved))
+        runLog.important(f"Fuel handler performed {numMoved} assembly shuffles.")
 
         # now wipe out the self.moved version so it doesn't transmit the assemblies during distributeState
         moved = self.moved[:]
@@ -858,7 +852,7 @@ class FuelHandler:
             runLog.warning("Cannot swap None assemblies. Check your findAssembly results. Skipping swap")
             return
 
-        runLog.extra("Swapping {} with {}.".format(a1, a2))
+        runLog.extra(f"Swapping {a1} with {a2}.")
         # add assemblies into the moved location
         for a in [a1, a2]:
             if a not in self.moved:
@@ -889,24 +883,15 @@ class FuelHandler:
         # check for any inconsistencies in stationary blocks and ensure alignment
         if [block[1] for block in a1StationaryBlocks] != [block[1] for block in a2StationaryBlocks]:
             raise ValueError(
-                """Different number and/or locations of stationary blocks 
-                 between {} (Stationary Blocks: {}) and {} (Stationary Blocks: {}).""".format(
-                    assembly1, a1StationaryBlocks, assembly2, a2StationaryBlocks
-                )
+                f"""Different number and/or locations of stationary blocks 
+                 between {assembly1} (Stationary Blocks: {a1StationaryBlocks}) and {assembly2} (Stationary Blocks: {a2StationaryBlocks})."""
             )
         if a1StationaryBlocks and a2StationaryBlocks:
             if a1StationaryBlocks[-1][0].p.ztop != a2StationaryBlocks[-1][0].p.ztop:
                 runLog.warning(
-                    """Difference in top elevation of stationary blocks 
-                     between {} (Stationary Blocks: {}, Elevation at top of stationary blocks {}) 
-                     and {} (Stationary Blocks: {}, Elevation at top of stationary blocks {}))""".format(
-                        assembly1,
-                        a1StationaryBlocks,
-                        a1StationaryBlocks[-1][0].p.ztop,
-                        assembly2,
-                        a2StationaryBlocks,
-                        a2StationaryBlocks[-1][0].p.ztop,
-                    )
+                    f"""Difference in top elevation of stationary blocks 
+                     between {assembly1} (Stationary Blocks: {a1StationaryBlocks}, Elevation at top of stationary blocks {a1StationaryBlocks[-1][0].p.ztop}) 
+                     and {assembly2} (Stationary Blocks: {a2StationaryBlocks}, Elevation at top of stationary blocks {a2StationaryBlocks[-1][0].p.ztop}))"""
                 )
 
         # swap stationary blocks
@@ -978,7 +963,7 @@ class FuelHandler:
         --------
         swapAssemblies : swaps assemblies that are already in the core
         """
-        runLog.debug("Discharge swapping {} for {}.".format(incoming, outgoing))
+        runLog.debug(f"Discharge swapping {incoming} for {outgoing}.")
         if incoming is None or outgoing is None:
             runLog.warning("Cannot discharge swap None assemblies. Check your findAssembly calls. Skipping")
             return
@@ -1007,7 +992,7 @@ class FuelHandler:
         if self.r.excore.get("sfp") is not None:
             if incoming in self.r.excore["sfp"].getChildren():
                 # pull it out of the sfp if it's in there.
-                runLog.extra("removing {0} from the sfp".format(incoming))
+                runLog.extra(f"removing {incoming} from the sfp")
                 self.r.excore["sfp"].remove(incoming)
 
         incoming.p.multiplicity = 1
@@ -1145,9 +1130,7 @@ class FuelHandler:
         try:
             stream = open(fname)
         except OSError:
-            raise RuntimeError(
-                "Could not find/open repeat shuffle file {} in working directory {}".format(fname, os.getcwd())
-            )
+            raise RuntimeError(f"Could not find/open repeat shuffle file {fname} in working directory {os.getcwd()}")
 
         moves = {}
         numMoves = 0
@@ -1159,7 +1142,7 @@ class FuelHandler:
                     # Later, we removed the at x years
                     m = re.search(r"ycle (\d+)", line)
                     if m is None:
-                        raise InputError('Failed to parse line "{0}" in shuffle file'.format(line))
+                        raise InputError(f'Failed to parse line "{line}" in shuffle file')
                     cycle = int(m.group(1))
                     moves[cycle] = []
                 elif "assembly" in line:
@@ -1171,7 +1154,7 @@ class FuelHandler:
                     )
                     m = re.search(pat, line)
                     if not m:
-                        raise InputError('Failed to parse line "{0}" in shuffle file'.format(line))
+                        raise InputError(f'Failed to parse line "{line}" in shuffle file')
                     oldLoc = m.group(1)
                     newLoc = m.group(2)
                     assemType = m.group(3).strip()  # take off any possible trailing whitespace
@@ -1186,7 +1169,7 @@ class FuelHandler:
                     moves[cycle].append(AssemblyMove(oldLoc, newLoc, enrichList, assemType, ringPosCycle))
                     numMoves += 1
 
-        runLog.info("Read {0} moves over {1} cycles".format(numMoves, len(moves.keys())))
+        runLog.info(f"Read {numMoves} moves over {len(moves.keys())} cycles")
         return moves
 
     @staticmethod
@@ -1214,7 +1197,7 @@ class FuelHandler:
         """
         # 1. load YAML file
         try:
-            with open(fname, "r") as stream:
+            with open(fname) as stream:
                 yaml = YAML(typ="safe")
                 data = yaml.load(stream)
         except DuplicateKeyError as e:
@@ -1435,7 +1418,7 @@ class FuelHandler:
                     safeCount += 1
 
                 if not safeCount < 100:
-                    raise RuntimeError("Chain tracking got too long. Check moves.\n{0}".format(chain))
+                    raise RuntimeError(f"Chain tracking got too long. Check moves.\n{chain}")
 
                 # delete the last item, it's loadqueue location or the startingFrom
                 # location.
@@ -1445,7 +1428,7 @@ class FuelHandler:
                 return chain, enrich, assemType, ringPosCycle, destination
 
         # if we get here, the startingAt location was not found.
-        runLog.warning("No chain found starting at {0}".format(startingAt))
+        runLog.warning(f"No chain found starting at {startingAt}")
         return [], enrich, assemType, loadName, destination
 
     def processMoveList(self, moveList) -> ProcessMoveListResult:
@@ -1516,7 +1499,7 @@ class FuelHandler:
             elif toLoc in self.DISCHARGE_LOCS:
                 # discharge. Track chain.
                 chain, enrichList, assemType, ringPosCycle, dest = FuelHandler.trackChain(moveList, startingAt=fromLoc)
-                runLog.extra("Load Chain with load assem {0}: {1}".format(assemType, chain))
+                runLog.extra(f"Load Chain with load assem {assemType}: {chain}")
                 loadChains.append(chain)
                 enriches.append(enrichList)
                 loadChargeTypes.append(assemType)
@@ -1548,7 +1531,7 @@ class FuelHandler:
                 loopChains.append(chain)
                 alreadyDone.extend(chain)
 
-                runLog.extra("Loop Chain: {0}".format(chain))
+                runLog.extra(f"Loop Chain: {chain}")
 
         return ProcessMoveListResult(
             loadChains=loadChains,
@@ -1629,7 +1612,7 @@ class FuelHandler:
                 loadAssembly = self.r.core.createAssemblyOfType(enrichList=enrichList, assemType=assemblyType)
 
             # replace the goingOut guy (for continual feed cases)
-            runLog.debug("Calling discharge swap with {} and {}".format(loadAssembly, assemblyList[0]))
+            runLog.debug(f"Calling discharge swap with {loadAssembly} and {assemblyList[0]}")
             self.dischargeSwap(loadAssembly, assemblyList[0], toSfp=(dest == "SFP"))
             moved.append(loadAssembly)
 

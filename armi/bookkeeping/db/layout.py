@@ -27,11 +27,6 @@ versioning information.
 import collections
 from typing import (
     Any,
-    Dict,
-    List,
-    Optional,
-    Tuple,
-    Type,
 )
 
 import numpy as np
@@ -120,20 +115,20 @@ class Layout:
        ``Reactor``, and is not guaranteed to use the zeroth grid.
     """
 
-    def __init__(self, version: Tuple[int, int], h5group=None, comp=None):
-        self.type: List[str] = []
-        self.name: List[str] = []
-        self.serialNum: List[int] = []
+    def __init__(self, version: tuple[int, int], h5group=None, comp=None):
+        self.type: list[str] = []
+        self.name: list[str] = []
+        self.serialNum: list[int] = []
         # The index into the parameter datasets corresponding to each object's class.
         # E.g., the 5th HexBlock object in the tree would get 5; to look up its
         # "someParameter" value, you would extract cXXnYY/HexBlock/someParameter[5].
-        self.indexInData: List[int] = []
+        self.indexInData: list[int] = []
         # The number of direct children this object has.
-        self.numChildren: List[int] = []
+        self.numChildren: list[int] = []
         # The type of location that specifies the object's physical location; see the
         # associated pack/unpackLocation functions for more information about how
         # locations are handled.
-        self.locationType: List[str] = []
+        self.locationType: list[str] = []
         # There is a minor asymmetry here in that before writing to the DB, this is
         # truly a flat list of tuples. However when reading, this may contain lists of
         # tuples, which represent MI locations. This comes from the fact that we map the
@@ -142,24 +137,24 @@ class Layout:
         # same place so this can be less surprising. Resolving this would require
         # changing the interface of the various pack/unpack functions, which have
         # multiple versions, so the update would need to be done with care.
-        self.location: List[Tuple[int, int, int]] = []
+        self.location: list[tuple[int, int, int]] = []
         # Which grid, as stored in the database, this object uses to arrange its
         # children
-        self.gridIndex: List[int] = []
-        self.temperatures: List[float] = []
-        self.material: List[str] = []
+        self.gridIndex: list[int] = []
+        self.temperatures: list[float] = []
+        self.material: list[str] = []
         # Used to cache all of the spatial locators so that we can pack them all at
         # once. The benefit here is that the version checking can happen up front and
         # less branching down below
-        self._spatialLocators: List[grids.LocationBase] = []
+        self._spatialLocators: list[grids.LocationBase] = []
         # set of grid parameters that have been seen in _createLayout. For efficient
         # checks for uniqueness
-        self._seenGridParams: Dict[Any, Any] = dict()
+        self._seenGridParams: dict[Any, Any] = dict()
         # actual list of grid parameters, with stable order for safe indexing
-        self.gridParams: List[Any] = []
+        self.gridParams: list[Any] = []
         self.version = version
 
-        self.groupedComps: Dict[Type[ArmiObject], List[ArmiObject]] = collections.defaultdict(list)
+        self.groupedComps: dict[type[ArmiObject], list[ArmiObject]] = collections.defaultdict(list)
 
         # it should be noted, one of the two inputs must be non-None: comp/h5group
         if comp is not None:
@@ -236,9 +231,7 @@ class Layout:
             comps = sorted(list(comp))
         except ValueError:
             runLog.error(
-                "Failed to sort some collection of ArmiObjects for database output: {} value {}".format(
-                    type(comp), list(comp)
-                )
+                f"Failed to sort some collection of ArmiObjects for database output: {type(comp)} value {list(comp)}"
             )
             raise
 
@@ -281,7 +274,7 @@ class Layout:
                 unitSteps = thisGroup["unitSteps"][:]
                 bounds = []
                 for ibound in range(3):
-                    boundName = "bounds_{}".format(ibound)
+                    boundName = f"bounds_{ibound}"
                     if boundName in thisGroup:
                         bounds.append(thisGroup[boundName][:])
                     else:
@@ -306,7 +299,7 @@ class Layout:
                 )
 
         except KeyError as e:
-            runLog.error("Failed to get layout information from group: {}".format(h5group.name))
+            runLog.error(f"Failed to get layout information from group: {h5group.name}")
             raise e
 
     def _initComps(self, caseTitle, bp):
@@ -447,7 +440,7 @@ class Layout:
                 for ibound, bound in enumerate(gridParams.bounds):
                     if bound is not None:
                         bound = np.array(bound)
-                        thisGroup.create_dataset("bounds_{}".format(ibound), data=bound, track_order=True)
+                        thisGroup.create_dataset(f"bounds_{ibound}", data=bound, track_order=True)
 
                 thisGroup.create_dataset("unitStepLimits", data=gridParams.unitStepLimits, track_order=True)
 
@@ -458,11 +451,11 @@ class Layout:
                 thisGroup.create_dataset("geomType", data=gridParams.geomType, track_order=True)
                 thisGroup.create_dataset("symmetry", data=gridParams.symmetry, track_order=True)
         except RuntimeError:
-            runLog.error("Failed to create datasets in: {}".format(h5group))
+            runLog.error(f"Failed to create datasets in: {h5group}")
             raise
 
     @staticmethod
-    def computeAncestors(serialNum, numChildren, depth=1) -> List[Optional[int]]:
+    def computeAncestors(serialNum, numChildren, depth=1) -> list[int | None]:
         """
         Return a list containing the serial number of the parent corresponding to each
         object at the given depth.
@@ -494,7 +487,7 @@ class Layout:
         index/cursor, or progressively slice them as we go, which would be pretty
         inefficient.
         """
-        ancestors: List[Optional[int]] = [None]
+        ancestors: list[int | None] = [None]
 
         snStack = [serialNum[0]]
         ncStack = [numChildren[0]]
@@ -532,8 +525,8 @@ class Layout:
 
 
 def _packLocations(
-    locations: List[grids.LocationBase], minorVersion: int = DB_MINOR
-) -> Tuple[List[str], List[Tuple[int, int, int]]]:
+    locations: list[grids.LocationBase], minorVersion: int = DB_MINOR
+) -> tuple[list[str], list[tuple[int, int, int]]]:
     """
     Extract information from a location needed to write it to this DB.
 
@@ -556,16 +549,16 @@ def _packLocations(
     elif minorVersion > 3:
         locationTypes, locationData = _packLocationsV3(locations)
     else:
-        raise ValueError("Unsupported minor version: {}".format(minorVersion))
+        raise ValueError(f"Unsupported minor version: {minorVersion}")
     return locationTypes, locationData
 
 
 def _packLocationsV1(
-    locations: List[grids.LocationBase],
-) -> Tuple[List[str], List[Tuple[int, int, int]]]:
+    locations: list[grids.LocationBase],
+) -> tuple[list[str], list[tuple[int, int, int]]]:
     """Delete when reading v <=3.2 DB's no longer wanted."""
     locTypes = []
-    locData: List[Tuple[int, int, int]] = []
+    locData: list[tuple[int, int, int]] = []
     for loc in locations:
         locationType = loc.__class__.__name__
         if loc is None:
@@ -583,11 +576,11 @@ def _packLocationsV1(
 
 
 def _packLocationsV2(
-    locations: List[grids.LocationBase],
-) -> Tuple[List[str], List[Tuple[int, int, int]]]:
+    locations: list[grids.LocationBase],
+) -> tuple[list[str], list[tuple[int, int, int]]]:
     """Location packing implementation for minor version 3. See module docstring above."""
     locTypes = []
-    locData: List[Tuple[int, int, int]] = []
+    locData: list[tuple[int, int, int]] = []
     for loc in locations:
         locationType = LOCATION_TYPE_LABELS[type(loc)]
         if loc is None:
@@ -610,11 +603,11 @@ def _packLocationsV2(
 
 
 def _packLocationsV3(
-    locations: List[grids.LocationBase],
-) -> Tuple[List[str], List[Tuple[int, int, int]]]:
+    locations: list[grids.LocationBase],
+) -> tuple[list[str], list[tuple[int, int, int]]]:
     """Location packing implementation for minor version 4. See module docstring above."""
     locTypes = []
-    locData: List[Tuple[int, int, int]] = []
+    locData: list[tuple[int, int, int]] = []
 
     for loc in locations:
         locationType = LOCATION_TYPE_LABELS[type(loc)]
@@ -781,22 +774,18 @@ def replaceNonesWithNonsense(data: np.ndarray, paramName: str, nones: np.ndarray
             data[nones] = defaultValue
 
     except Exception as ee:
-        runLog.error(
-            "Error while attempting to determine default for {}.\nvalue: {}\nError: {}".format(paramName, val, ee)
-        )
+        runLog.error(f"Error while attempting to determine default for {paramName}.\nvalue: {val}\nError: {ee}")
         raise TypeError(
-            "Could not determine None replacement for {} with type {}, val {}, default {}".format(
-                paramName, realType, val, defaultValue
-            )
+            f"Could not determine None replacement for {paramName} with type {realType}, val {val}, default {defaultValue}"
         )
 
     try:
         data = data.astype(realType)
     except Exception:
-        raise ValueError("Could not coerce data for {} to {}, data:\n{}".format(paramName, realType, data))
+        raise ValueError(f"Could not coerce data for {paramName} to {realType}, data:\n{data}")
 
     if data.dtype.kind == "O":
-        raise TypeError("Failed to convert data to valid HDF5 type {}, data:{}".format(paramName, data))
+        raise TypeError(f"Failed to convert data to valid HDF5 type {paramName}, data:{data}")
 
     return data
 
@@ -828,7 +817,7 @@ def replaceNonsenseWithNones(data: np.ndarray, paramName: str) -> np.ndarray:
     elif np.issubdtype(data.dtype, np.str_):
         isNone = data == "<!None!>"
     else:
-        raise TypeError("Unable to resolve values that should be None for `{}`".format(paramName))
+        raise TypeError(f"Unable to resolve values that should be None for `{paramName}`")
 
     if data.ndim > 1:
         result = np.ndarray(data.shape[0], dtype=np.dtype("O"))

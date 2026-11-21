@@ -286,8 +286,8 @@ class RedistributeMass:
         bool
             If the update was performed.
         """
-        fromData: typing.Optional[np.ndarray] = getattr(self.fromComp.p, paramName, None)
-        toData: typing.Optional[np.ndarray] = getattr(self.toComp.p, paramName, None)
+        fromData: np.ndarray | None = getattr(self.fromComp.p, paramName, None)
+        toData: np.ndarray | None = getattr(self.toComp.p, paramName, None)
 
         if (fromData is None) != (toData is None):
             runLog.warning(

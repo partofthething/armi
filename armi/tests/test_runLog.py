@@ -522,16 +522,16 @@ class TestRunLog(RunLogTestCase):
         runLog.createLogDir(logDir)
 
         # create as stdout file
-        stdoutFile1 = os.path.join(logDir, "{}.runLogTest.0000.stdout".format(runLog.STDOUT_LOGGER_NAME))
+        stdoutFile1 = os.path.join(logDir, f"{runLog.STDOUT_LOGGER_NAME}.runLogTest.0000.stdout")
         with open(stdoutFile1, "w") as f:
             f.write("hello world\n")
 
-        stdoutFile2 = os.path.join(logDir, "{}.runLogTest.0001.stdout".format(runLog.STDOUT_LOGGER_NAME))
+        stdoutFile2 = os.path.join(logDir, f"{runLog.STDOUT_LOGGER_NAME}.runLogTest.0001.stdout")
         with open(stdoutFile2, "w") as f:
             f.write("hello other world\n")
 
         # verify behavior for a corner case
-        stdoutFile3 = os.path.join(logDir, "{}..0000.stdout".format(runLog.STDOUT_LOGGER_NAME))
+        stdoutFile3 = os.path.join(logDir, f"{runLog.STDOUT_LOGGER_NAME}..0000.stdout")
         with open(stdoutFile3, "w") as f:
             f.write("hello world again\n")
 
@@ -540,7 +540,7 @@ class TestRunLog(RunLogTestCase):
         self.assertTrue(os.path.exists(stdoutFile3))
 
         # create a stderr file
-        stderrFile = os.path.join(logDir, "{}.runLogTest.0000.stderr".format(runLog.STDOUT_LOGGER_NAME))
+        stderrFile = os.path.join(logDir, f"{runLog.STDOUT_LOGGER_NAME}.runLogTest.0000.stderr")
         with open(stderrFile, "w") as f:
             f.write("goodbye cruel world\n")
 
@@ -558,7 +558,7 @@ class TestRunLog(RunLogTestCase):
         self.assertFalse(os.path.exists(stderrFile))
 
         # verify behavior for a corner case
-        stdoutFile3 = os.path.join(logDir, "{}..0000.stdout".format(runLog.STDOUT_LOGGER_NAME))
+        stdoutFile3 = os.path.join(logDir, f"{runLog.STDOUT_LOGGER_NAME}..0000.stdout")
         with open(stdoutFile3, "w") as f:
             f.write("hello world again\n")
         # concat logs

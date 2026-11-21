@@ -20,7 +20,7 @@ from armi.settings import setting
 from armi.settings.fwSettings import databaseSettings, globalSettings, reportSettings
 
 
-def getFrameworkSettings() -> List[setting.Setting]:
+def getFrameworkSettings() -> list[setting.Setting]:
     settings = []
     for mod in (globalSettings, databaseSettings, reportSettings):
         settings.extend(mod.defineSettings())

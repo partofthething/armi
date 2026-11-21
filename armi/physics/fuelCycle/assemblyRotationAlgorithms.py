@@ -128,6 +128,6 @@ def simpleAssemblyRotation(fh):
             a.rotate(rot)
             numRotated += 1
             ring, pos = a.spatialLocator.getRingPos()
-            runLog.extra("Rotating Assembly ({0},{1}) to Orientation {2}".format(ring, pos, 1))
+            runLog.extra(f"Rotating Assembly ({ring},{pos}) to Orientation {1}")
 
-    runLog.extra("Rotated {0} assemblies".format(numRotated))
+    runLog.extra(f"Rotated {numRotated} assemblies")

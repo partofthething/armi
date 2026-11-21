@@ -20,7 +20,6 @@ import collections
 import datetime
 import os
 import sys
-from typing import Dict, Set, Tuple
 
 import ruamel.yaml.comments
 from ruamel.yaml import YAML
@@ -52,10 +51,10 @@ class SettingRenamer:
     them. The renaming logic follows the rules described in :py:meth:`renameSetting`.
     """
 
-    def __init__(self, settings: Dict[str, Setting]):
-        self._currentNames: Set[str] = set()
-        self._activeRenames: Dict[str, str] = dict()
-        self._expiredRenames: Set[Tuple[str, str, datetime.date]] = set()
+    def __init__(self, settings: dict[str, Setting]):
+        self._currentNames: set[str] = set()
+        self._activeRenames: dict[str, str] = dict()
+        self._expiredRenames: set[tuple[str, str, datetime.date]] = set()
 
         today = datetime.date.today()
 
@@ -71,13 +70,11 @@ class SettingRenamer:
                 else:
                     if oldName in self._activeRenames:
                         raise SettingException(
-                            "The setting rename from {0}->{1} collides with another rename {0}->{2}".format(
-                                oldName, name, self._activeRenames[oldName]
-                            )
+                            f"The setting rename from {oldName}->{name} collides with another rename {oldName}->{self._activeRenames[oldName]}"
                         )
                     self._activeRenames[oldName] = name
 
-    def renameSetting(self, name) -> Tuple[str, bool]:
+    def renameSetting(self, name) -> tuple[str, bool]:
         """
         Attempt to rename a candidate setting.
 
@@ -150,7 +147,7 @@ class SettingsReader:
 
     def readFromFile(self, path, handleInvalids=True):
         """Load file and read it."""
-        with open(path, "r") as f:
+        with open(path) as f:
             ext = os.path.splitext(path)[1].lower()
             assert ext.lower() in (".yaml", ".yml"), f"{ext} is the wrong extension"
             self.inputPath = path
@@ -199,9 +196,7 @@ class SettingsReader:
         try:
             invalidNames = "\n\t".join(self.invalidSettings)
             proceed = prompt(
-                "Found {} invalid settings in {}.\n\n {} \n\t".format(
-                    len(self.invalidSettings), self.inputPath, invalidNames
-                ),
+                f"Found {len(self.invalidSettings)} invalid settings in {self.inputPath}.\n\n {invalidNames} \n\t",
                 "Invalid settings will be ignored. Continue running the case?",
                 "YES_NO",
             )

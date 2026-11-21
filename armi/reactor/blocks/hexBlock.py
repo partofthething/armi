@@ -17,7 +17,7 @@
 import copy
 import functools
 import math
-from typing import ClassVar, Optional, Tuple, Type
+from typing import ClassVar, Optional
 
 import numpy as np
 
@@ -30,7 +30,7 @@ from armi.reactor.flags import Flags
 from armi.reactor.parameters import ParamLocation
 from armi.utils import hexagon, iterables, units
 
-_PitchDefiningComponent = Optional[Tuple[Type[components.Component], ...]]
+_PitchDefiningComponent = Optional[tuple[type[components.Component], ...]]
 
 
 class HexBlock(Block):
@@ -349,7 +349,7 @@ class HexBlock(Block):
             wwCladGap = self.getWireWrapCladGap(cold=True)
             if round(wwCladGap, 6) != 0.0:
                 runLog.warning(
-                    "The gap between wire wrap and clad in block {} was {} cm. Expected 0.0.".format(self, wwCladGap),
+                    f"The gap between wire wrap and clad in block {self} was {wwCladGap} cm. Expected 0.0.",
                     single=True,
                 )
 
@@ -357,15 +357,13 @@ class HexBlock(Block):
         pinToDuctGap = self.getPinToDuctGap(cold=True)
         # Allow for some tolerance; user input precision may lead to slight negative gaps
         if pinToDuctGap is not None and pinToDuctGap < -0.005:
-            raise ValueError(
-                "Gap between pins and duct is {0:.4f} cm in {1}. Make more room.".format(pinToDuctGap, self)
-            )
+            raise ValueError(f"Gap between pins and duct is {pinToDuctGap:.4f} cm in {self}. Make more room.")
         elif pinToDuctGap is None:
             # Only warn about clad pins that are missing a wire or duct. Wire wrapped directly around an unclad rod
             # (e.g. a solid reflector rod) is a valid design that this gap check simply does not cover.
             ductComp = next(iter(ductComps), None)
             if cladComp is not None and (wireComp is None or ductComp is None):
-                runLog.warning("Some component was missing in {} so pin-to-duct gap not calculated".format(self))
+                runLog.warning(f"Some component was missing in {self} so pin-to-duct gap not calculated")
 
     def getPinToDuctGap(self, cold=False):
         """
@@ -527,9 +525,7 @@ class HexBlock(Block):
 
         if numLocations != self.getNumPins():
             raise ValueError(
-                "Cannot create spatialGrid, number of locations in rings {} not equal to pin number {}".format(
-                    numLocations, self.getNumPins()
-                )
+                f"Cannot create spatialGrid, number of locations in rings {numLocations} not equal to pin number {self.getNumPins()}"
             )
 
         # set the spatial position of the sub-block components

@@ -23,7 +23,6 @@ These algorithms are defined in assemblyRotationAlgorithms.py, but they are used
 import copy
 import enum
 import math
-import typing
 from unittest import TestCase, mock
 
 import numpy as np
@@ -112,7 +111,7 @@ class ShuffleAndRotateTestHelper(TestCase):
         data[maxIndex] = 50
         return data
 
-    def compareMockedToExpectedRotation(self, nRotations: int, mRotate: mock.Mock, msg: typing.Optional[str] = None):
+    def compareMockedToExpectedRotation(self, nRotations: int, mRotate: mock.Mock, msg: str | None = None):
         """Helper function to check the mocked rotate and compare against expected rotation."""
         expectedRadians = nRotations * math.pi / 3
         (actualRadians,) = mRotate.call_args.args

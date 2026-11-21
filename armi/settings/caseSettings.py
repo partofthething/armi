@@ -390,7 +390,7 @@ class Settings:
         """
         # We do not want to load these as settings, but just grab the dictionary straight from the settings file to know
         # which settings are user-defined.
-        with open(fPath, "r") as stream:
+        with open(fPath) as stream:
             yaml = YAML()
             yaml.allow_duplicate_keys = False
             tree = yaml.load(stream)

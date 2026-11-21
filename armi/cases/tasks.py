@@ -17,13 +17,14 @@ state at zero burnup, say), and a task can do exactly that while reusing the cas
 """
 
 import importlib
-from typing import Any, Callable, Dict
+from collections.abc import Callable
+from typing import Any
 
 #: The task of a case with no task of its own: the full ARMI operator loop.
 DEFAULT_TASK = "armi.cases.tasks:runOperator"
 
 
-def runOperator(case, dependencies: Dict[str, str]) -> dict:
+def runOperator(case, dependencies: dict[str, str]) -> dict:
     """Run the case's operator loop, as ``armi run`` would."""
     case.run()
     return {}

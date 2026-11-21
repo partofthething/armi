@@ -21,9 +21,9 @@ Hand a sweep to :py:meth:`~armi.cases.suiteBuilder.SuiteBuilder.addSweep` to tur
 """
 
 import itertools
-from typing import Callable, Iterable, Iterator, Tuple
+from collections.abc import Callable, Iterable, Iterator
 
-Point = Tuple  # a tuple of InputModifier
+Point = tuple  # a tuple of InputModifier
 
 
 class Sweep:

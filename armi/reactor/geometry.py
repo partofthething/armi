@@ -15,7 +15,7 @@
 """Constants and enumerations that are useful for describing system geometry."""
 
 import enum
-from typing import Optional, Union
+from typing import Union
 
 
 class GeomType(enum.Enum):
@@ -65,7 +65,7 @@ class GeomType(enum.Enum):
         elif isinstance(source, str):
             return cls.fromStr(source)
         else:
-            raise TypeError("Expected str or GeomType; got {}".format(type(source)))
+            raise TypeError(f"Expected str or GeomType; got {type(source)}")
 
     @classmethod
     def fromStr(cls, geomStr: str) -> "GeomType":
@@ -305,7 +305,7 @@ class SymmetryType:
         self,
         domainType: "DomainType" = DomainType.THIRD_CORE,
         boundaryType: "BoundaryType" = BoundaryType.PERIODIC,
-        throughCenterAssembly: Optional[bool] = False,
+        throughCenterAssembly: bool | None = False,
     ):
         self.domain = domainType
         self.boundary = boundaryType
@@ -343,9 +343,7 @@ class SymmetryType:
         elif len(pieces) == 2:
             boundary = BoundaryType.fromStr(pieces[1])
         else:
-            errorMsg = "{} [{}] is not a valid symmetry option. Valid symmetry options are:".format(
-                symmetryString, trimmedString
-            )
+            errorMsg = f"{symmetryString} [{trimmedString}] is not a valid symmetry option. Valid symmetry options are:"
             errorMsg += ", ".join([f"{sym}" for sym in cls.createValidSymmetryStrings()])
             raise ValueError(errorMsg)
         return cls(domain, boundary, isThroughCenter)

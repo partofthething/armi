@@ -44,7 +44,7 @@ class ThetaRZGrid(StructuredGrid):
     def getCoordinates(self, indices, nativeCoords=False) -> np.ndarray:
         meshCoords = theta, r, z = super().getCoordinates(indices, nativeCoords=nativeCoords)
         if not 0 <= theta <= TAU:
-            raise ValueError("Invalid theta value: {}. Check mesh.".format(theta))
+            raise ValueError(f"Invalid theta value: {theta}. Check mesh.")
         if nativeCoords:
             # return Theta, R, Z values directly.
             return meshCoords

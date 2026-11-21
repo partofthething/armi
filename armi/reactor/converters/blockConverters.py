@@ -65,9 +65,7 @@ class BlockConverter:
         discarded. Attaching them to the reactor is not recommended.
         """
         runLog.extra(
-            "Homogenizing the {} component into the {} component in block {}".format(
-                soluteName, solventName, self._sourceBlock.getType()
-            ),
+            f"Homogenizing the {soluteName} component into the {solventName} component in block {self._sourceBlock.getType()}",
             single=True,
         )
         # break up dimension links since we will be messing with this block's components
@@ -81,7 +79,7 @@ class BlockConverter:
         # the area about to be added by the dimension change can be different than the simple area of the
         # merged component due to void gaps between components
         oldArea = solvent.getArea()
-        runLog.debug("removing {}".format(solute))
+        runLog.debug(f"removing {solute}")
         # skip recomputation of area fractions because the blocks still have 0 height at this stage and derived
         # shape volume computations will fail
         soluteArea = solute.getArea()
@@ -134,53 +132,47 @@ class BlockConverter:
     def _checkInputs(self, soluteName, solventName, solute, solvent):
         if solute is None or solvent is None:
             raise ValueError(
-                "Block {} must have a {} component and a {} component to homogenize.".format(
-                    self._sourceBlock, soluteName, solventName
-                )
+                f"Block {self._sourceBlock} must have a {soluteName} component and a {solventName} component to homogenize."
             )
         if not (
             isinstance(solvent, components.DerivedShape)
             or all(isinstance(c, components.Circle) for c in (solute, solvent))
         ):
             raise ValueError(
-                "Components are not of compatible shape to be merged solute: {}, solvent: {}".format(solute, solvent)
+                f"Components are not of compatible shape to be merged solute: {solute}, solvent: {solvent}"
             )
         if solute.getArea() < 0:
             # allow negative-area gap
             if not solute.hasFlags(Flags.GAP):
                 raise ValueError(
-                    "Cannot merge solute with negative area into a solvent. {} area: {}".format(
-                        solute, solute.getArea()
-                    )
+                    f"Cannot merge solute with negative area into a solvent. {solute} area: {solute.getArea()}"
                 )
         if solvent.getArea() <= 0:
             raise ValueError(
-                "Cannot merge into a solvent with negative or 0 area. {} area: {}".format(solvent, solvent.getArea())
+                f"Cannot merge into a solvent with negative or 0 area. {solvent} area: {solvent.getArea()}"
             )
 
     def restablishLinks(self, solute, solvent, soluteLinks):
         runLog.extra(
-            "Solute is linked to component(s) {} and these links will be reestablished.".format(soluteLinks),
+            f"Solute is linked to component(s) {soluteLinks} and these links will be reestablished.",
             single=True,
         )
         for linkedC in soluteLinks:
             if linkedC in solvent.getLinkedComponents():
                 if not linkedC.containsVoidMaterial():
                     raise ValueError(
-                        "Non-Void component {} was linked to solute and solvent {} in converted block {}. "
-                        "Please dissolve this separately.".format(linkedC, solvent, self._sourceBlock)
+                        f"Non-Void component {linkedC} was linked to solute and solvent {solvent} in converted block {self._sourceBlock}. "
+                        "Please dissolve this separately."
                     )
                 runLog.extra(
-                    "Removing void component {} in converted block {}.".format(linkedC, self._sourceBlock.getType()),
+                    f"Removing void component {linkedC} in converted block {self._sourceBlock.getType()}.",
                     single=True,
                 )
                 self._sourceBlock.remove(linkedC)
             else:
                 dims = linkedC.getDimensionNamesLinkedTo(solute)
                 runLog.extra(
-                    "Linking component {} in converted block {} to solvent {}.".format(
-                        linkedC, self._sourceBlock.getType(), solvent
-                    ),
+                    f"Linking component {linkedC} in converted block {self._sourceBlock.getType()} to solvent {solvent}.",
                     single=True,
                 )
                 for dimToChange, dimOfOther in dims:
@@ -193,14 +185,12 @@ class BlockConverter:
                 continue
             if c.isEncapsulatedBy(solvent):
                 raise ValueError(
-                    "There is a non void component {} in the location where component {} was expanded "
-                    "to absorb component solute {}. solvent dims {}, {} comp dims {} {}.".format(
-                        c, solvent, solute, solvent.p.id, solvent.p.od, c.p.id, c.p.od
-                    )
+                    f"There is a non void component {c} in the location where component {solvent} was expanded "
+                    f"to absorb component solute {solute}. solvent dims {solvent.p.id}, {solvent.p.od} comp dims {c.p.id} {c.p.od}."
                 )
             if c.getArea() < 0.0:
                 runLog.warning(
-                    "Component {} still has negative area after {} was dissolved into {}".format(c, solute, solvent),
+                    f"Component {c} still has negative area after {solute} was dissolved into {solvent}",
                     single=True,
                 )
 
@@ -370,14 +360,12 @@ class MixedPinComponentMerger(MultipleComponentMerger):
                 continue
             if c.isEncapsulatedBy(solvent):
                 raise ValueError(
-                    "There is a non void component {} in the location where component {} was expanded "
-                    "to absorb component solute {}. solvent dims {}, {} comp dims {} {}.".format(
-                        c, solvent, solute, solvent.p.id, solvent.p.od, c.p.id, c.p.od
-                    )
+                    f"There is a non void component {c} in the location where component {solvent} was expanded "
+                    f"to absorb component solute {solute}. solvent dims {solvent.p.id}, {solvent.p.od} comp dims {c.p.id} {c.p.od}."
                 )
             if c.getArea() < 0.0:
                 runLog.warning(
-                    "Component {} still has negative area after {} was dissolved into {}".format(c, solute, solvent),
+                    f"Component {c} still has negative area after {solute} was dissolved into {solvent}",
                     single=True,
                 )
 
@@ -427,7 +415,7 @@ class BlockAvgToCylConverter(BlockConverter):
 
     def _addBlockRings(self, blockToAdd, blockName, numRingsToAdd, firstRing, mainComponent=None):
         """Add a homogeneous block ring to the converted block."""
-        runLog.info("Converting representative block {} to its equivalent cylindrical model".format(self._sourceBlock))
+        runLog.info(f"Converting representative block {self._sourceBlock} to its equivalent cylindrical model")
 
         innerDiam = self.convertedBlock[-1].getDimension("od") if len(self.convertedBlock) else 0.0
 
@@ -475,10 +463,10 @@ class BlockAvgToCylConverter(BlockConverter):
         if self._driverFuelBlock is None:
             return
         if not self._driverFuelBlock.isFuel():
-            raise ValueError("Driver block {} must be fuel".format(self._driverFuelBlock))
+            raise ValueError(f"Driver block {self._driverFuelBlock} must be fuel")
         if self._numExternalRings < 0:
             raise ValueError(
-                "Number of fuel rings is set to {}, but must be a positive integer.".format(self._numExternalRings)
+                f"Number of fuel rings is set to {self._numExternalRings}, but must be a positive integer."
             )
 
         blockName = self._driverFuelBlock.getType() + " driver"
@@ -552,9 +540,7 @@ class HexComponentsToCylConverter(BlockAvgToCylConverter):
             numExternalRings=numExternalRings,
         )
         if not isinstance(sourceBlock, blocks.HexBlock):
-            raise TypeError(
-                "Block {} is not hexagonal and cannot be converted to an equivalent cylinder".format(sourceBlock)
-            )
+            raise TypeError(f"Block {sourceBlock} is not hexagonal and cannot be converted to an equivalent cylinder")
 
         if sourceBlock.spatialGrid is None:
             raise ValueError(
@@ -565,9 +551,7 @@ class HexComponentsToCylConverter(BlockAvgToCylConverter):
         if driverFuelBlock is not None:
             if not isinstance(driverFuelBlock, blocks.HexBlock):
                 raise TypeError(
-                    "Block {} is not hexagonal and cannot be converted to an equivalent cylinder".format(
-                        driverFuelBlock
-                    )
+                    f"Block {driverFuelBlock} is not hexagonal and cannot be converted to an equivalent cylinder"
                 )
         self.pinPitch = sourceBlock.getPinPitch()
         self.mergeIntoClad = mergeIntoClad or []
@@ -594,7 +578,7 @@ class HexComponentsToCylConverter(BlockAvgToCylConverter):
             both the ``sourceBlock`` and ``driverFuelBlock`` must be instances of
             ``HexBlocks``.
         """
-        runLog.info("Converting representative block {} to its equivalent cylindrical model".format(self._sourceBlock))
+        runLog.info(f"Converting representative block {self._sourceBlock} to its equivalent cylindrical model")
         self._dissolveComponents()
         numRings = self._sourceBlock.spatialGrid.getMinimumRings(self._sourceBlock.getNumPins())
         pinComponents, nonPins = self._classifyComponents()
@@ -699,7 +683,7 @@ class HexComponentsToCylConverter(BlockAvgToCylConverter):
         numPinsInRing = self._sourceBlock.spatialGrid.getPositionsInRing(ringNum)
         pinRadii = [c.getDimension("od") / 2.0 for c in pinComponents]
         bigRingRadii = radiiFromRingOfRods(self.pinPitch * (ringNum - 1), numPinsInRing, pinRadii)
-        nameSuffix = " {}".format(ringNum)
+        nameSuffix = f" {ringNum}"
 
         coolantOD = bigRingRadii[0] * 2.0
         self._addCoolantRing(coolantOD, nameSuffix)
@@ -731,7 +715,7 @@ class HexComponentsToCylConverter(BlockAvgToCylConverter):
 
         for i, hexagon in enumerate(sorted(nonPins)):
             outerDiam = getOuterDiamFromIDAndArea(innerDiameter, hexagon.getArea())  # conserve area of hex.
-            name = hexagon.name + " {}".format(i)
+            name = hexagon.name + f" {i}"
             circularHexagon = self._addSolidMaterialRing(hexagon, innerDiameter, outerDiam, name)
             self.convertedBlock.add(circularHexagon)
             innerDiameter = outerDiam
@@ -829,11 +813,11 @@ def radiiFromRingOfRods(distToRodCenter, numRods, rodRadii, layout="hexagon"):
         radToRodCenter = distToRodCenter * math.sqrt(math.sin(alpha) / alpha)
     elif layout == "hexagon":
         if numRods % 6:
-            raise ValueError("numRods ({}) must be a multiple of 6.".format(numRods))
+            raise ValueError(f"numRods ({numRods}) must be a multiple of 6.")
         sideLengthOfBigHex = distToRodCenter  # for equilateral triangle
         radToRodCenter = radiiFromHexSides([sideLengthOfBigHex])[0]
     else:
-        raise ValueError("Invalid layout {}".format(layout))
+        raise ValueError(f"Invalid layout {layout}")
 
     radiiFromRodCenter = []
     rLast = bigRLast = 0.0

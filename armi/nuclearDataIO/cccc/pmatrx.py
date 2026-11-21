@@ -63,9 +63,7 @@ def compareNuclideXS(nuc1, nuc2):
         val1 = getattr(nuc1, attrName)
         val2 = getattr(nuc2, attrName)
         if not properties.numpyHackForEqual(val1, val2):
-            runLog.important(
-                "{} and {} have different `{}` attributes:\n{}\n{}".format(nuc1, nuc2, attrName, val1, val2)
-            )
+            runLog.important(f"{nuc1} and {nuc2} have different `{attrName}` attributes:\n{val1}\n{val2}")
             equal &= False
     return equal
 
@@ -89,19 +87,17 @@ def addDummyNuclidesToLibrary(lib, dummyNuclides):
     :py:class:`~armi.nuclearDataIO.xsLibraries.XSLibrary`.
     """
     if not dummyNuclides:
-        runLog.important("No dummy nuclide data provided to be added to {}".format(lib))
+        runLog.important(f"No dummy nuclide data provided to be added to {lib}")
         return False
     if len(lib.xsIDs) > 1:
-        runLog.warning(
-            "Cannot add dummy nuclide data to PMATRX library {} containing data for more than 1 XS ID.".format(lib)
-        )
+        runLog.warning(f"Cannot add dummy nuclide data to PMATRX library {lib} containing data for more than 1 XS ID.")
         return False
     dummyNuclideKeysAddedToLibrary = []
     for dummy in dummyNuclides:
         dummyKey = dummy.nucLabel + lib.xsIDs[0]
         if dummyKey in lib:
             continue
-        runLog.debug("Adding {} nuclide data to {}".format(dummyKey, lib))
+        runLog.debug(f"Adding {dummyKey} nuclide data to {lib}")
         newDummy = xsNuclides.XSNuclide(lib, dummyKey)
         newDummy.pmatrxMetadata["hasNeutronHeatingAndDamage"] = False
         newDummy.pmatrxMetadata["maxScatteringOrder"] = 0
@@ -206,7 +202,7 @@ class PmatrxIO(cccc.Stream):
             self._rwIsotopes(numNucs)
         except Exception:
             runLog.error(traceback.format_exc())
-            raise OSError("Failed to read/write {}".format(self))
+            raise OSError(f"Failed to read/write {self}")
         finally:
             properties.lockImmutableProperties(self._lib)
 

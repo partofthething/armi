@@ -576,7 +576,7 @@ class TestInterfaceAndEventHeaders(unittest.TestCase):
         """When cycleNodeInfo should return the cycle and node."""
         self.assertEqual(
             self.o._expandCycleAndTimeNodeArgs(interactionName="EveryNode"),
-            f" - timestep: cycle {self.r.p.cycle}, node {self.r.p.timeNode}, year {'{0:.2f}'.format(self.r.p.time)}",
+            f" - timestep: cycle {self.r.p.cycle}, node {self.r.p.timeNode}, year {f'{self.r.p.time:.2f}'}",
         )
 
     def test_expandCycleAndTimeNodeArgs_Coupled(self):
@@ -585,7 +585,7 @@ class TestInterfaceAndEventHeaders(unittest.TestCase):
             self.o._expandCycleAndTimeNodeArgs(interactionName="Coupled"),
             (
                 f" - timestep: cycle {self.r.p.cycle}, node {self.r.p.timeNode}, year "
-                f"{'{0:.2f}'.format(self.r.p.time)} - iteration {self.r.core.p.coupledIteration}"
+                f"{f'{self.r.p.time:.2f}'} - iteration {self.r.core.p.coupledIteration}"
             ),
         )
 
