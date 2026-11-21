@@ -29,8 +29,10 @@ from armi.bookkeeping import report
 from armi.materials import Void, custom, material
 from armi.reactor import composites, flags, parameters
 from armi.reactor.components import componentParameters
+from armi.nucDirectory import elements as _nucDirElements
+from armi.nucDirectory import nuclideBases as _nucDirNuclideBases
 from armi.utils import densityTools
-from armi.utils.units import C_TO_K
+from armi.utils.units import C_TO_K, MOLES_PER_CC_TO_ATOMS_PER_BARN_CM
 
 COMPONENT_LINK_REGEX = re.compile(r"^\s*(.+?)\s*\.\s*(.+?)\s*$")
 
@@ -221,6 +223,9 @@ class Component(composites.Composite, metaclass=ComponentType):
         self.p.customIsotopicsName = isotopics
         #: Layers of particles dispersed in this component (see ``armi.reactor.components.particles``).
         self.particleLayers = []
+        #: Cache of the decoded nuclide-name list, keyed on the exact bytes array it came from.
+        self._decodedNuclidesArray = None
+        self._decodedNuclides = None
 
     @property
     def temperatureInC(self):
@@ -629,9 +634,16 @@ class Component(composites.Composite, metaclass=ComponentType):
         Return nuclides in this component.
 
         This includes anything that has been specified in here, including trace nuclides.
+
+        The decoded list is cached on the exact bytes array it was built from, so repeated
+        calls do not re-decode a short name list per call.
         """
-        # tolist() first avoids creating a numpy scalar per element
-        return [nucName.decode() for nucName in self.p.nuclides.tolist()]
+        nucs = self.p.nuclides
+        if self._decodedNuclidesArray is not nucs:
+            # tolist() first avoids creating a numpy scalar per element
+            self._decodedNuclides = [nucName.decode() for nucName in nucs.tolist()]
+            self._decodedNuclidesArray = nucs
+        return list(self._decodedNuclides)
 
     def getNumberDensity(self, nucName):
         """
@@ -675,34 +687,13 @@ class Component(composites.Composite, metaclass=ComponentType):
         if np.array_equal(byteNucs, self.p.nuclides):
             return np.array(self.p.numberDensities)
 
-        if len(byteNucs) < len(self.p.nuclides) / 10:
-            return self._getNumberDensitiesArray(byteNucs)
+        # One-nuclide lookups are cheap enough without building the dict.
+        if len(byteNucs) == 1:
+            hits = np.flatnonzero(self.p.nuclides == byteNucs[0])
+            return np.array([self.p.numberDensities[hits[0]]] if hits.size > 0 else [0.0])
 
         nDensDict = dict(zip(self.p.nuclides, self.p.numberDensities))
         return np.array([nDensDict.get(nuc, 0.0) for nuc in byteNucs])
-
-    def _getNumberDensitiesArray(self, byteNucs):
-        """
-        Get number densities using direct array lookup.
-
-        When only a small subset of nuclide number densities are requested, it is likely faster to lookup the index for
-        each nuclide than to recreate the entire dictionary for a lookup.
-
-        Parameters
-        ----------
-        byteNucs : np.ndarray, dtype="S6"
-            List of nuclides for which to retrieve number densities, as encoded byte strings
-        """
-        ndens = np.zeros(len(byteNucs), dtype=np.float64)
-        nuclides = self.p.nuclides
-        numberDensities = self.p.numberDensities
-
-        # if it's just a small subset of nuclides, use np.where for direct index lookup
-        for i, nuc in enumerate(byteNucs):
-            j = np.where(nuclides == nuc)[0]
-            if j.size > 0:
-                ndens[i] = numberDensities[j[0]]
-        return ndens
 
     def _getNdensHelper(self):
         nucs = self.getNuclides()
@@ -915,17 +906,39 @@ class Component(composites.Composite, metaclass=ComponentType):
             The mass in grams.
         """
         volume = self.getVolume() / (self.parent.getSymmetryFactor() if self.parent else 1.0)
+        # Weight the requested number densities directly: the full nuclide list is only
+        # needed for the unfiltered total mass, which does not go through here.
+        single = None
+        if isinstance(nuclideNames, str):
+            single = nuclideNames
+        elif isinstance(nuclideNames, (list, tuple)) and len(nuclideNames) == 1 and isinstance(nuclideNames[0], str):
+            single = nuclideNames[0]
+        if single is not None and single not in _nucDirElements.bySymbol:
+            # A pure nuclide name (e.g. U235): one lookup, no specification expansion.
+            # Anything an element symbol is not is checked for membership in the byName table
+            # rather than the object, so an unknown name yields zero mass as the generic path would.
+            nb = _nucDirNuclideBases.byName.get(single)
+            if nb is None:
+                return 0.0
+            byteName = single.encode()
+            hits = np.flatnonzero(self.p.nuclides == byteName)
+            dens = self.p.numberDensities[hits[0]] if hits.size > 0 else 0.0
+            return dens * nb.weight / MOLES_PER_CC_TO_ATOMS_PER_BARN_CM * volume
         if nuclideNames is None:
-            nDens = self._getNdensHelper()
-        else:
-            nuclideNames = self._getNuclidesFromSpecifier(nuclideNames)
-            # densities comes from self.p.numberDensities
-            if len(nuclideNames) > 0:
-                densities = self.getNuclideNumberDensities(nuclideNames)
-                nDens = dict(zip(nuclideNames, densities))
-            else:
-                nDens = {}
-        return densityTools.calculateMassDensity(nDens) * volume
+            nuclides = self.getNuclides()
+            mass = 0.0
+            for nucName, nDens in dict(zip(nuclides, self.p.numberDensities)).items():
+                mass += nDens * _nucDirNuclideBases.byName[nucName].weight
+            return mass / MOLES_PER_CC_TO_ATOMS_PER_BARN_CM * volume
+        nuclideNames = self._getNuclidesFromSpecifier(nuclideNames)
+        if len(nuclideNames) == 0:
+            return 0.0
+        # densities comes from self.p.numberDensities
+        densities = self.getNuclideNumberDensities(nuclideNames)
+        mass = 0.0
+        for dens, nucName in zip(densities, nuclideNames):
+            mass += dens * _nucDirNuclideBases.byName[nucName].weight
+        return mass / MOLES_PER_CC_TO_ATOMS_PER_BARN_CM * volume
 
     def setDimension(self, key, val, retainLink=False, cold=True):
         """
