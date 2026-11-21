@@ -543,7 +543,12 @@ class DefaultExecuter(Executer):
     def run(self):
         """Prepare, run the code (if there is one) and finish; return the output."""
         self.prepare()
-        return self.finish(self._execute())
+        try:
+            return self.finish(self._execute())
+        finally:
+            # Finish also undoes the transformations; this keeps the reactor restored even
+            # when the code run or the output read raises. No-op when finish already ran.
+            self._undoGeometryTransformations()
 
     def prepare(self) -> None:
         """Everything before the code runs: options, geometry, working directory, input."""
@@ -598,17 +603,22 @@ class DefaultExecuter(Executer):
 
     def finish(self, result: Optional[RunResult]):
         """Everything after the code ran: check it, read and apply the output, undo the geometry; return the output."""
-        if result is not None:
-            if not result.succeeded:
-                raise RuntimeError(f"{result.code.name} failed on {self.inputPath}:\n{result.failureReason()}")
-            if not result.cached and os.path.isdir(result.runDir):
-                shutil.rmtree(result.runDir)
-        output = self._readOutput()
-        if self.options.applyResultsToReactor:
-            output.apply(self.r)
-        self._undoGeometryTransformations()
-        self._updateAdditionalParameters()
-        return output
+        try:
+            if result is not None:
+                if not result.succeeded:
+                    raise RuntimeError(f"{result.code.name} failed on {self.inputPath}:\n{result.failureReason()}")
+                if not result.cached and os.path.isdir(result.runDir):
+                    shutil.rmtree(result.runDir)
+            output = self._readOutput()
+            if self.options.applyResultsToReactor:
+                output.apply(self.r)
+            self._undoGeometryTransformations()
+            self._updateAdditionalParameters()
+            return output
+        finally:
+            # Any failure below must not leave the reactor transformed; undo what the
+            # executer applied. No-op when the transformations were already undone.
+            self._undoGeometryTransformations()
 
     def writeInput(self):
         """Write the code's input to :py:attr:`inputPath`."""
@@ -634,11 +644,19 @@ def runExecuters(executers: Sequence[DefaultExecuter], maxWorkers: Optional[int]
     every executer is finished. Executers that transform the same reactor's geometry cannot be interleaved like this;
     run those one at a time.
     """
-    for executer in executers:
-        executer.prepare()
-    runs = [executer.codeRun() for executer in executers]
-    pending = [i for i, run in enumerate(runs) if run is not None]
-    results = [None] * len(executers)
-    for i, result in zip(pending, runAll([runs[i] for i in pending], maxWorkers, runner=runner)):
-        results[i] = result
-    return [executer.finish(result) for executer, result in zip(executers, results)]
+    prepared = []
+    try:
+        for executer in executers:
+            executer.prepare()
+            prepared.append(executer)
+        runs = [executer.codeRun() for executer in executers]
+        pending = [i for i, run in enumerate(runs) if run is not None]
+        results = [None] * len(executers)
+        for i, result in zip(pending, runAll([runs[i] for i in pending], maxWorkers, runner=runner)):
+            results[i] = result
+        return [executer.finish(result) for executer, result in zip(executers, results)]
+    finally:
+        # A failure in prepare, the codes or any executer's finish must not leave the reactor
+        # transformed; undo what each executer applied (idempotent).
+        for executer in prepared:
+            executer._undoGeometryTransformations()
