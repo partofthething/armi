@@ -53,7 +53,7 @@ from armi.reactor.components import (
 )
 from armi.reactor.reactors import Reactor
 from armi.testing import TESTING_ROOT, buildSimpleFuelHexBlock, loadTestReactor
-from armi.utils import hexagon
+from armi.utils import densityTools, hexagon
 from armi.utils.units import getTc
 
 
@@ -332,6 +332,35 @@ class TestComponent(TestGeneralComponents):
         self.assertTrue(isinstance(self.component.getProperties(), Material))
         self.assertTrue(hasattr(self.component.material, "density"))
         self.assertIn("Alloy200", str(self.component.getProperties()))
+
+
+class TestGetMass(unittest.TestCase):
+    def test_everySpecifierMatchesTheReferenceMass(self):
+        """Every kind of specifier, including the one-nuclide fast path, agrees with densityTools."""
+        fuel = buildSimpleFuelHexBlock().getComponent(flags.Flags.FUEL)
+        volume = fuel.getVolume() / fuel.parent.getSymmetryFactor()
+
+        def reference(nucNames):
+            nDens = {nuc: fuel.getNumberDensity(nuc) for nuc in nucNames}
+            return densityTools.calculateMassDensity(nDens) * volume
+
+        uranium = [nuc for nuc in fuel.getNuclides() if nuc.startswith("U")]
+        for spec, nucs in [
+            ("U235", ["U235"]),
+            (["U238"], ["U238"]),
+            ("U", uranium),
+            (["U235", "ZR90"], ["U235", "ZR90"]),
+            ("PU239", ["PU239"]),
+            (None, fuel.getNuclides()),
+        ]:
+            with self.subTest(spec=spec):
+                expected = reference(nucs)
+                self.assertAlmostEqual(fuel.getMass(spec), expected, delta=1e-12 * max(expected, 1e-12))
+        self.assertGreater(fuel.getMass("U235"), 0.0)
+
+        for spec in ("XX99", ["XX99"], ["XX99", "U235"]):
+            with self.subTest(unknown=spec), self.assertRaises(KeyError):
+                fuel.getMass(spec)
 
 
 class TestNullComponent(TestGeneralComponents):

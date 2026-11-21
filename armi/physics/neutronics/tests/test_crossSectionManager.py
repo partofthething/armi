@@ -181,7 +181,7 @@ class TestBlockCollAvg(unittest.TestCase):
         )
         self.assertAlmostEqual(avgB.getNumberDensity("U235") / expansion**2, 2.0)
         # (0 + 1/4 + 2/4 + 3/4 + 4/4) / 5 * 100.0 = 50.0
-        self.assertEqual(avgB.p.percentBu, 50.0)
+        self.assertAlmostEqual(avgB.p.percentBu, 50.0)
 
         # check that a new block collection of the representative block has right temperatures
         # this is required for Doppler coefficient calculations
@@ -892,13 +892,13 @@ class TestXSGM(unittest.TestCase):
         blockCollectionsByXsGroup = {}
         blockCollectionsByXsGroup = self.csm._addXsGroupsFromBlocks(blockCollectionsByXsGroup, self.blockList)
         ABcollection = blockCollectionsByXsGroup["AB"]
-        self.assertEqual(blockCollectionsByXsGroup["AA"]._calcWeightedBurnup(), 1 / 12.0)
+        self.assertAlmostEqual(blockCollectionsByXsGroup["AA"]._calcWeightedBurnup(), 1 / 12.0)
         self.assertEqual(
             ABcollection.getWeight(self.blockList[1]),
             ABcollection.getWeight(self.blockList[2]),
             "The two blocks in AB do not have the same weighting!",
         )
-        self.assertEqual(ABcollection._calcWeightedBurnup(), 6.55)
+        self.assertAlmostEqual(ABcollection._calcWeightedBurnup(), 6.55)
 
     def test_getNextAvailableXsType(self):
         blockCollectionsByXsGroup = {}
