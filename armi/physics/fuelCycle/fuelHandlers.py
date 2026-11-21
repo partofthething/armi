@@ -331,7 +331,6 @@ class FuelHandler:
 
     def prepCore(self):
         """Aux function to run before XS generation (do moderation, etc)."""
-        pass
 
     @staticmethod
     def _compareAssem(candidate, current):
@@ -1631,7 +1630,6 @@ class FuelHandler:
 
     def workerOperate(self, cmd):
         """Handle a mpi command on the worker nodes."""
-        pass
 
     def prepShuffleMap(self):
         """Prepare a table of current locations for plotting shuffle maneuvers."""

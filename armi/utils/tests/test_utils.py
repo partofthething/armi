@@ -185,7 +185,6 @@ class TestGeneralUtils(unittest.TestCase):
         @codeTiming.timed
         def testFunc():
             """Test function docstring."""
-            pass
 
         self.assertEqual(testFunc.__doc__, "Test function docstring.")
         self.assertEqual(testFunc.__name__, "testFunc")

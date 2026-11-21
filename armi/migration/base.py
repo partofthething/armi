@@ -52,17 +52,14 @@ class Migration(abc.ABC):
     @abc.abstractproperty
     def fromVersion(self):
         """ARMI version string, must be smaller than toVersion."""
-        pass
 
     @abc.abstractproperty
     def toVersion(self):
         """ARMI version string, must be larger than fromVersion."""
-        pass
 
     @abc.abstractmethod
     def _applyToStream(self):
         """Add actual migration code here in a subclass."""
-        pass
 
     def __repr__(self):
         return f"<Migration from {self.fromVersion}: {self.__doc__[:40]}..."
@@ -152,5 +149,3 @@ class SettingsMigration(Migration):
 
 class DatabaseMigration(Migration):
     """Migration for db output."""
-
-    pass

@@ -369,13 +369,9 @@ def prompt(statement, question, *options):
 class RunLogPromptCancel(Exception):
     """An error that occurs when the user submits a cancel on a runLog prompt which allows for cancellation."""
 
-    pass
-
 
 class RunLogPromptUnresolvable(Exception):
     """
     An error that occurs when the current mode enum in armi.__init__ suggests the user cannot be communicated with from
     the current process.
     """
-
-    pass

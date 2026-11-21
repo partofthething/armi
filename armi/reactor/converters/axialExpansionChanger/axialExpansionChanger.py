@@ -489,7 +489,6 @@ class AxialExpansionChanger:
         -----
         Since burnup can be calculated differently, this is meant to be populated in a downstream application subclass.
         """
-        pass
 
     def _shiftLinkedCompsForDelta(self, c: "Component", cAbove: "Component", deltaZTop: float):
         # shift the height and ztop of c downwards (-deltaZTop) or upwards (+deltaZTop)

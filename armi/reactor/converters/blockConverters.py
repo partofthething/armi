@@ -293,7 +293,6 @@ class MultipleComponentMerger(BlockConverter):
 
     def _verifyExpansion(self, solute, solvent):
         """Wait until all components are dissolved to check this."""
-        pass
 
     def convert(self):
         """Return a block with the solute merged into the solvent."""

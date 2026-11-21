@@ -321,7 +321,6 @@ class ZeroMassComponent(UnshapedVolumetricComponent):
 
     def setNumberDensity(self, *args, **kwargs):
         """Never add mass."""
-        pass
 
 
 class PositiveOrNegativeVolumeComponent(UnshapedVolumetricComponent):
@@ -335,7 +334,6 @@ class PositiveOrNegativeVolumeComponent(UnshapedVolumetricComponent):
 
     def _checkNegativeVolume(self, volume):
         """Allow negative areas."""
-        pass
 
 
 class DerivedShape(UnshapedComponent):

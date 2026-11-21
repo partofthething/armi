@@ -314,7 +314,7 @@ def createMaterialByName(name: str, namespaceOrder: list[str] = None):
 
     # 3. Try to import the material from a namespace defined above
     for namespace in namespaceOrder:
-        if namespace.startswith("venv:") or namespace.startswith("dir:"):
+        if namespace.startswith(("venv:", "dir:")):
             # get the directory in question
             if namespace.startswith("dir:"):
                 yDir = namespace[4:]

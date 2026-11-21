@@ -952,7 +952,6 @@ class UniformMeshGeometryConverter(GeometryConverter):
 
     def _checkConversion(self):
         """Perform checks to ensure conversion occurred properly."""
-        pass
 
     @staticmethod
     def _createNewAssembly(sourceAssembly):

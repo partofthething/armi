@@ -563,7 +563,7 @@ class Assembly(composites.Composite):
         """
         heights = []
         # loop from bottom to top
-        for i in range(0, len(self) - 1):
+        for i in range(len(self) - 1):
             diff1 = self[i].p[param] - value
             diff2 = self[i + 1].p[param] - value
             z1 = (self[i].p.zbottom + self[i].p.ztop) / 2

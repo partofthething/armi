@@ -46,7 +46,7 @@ class TestTransmutation(unittest.TestCase):
     def test_Transmutation_invalidReactionTypes(self):
         data = {"products": [""], "branch": 1.0}
         errorCount = 0
-        for _ in range(0, 5):
+        for _ in range(5):
             rxn = randomString(3)
             data["type"] = rxn
             if rxn in transmutations.TRANSMUTATION_TYPES:
@@ -72,7 +72,7 @@ class TestDecayMode(unittest.TestCase):
 
     def test_DecayMode_invalidReactionTypes(self):
         data = {"products": [""], "branch": 1.0, "halfLifeInSeconds": 1.0}
-        for _ in range(0, 25):
+        for _ in range(25):
             rxn = randomString(3)
             data["type"] = rxn
             if rxn in transmutations.DECAY_MODES:

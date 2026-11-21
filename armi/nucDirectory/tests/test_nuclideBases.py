@@ -78,7 +78,7 @@ class TestNuclideBases(unittest.TestCase):
             labels.append(nn.label)
 
     def test_nucBases_NegativeZRaisesException(self):
-        for _ in range(0, 5):
+        for _ in range(5):
             with self.assertRaises(AttributeError):
                 self.nuclideBases.isotopes(random.randint(-1000, -1))
 

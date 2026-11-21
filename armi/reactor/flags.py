@@ -323,8 +323,6 @@ class Flags(Flag):
 class InvalidFlagsError(KeyError):
     """Raised when code attempts to look for an undefined flag."""
 
-    pass
-
 
 # string conversions for multiple-word flags
 # Beware of how these may interact with the standard flag names! E.g., make sure NOZZLE

@@ -141,8 +141,6 @@ class ThoriumOxide(FuelMaterial):
 class ThO2(ThoriumOxide):
     """Just another name for ThoriumOxide."""
 
-    pass
-
 
 class ThU(FuelMaterial):
     enrichedNuclide = "U233"

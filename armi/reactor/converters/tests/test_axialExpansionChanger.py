@@ -370,7 +370,7 @@ class TestConservation(AxialExpansionTestBase):
         componentLst = [c for b in a for c in iterSolidComponents(b)]
         expansionGrowthFrac = 1.01
         contractionGrowthFrac = 1.0 / expansionGrowthFrac
-        for i in range(0, 10):
+        for i in range(10):
             if i < 5:
                 growthFrac = expansionGrowthFrac
                 fracLst = growthFrac + zeros(len(componentLst))

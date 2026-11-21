@@ -333,7 +333,6 @@ class Interface:
 
     def _checkSettings(self):
         """Raises an exception if interface settings requirements are not met."""
-        pass
 
     def nameContains(self, name):
         return name in str(self.name)
@@ -361,7 +360,6 @@ class Interface:
 
     def postDistributeState(self, toRestore):
         """Restore non-distributable attributes after a distributeState."""
-        pass
 
     def attachReactor(self, o, r):
         """
@@ -463,35 +461,27 @@ class Interface:
 
     def interactEOL(self):
         """Called at End-of-Life, after all cycles are complete."""
-        pass
 
     def interactBOC(self, cycle=None):
         """Called at the beginning of each cycle."""
-        pass
 
     def interactEOC(self, cycle=None):
         """Called at the end of each cycle."""
-        pass
 
     def interactEveryNode(self, cycle, node):
         """Called at each time node/subcycle of every cycle."""
-        pass
 
     def interactCoupled(self, iteration):
         """Called repeatedly at each time node/subcycle when tight physics coupling is active."""
-        pass
 
     def getTightCouplingValue(self):
         """Abstract method to retrieve the value in which tight coupling will converge on."""
-        pass
 
     def interactError(self):
         """Called if an error occurs."""
-        pass
 
     def interactDistributeState(self):
         """Called after this interface is copied to a different (non-primary) MPI node."""
-        pass
 
     def interactRestart(self, startNode: tuple[int, int], previousNode: tuple[int, int]):
         """Perform any actions prior to simulating a restart.
@@ -650,7 +640,6 @@ class Interface:
 
     def updatePhysicsCouplingControl(self):
         """Adjusts physics coupling settings depending on current state of run."""
-        pass
 
 
 class InputWriter:

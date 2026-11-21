@@ -325,8 +325,6 @@ class RZThetaReactorMeshConverterByRingCompositionAxialBins(
     _RZThetaReactorMeshConverterByAxialBins
     """
 
-    pass
-
 
 class RZThetaReactorMeshConverterByRingCompositionAxialCoordinates(
     _RZThetaReactorMeshConverterByRingComposition,
@@ -340,8 +338,6 @@ class RZThetaReactorMeshConverterByRingCompositionAxialCoordinates(
     _RZThetaReactorMeshConverterByRingComposition
     _RZThetaReactorMeshConverterByAxialCoordinates
     """
-
-    pass
 
 
 class RZThetaReactorMeshConverterByRingCompositionAxialFlags(
@@ -357,8 +353,6 @@ class RZThetaReactorMeshConverterByRingCompositionAxialFlags(
     _RZThetaReactorMeshConverterByRingComposition
     _RZThetaReactorMeshConverterByAxialFlags
     """
-
-    pass
 
 
 def checkLastValueInList(inputList, listName, expectedValue, eps=0.001, adjustLastValue=False):

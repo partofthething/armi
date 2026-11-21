@@ -536,7 +536,6 @@ class Operator:
 
         Useful for cleaning up data.
         """
-        pass
 
     def printInterfaceSummary(self, interface, interactionName, statePointIndex):
         """

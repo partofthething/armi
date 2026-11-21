@@ -371,7 +371,7 @@ class Elements:
         with open(self.elementsFile) as f:
             for line in f:
                 # Skip header lines
-                if line.startswith("#") or line.startswith("Z"):
+                if line.startswith(("#", "Z")):
                     continue
                 # read z, symbol, name, phase, and chemical group
                 lineData = line.split()

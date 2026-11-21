@@ -1437,7 +1437,7 @@ class NuclideBases:
         with open(nuclidesFile) as f:
             for line in f:
                 # Skip header lines
-                if line.startswith("#") or line.startswith("Z"):
+                if line.startswith(("#", "Z")):
                     continue
                 lineData = line.split()
                 _z = int(lineData[0])
