@@ -199,14 +199,13 @@ def getAtomicWeight(lab=None, z=None, a=None):
         else:
             nuclide = getNuclideFromName(lab)
         return nuclide.weight
-    elif z == 0 and a == 0:
+    if z == 0 and a == 0:
         return 0.0
     if a == 0 and z:
         element = elements.byZ[z]
         return element.standardWeight
-    else:
-        nuclide = nuclideBases.single(lambda nn: nn.a == a and nn.z == z)
-        return nuclide.weight
+    nuclide = nuclideBases.single(lambda nn: nn.a == a and nn.z == z)
+    return nuclide.weight
 
 
 def isHeavyMetal(name):

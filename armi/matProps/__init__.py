@@ -98,7 +98,7 @@ def getPaths(rootDir: str) -> list:
     """Get the paths of all the YAML files in a given directory."""
     if not os.path.exists(rootDir):
         raise FileNotFoundError(f"Directory {rootDir} not found")
-    elif not os.path.isdir(rootDir):
+    if not os.path.isdir(rootDir):
         raise NotADirectoryError(f"Input path {rootDir} is not a directory")
 
     patterns = ["*.yaml", "*.yml"]

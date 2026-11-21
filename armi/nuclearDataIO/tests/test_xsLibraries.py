@@ -304,6 +304,7 @@ class AbstractTestXSlibraryMerging(TempFileMixin):
                 if a >= (maxAttempts - 1):
                     raise e
                 sleep(1)
+        return None
 
     @classmethod
     def setUpClass(cls):

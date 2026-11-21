@@ -103,8 +103,7 @@ class Settings:
         """Getter for settings file path."""
         if self.path is None:
             return os.getcwd()
-        else:
-            return os.path.dirname(self.path)
+        return os.path.dirname(self.path)
 
     @property
     def caseTitle(self):
@@ -122,8 +121,7 @@ class Settings:
         """
         if not self.path:
             return self.defaultCaseTitle
-        else:
-            return os.path.splitext(os.path.basename(self.path))[0]
+        return os.path.splitext(os.path.basename(self.path))[0]
 
     @caseTitle.setter
     def caseTitle(self, value):
@@ -176,8 +174,7 @@ class Settings:
         settingIsOkayToGrab, err = self._directAccessOfSettingAllowed(key)
         if settingIsOkayToGrab:
             return self.__settings[key].value
-        else:
-            raise err
+        raise err
 
     def getSetting(self, key, default=None):
         """
@@ -189,10 +186,9 @@ class Settings:
         """
         if key in self.__settings:
             return copy(self.__settings[key])
-        elif default is not None:
+        if default is not None:
             return default
-        else:
-            raise NonexistentSetting(key)
+        raise NonexistentSetting(key)
 
     def __setitem__(self, key, val):
         """

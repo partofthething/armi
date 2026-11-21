@@ -117,8 +117,7 @@ class JaggedArray:
                 return []
             first, rest = x[0], x[1:]
             return JaggedArray.flatten(first) + JaggedArray.flatten(rest)
-        else:
-            return [x]
+        return [x]
 
     @classmethod
     def fromH5(cls, data, offsets, shapes, nones, dtype, paramName):

@@ -72,10 +72,9 @@ def getOperatorClassFromSettings(cs):
     if runType == RunTypes.STANDARD:
         if context.MPI_SIZE == 1:
             return Operator
-        else:
-            return OperatorMPI
+        return OperatorMPI
 
-    elif runType == RunTypes.SNAPSHOTS:
+    if runType == RunTypes.SNAPSHOTS:
         return OperatorSnapshots
 
     plugInOperator = None

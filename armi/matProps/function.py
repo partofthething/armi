@@ -92,7 +92,7 @@ class Function:
         # This method should take in one dictionary or a set of kwargs, but not both
         if point is not None and kwargs:
             raise ValueError("Please provide either a single dictionary or a set of kwargs, but not both.")
-        elif point is None and not kwargs:
+        if point is None and not kwargs:
             raise ValueError("Please provide at least one input to this method.")
 
         # select the inputs provided
@@ -107,7 +107,7 @@ class Function:
                 f"Material {self.material.name}, Property {self.property.name}: Specified point {data} does contain the"
                 f" correct independent variables: {self.independentVars}"
             )
-        elif not self.inRange(data):
+        if not self.inRange(data):
             raise ValueError(
                 f"Material {self.material.name}, Property {self.property.name}: Requested calculation point, {data} is "
                 "not in the valid range of the function"

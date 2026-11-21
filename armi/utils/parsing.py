@@ -70,8 +70,7 @@ def parseValue(source, requestedType, allowNone=False, matchingNonetype=True):
     if allowNone and not evaluated_source:
         if matchingNonetype:
             return copy.deepcopy(_none_types[requestedType])
-        else:
-            return evaluated_source
+        return evaluated_source
 
     # assert everything went well
     if not skip_instance_check and not isinstance(evaluated_source, requestedType):

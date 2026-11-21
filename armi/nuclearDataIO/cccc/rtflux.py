@@ -182,5 +182,4 @@ def getFDFluxReader(adjointFlag):
     """Returns the appropriate DIF3D FD flux binary file reader class, either RTFLUX (real) or ATFLUX (adjoint)."""
     if adjointFlag:
         return AtfluxStream
-    else:
-        return RtfluxStream
+    return RtfluxStream

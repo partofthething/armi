@@ -203,8 +203,7 @@ class Setting:
                 )
                 runLog.error(msg)
                 raise AttributeError(msg) from ee
-            else:
-                raise
+            raise
 
         self._setSchema()
 

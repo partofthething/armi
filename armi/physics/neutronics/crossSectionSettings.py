@@ -262,8 +262,7 @@ class XSSettings(dict):
         if not any(existingXsOpts):
             return self._getDefault(xsID)
 
-        else:
-            return sorted(existingXsOpts, key=lambda xsOpt: xsOpt.envGroup)[0]
+        return sorted(existingXsOpts, key=lambda xsOpt: xsOpt.envGroup)[0]
 
     def setDefaults(self, blockRepresentation, validBlockTypes):
         """

@@ -317,8 +317,7 @@ class GlobalFluxInterfaceUsingExecuters(GlobalFluxInterface):
         """
         if iteration is not None:
             return f"{caseTitle}-flux-c{cycle}n{node}i{iteration}"
-        else:
-            return f"{caseTitle}-flux-c{cycle}n{node}"
+        return f"{caseTitle}-flux-c{cycle}n{node}"
 
 
 class GlobalFluxOptions(executers.ExecutionOptions):

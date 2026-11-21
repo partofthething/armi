@@ -349,13 +349,12 @@ def createMaterialByName(name: str, namespaceOrder: list[str] = None):
             # composition variables by other plugins.
             newMat.setDefaultMassFracs()
             return newMat
-        else:
-            # check and see if this is an importable material
-            mod = importlib.import_module(namespace)
-            materialsList = inspect.getmembers(mod, lambda c: inspect.isclass(c) and issubclass(c, MatPropsMaterial))
-            materialsList = [material[0] for material in materialsList]
-            if name in materialsList:
-                return getattr(mod, name)()
+        # check and see if this is an importable material
+        mod = importlib.import_module(namespace)
+        materialsList = inspect.getmembers(mod, lambda c: inspect.isclass(c) and issubclass(c, MatPropsMaterial))
+        materialsList = [material[0] for material in materialsList]
+        if name in materialsList:
+            return getattr(mod, name)()
 
     raise KeyError(
         f"Cannot find material named `{name}` in any of: {str(namespaceOrder)}. Please update inputs or plugins. See "

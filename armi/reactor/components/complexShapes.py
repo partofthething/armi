@@ -93,8 +93,7 @@ class HoledHexagon(basicShapes.Hexagon):
         """
         if self.getDimension("nHoles") == 1:
             return self.getDimension("holeOD", Tc=Tc, cold=cold)
-        else:
-            return 0.0
+        return 0.0
 
     def getPerimeter(self, cold=False, Tc=None, inner=False):
         """Return the length of the closed boundary that surrounds a 2D shape."""
@@ -103,8 +102,7 @@ class HoledHexagon(basicShapes.Hexagon):
             n = self.getDimension("nHoles")
             mult = self.getDimension("mult")
             return math.pi * d * n * mult
-        else:
-            return super().getPerimeter(cold=cold, Tc=Tc, inner=False)
+        return super().getPerimeter(cold=cold, Tc=Tc, inner=False)
 
 
 class CircleHoledCircle(basicShapes.Circle):
@@ -170,8 +168,7 @@ class CircleHoledCircle(basicShapes.Circle):
         """
         if self.getDimension("nHoles") == 1:
             return self.getDimension("holeOD", Tc=Tc, cold=cold)
-        else:
-            return 0.0
+        return 0.0
 
     def getPerimeter(self, cold=False, Tc=None, inner=False):
         """Return the length of the closed boundary that surrounds a 2D shape."""
@@ -180,9 +177,8 @@ class CircleHoledCircle(basicShapes.Circle):
             holeOD = self.getDimension("holeOD", cold=cold, Tc=Tc)
             nHoles = self.getDimension("nHoles")
             return math.pi * holeOD * nHoles * mult
-        else:
-            d = self.getDimension("od", cold=cold, Tc=Tc)
-            return math.pi * d * mult
+        d = self.getDimension("od", cold=cold, Tc=Tc)
+        return math.pi * d * mult
 
 
 class HexHoledCircle(basicShapes.Circle):
@@ -240,8 +236,7 @@ class HexHoledCircle(basicShapes.Circle):
             )
             mult = self.getDimension("mult") if inner else 1.0
             return 6 * mult * pitch / math.sqrt(3)
-        else:
-            return super().getPerimeter(cold=cold, Tc=Tc, inner=False)
+        return super().getPerimeter(cold=cold, Tc=Tc, inner=False)
 
 
 class FilletedHexagon(basicShapes.Hexagon):
@@ -416,8 +411,7 @@ class HoledRectangle(basicShapes.Rectangle):
             holeOD = self.getDimension("holeOD", cold=cold, Tc=Tc)
             mult = self.getDimension("mult")
             return math.pi * holeOD * mult
-        else:
-            return super().getPerimeter(cold=cold, Tc=Tc, inner=False)
+        return super().getPerimeter(cold=cold, Tc=Tc, inner=False)
 
 
 class HoledSquare(basicShapes.Square):
@@ -482,9 +476,8 @@ class HoledSquare(basicShapes.Square):
         if inner:
             holeOD = self.getDimension("holeOD", cold=cold, Tc=Tc)
             return math.pi * holeOD * mult
-        else:
-            width = self.getDimension("widthOuter", cold=cold, Tc=Tc)
-            return 4 * width * mult
+        width = self.getDimension("widthOuter", cold=cold, Tc=Tc)
+        return 4 * width * mult
 
 
 class Helix(ShapedComponent):

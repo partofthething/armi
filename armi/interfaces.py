@@ -568,10 +568,11 @@ class Interface:
         """
         if flag is None:
             return self._enabled
-        elif isinstance(flag, bool):
+        if isinstance(flag, bool):
             self._enabled = flag
         else:
             raise ValueError(f"Non-bool passed to assign {self}.enable().")
+        return None
 
     def bolForce(self, flag=None):
         """
@@ -594,6 +595,7 @@ class Interface:
         if flag is None:
             return self._bolForce
         self._bolForce = flag
+        return None
 
     def writeInput(self, inName):
         """Write input file(s)."""

@@ -90,8 +90,7 @@ def _processIncludes(
         m = _INDENT_RE.match(line)
         if m and m.group(1) is not None:
             return m.start(1)
-        else:
-            return 0
+        return 0
 
     indentSpace = " " * indentation
     if hasattr(src, "getvalue"):
@@ -606,7 +605,7 @@ class TextProcessor:
                 if pattern in line:
                     result = line
                     break
-                elif killOn and killOn in line:
+                if killOn and killOn in line:
                     result = ""
                     break
             else:

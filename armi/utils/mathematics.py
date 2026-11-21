@@ -144,10 +144,9 @@ def convertToSlice(x, increment=0):
         jstep = x.step
 
         return np.s_[jstart:jstop:jstep]
-    elif isinstance(x, np.ndarray):
+    if isinstance(x, np.ndarray):
         return np.array([i + increment for i in x])
-    else:
-        raise TypeError(f"It is not known how to handle x type: {type(x)} in utils.convertToSlice")
+    raise TypeError(f"It is not known how to handle x type: {type(x)} in utils.convertToSlice")
 
 
 def efmt(a: str) -> str:
@@ -184,7 +183,7 @@ def expandRepeatedFloats(repeatedList):
             val = val.upper()
             if val.count("R") > 1:
                 raise ValueError("List had strings that were not repeats")
-            elif "R" in val:
+            if "R" in val:
                 val = val.replace("R", "")
                 isRepeat = True
         if isRepeat:
@@ -226,9 +225,8 @@ def findClosest(listToSearch, val, indx=False):
             minI = i
     if indx:
         return minVal, minI
-    else:
-        # backwards compatibility
-        return minVal
+    # backwards compatibility
+    return minVal
 
 
 def findNearestValue(searchList, searchValue):
@@ -354,8 +352,7 @@ def linearInterpolation(x0, y0, x1, y1, targetX=None, targetY=None):
 
     if targetX is not None:
         return m * targetX + b
-    else:
-        return (targetY - b) / m
+    return (targetY - b) / m
 
 
 def minimizeScalarFunc(
@@ -571,8 +568,7 @@ def relErr(v1: float, v2: float) -> float:
     """Find the relative error between to numbers."""
     if v1:
         return (v2 - v1) / v1
-    else:
-        return -1e99
+    return -1e99
 
 
 def resampleStepwise(xin, yin, xout, avg=True):
@@ -678,6 +674,5 @@ def rotateXY(x, y, degreesCounterclockwise=None, radiansCounterclockwise=None):
     if len(xr) > 1:
         # Convert to lists because everyone prefers lists for some reason
         return xr.tolist(), yr.tolist()
-    else:
-        # Convert to scalar for consistency with old implementation
-        return xr[0], yr[0]
+    # Convert to scalar for consistency with old implementation
+    return xr[0], yr[0]

@@ -80,10 +80,9 @@ def getTestResult(app, need, needs):
     if results:
         if "failure" in results:
             return "failure"
-        elif "passed" in results:
+        if "passed" in results:
             return "passed"
-        else:
-            return "skipped"
+        return "skipped"
 
     # Things get a little more complicated when the test tag has a class-level signature.
     # Basically we have to determine if all the methods in the class passed or if any of skipped/failed.
@@ -115,10 +114,9 @@ def getTestResult(app, need, needs):
     #  - If all of the methods passed, return "passed"
     if "failure" in results.values():
         return "failure"
-    elif "skipped" in results.values():
+    if "skipped" in results.values():
         return "skipped"
-    else:
-        return "passed"
+    return "passed"
 
 
 # Here is where we fill out all the test results, so it is only done once

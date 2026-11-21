@@ -425,8 +425,7 @@ class ArmiObject(metaclass=CompositeModelType):
         r = self.getAncestor(lambda c: isinstance(c, Reactor))
         if r:
             return r.nuclideBases
-        else:
-            return nuclideBases.nuclideBases
+        return nuclideBases.nuclideBases
 
     def duplicate(self):
         """
@@ -560,8 +559,7 @@ class ArmiObject(metaclass=CompositeModelType):
         name = self.name.lower()
         if isinstance(s, list):
             return any(n.lower() in name for n in s)
-        else:
-            return s.lower() in name
+        return s.lower() in name
 
     def getName(self):
         """Get composite name."""
@@ -652,7 +650,7 @@ class ArmiObject(metaclass=CompositeModelType):
         if isinstance(typeID, str):
             raise TypeError("Must pass Flags, or an iterable of Flags; Strings are no longer supported")
 
-        elif not isinstance(typeID, Flags):
+        if not isinstance(typeID, Flags):
             # list behavior gives a spec1 OR spec2 OR ... behavior.
             return any(self.hasFlags(typeIDi, exact=exact) for typeIDi in typeID)
 
@@ -781,7 +779,7 @@ class ArmiObject(metaclass=CompositeModelType):
         allNuclidesHere = self.getNuclides()
         if nucSpec is None:
             return allNuclidesHere
-        elif isinstance(nucSpec, (str)):
+        if isinstance(nucSpec, (str)):
             nuclideNames = [nucSpec]
         elif isinstance(nucSpec, list):
             nuclideNames = nucSpec
@@ -1142,8 +1140,7 @@ class ArmiObject(metaclass=CompositeModelType):
             return self
         if self.parent is None:
             return None
-        else:
-            return self.parent.getAncestor(fn)
+        return self.parent.getAncestor(fn)
 
     def getAncestorAndDistance(self, fn, _distance=0) -> tuple["ArmiObject", int] | None:
         """
@@ -1160,8 +1157,7 @@ class ArmiObject(metaclass=CompositeModelType):
             return self, _distance
         if self.parent is None:
             return None
-        else:
-            return self.parent.getAncestorAndDistance(fn, _distance + 1)
+        return self.parent.getAncestorAndDistance(fn, _distance + 1)
 
     def getAncestorWithFlags(self, typeSpec: TypeSpec, exactMatch=False):
         """
@@ -1189,8 +1185,7 @@ class ArmiObject(metaclass=CompositeModelType):
 
         if self.parent is None:
             return None
-        else:
-            return self.parent.getAncestorWithFlags(typeSpec, exactMatch=exactMatch)
+        return self.parent.getAncestorWithFlags(typeSpec, exactMatch=exactMatch)
 
     def getTotalNDens(self):
         """
@@ -1291,8 +1286,7 @@ class ArmiObject(metaclass=CompositeModelType):
         hm = self.getHMMass()
         if hm > 0:
             return self.getFissileMass() / hm
-        else:
-            return 0.0
+        return 0.0
 
     def getUraniumNumEnrich(self):
         """Returns fissile uranium number fraction."""
@@ -2210,8 +2204,7 @@ class Composite(ArmiObject):
                     realVal = val
         if returnObj:
             return realVal, maxP[1]
-        else:
-            return realVal
+        return realVal
 
     def getNuclides(self):
         """
@@ -2636,10 +2629,9 @@ class Composite(ArmiObject):
         nComp = len(components)
         if nComp == 0:
             return None
-        elif nComp > 1:
+        if nComp > 1:
             raise ValueError(f"More than one component named '{name}' in {self}")
-        else:
-            return components[0]
+        return components[0]
 
     def getComponent(self, typeSpec: TypeSpec, exact: bool = False, quiet: bool = True) -> Optional["Component"]:
         """
@@ -2667,7 +2659,7 @@ class Composite(ArmiObject):
         results = self.getComponents(typeSpec, exact=exact)
         if len(results) == 1:
             return results[0]
-        elif not results:
+        if not results:
             if not quiet:
                 runLog.debug(
                     f"No component matched {typeSpec} in {self}. Returning None",
@@ -2675,8 +2667,7 @@ class Composite(ArmiObject):
                     label=f"None component returned instead of {typeSpec}",
                 )
             return None
-        else:
-            raise ValueError(f"Multiple components match in {self} match typeSpec {typeSpec}: {results}")
+        raise ValueError(f"Multiple components match in {self} match typeSpec {typeSpec}: {results}")
 
     def getNumComponents(self, typeSpec: TypeSpec, exact=False):
         """

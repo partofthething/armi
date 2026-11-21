@@ -142,7 +142,7 @@ def addDummyNuclidesToLibrary(lib, dummyNuclides):
     if not dummyNuclides:
         runLog.important(f"No dummy nuclide data provided to be added to {lib}")
         return False
-    elif len(lib.xsIDs) > 1:
+    if len(lib.xsIDs) > 1:
         runLog.warning(f"Cannot add dummy nuclide data to ISOTXS library {lib} containing data for more than 1 XS ID.")
         return False
 

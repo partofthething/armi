@@ -160,10 +160,9 @@ class MpiAction:
         # if the object is large with lots of links, it is prudent to call gc.collect()
         if obj is None and context.MPI_RANK == 0:
             return self
-        elif context.MPI_RANK == 0:
+        if context.MPI_RANK == 0:
             return obj
-        else:
-            return result
+        return result
 
     def gather(self, obj=None):
         """A wrapper around ``MPI_COMM.gather``.

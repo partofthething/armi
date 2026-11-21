@@ -353,5 +353,4 @@ def directoryChangerFactory():
         from armi.utils.directoryChangersMpi import MpiDirectoryChanger
 
         return MpiDirectoryChanger
-    else:
-        return DirectoryChanger
+    return DirectoryChanger

@@ -230,7 +230,7 @@ def formatMaterialCard(
         if isinstance(nuc, (nuclideBases.LumpNuclideBase)):
             runLog.important("The material card returned will ignore LFPs.", single=True)
             continue
-        elif isinstance(nuc, nuclideBases.DummyNuclideBase):
+        if isinstance(nuc, nuclideBases.DummyNuclideBase):
             runLog.info(f"Omitting dummy nuclides such as {nuc}", single=True)
             continue
         mcnpNucName = nuc.getMcnpId()

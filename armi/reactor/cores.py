@@ -621,8 +621,7 @@ class Core(composites.Composite):
         """
         if self.circularRingList and not indexBased:
             return max(self.circularRingList)
-        else:
-            return self.getNumHexRings()
+        return self.getNumHexRings()
 
     def getNumHexRings(self):
         """Return the number of hex rings in the core. Based on location so indexing starts at 1."""
@@ -650,8 +649,7 @@ class Core(composites.Composite):
         """
         if self.powerMultiplier == 1:
             return 3 * nRings * (nRings - 1) + 1
-        else:
-            return nRings * (nRings - 1) + (nRings + 1) // 2
+        return nRings * (nRings - 1) + (nRings + 1) // 2
 
     def getNumEnergyGroups(self):
         """
@@ -1315,8 +1313,7 @@ class Core(composites.Composite):
         # build a lookup table one time.
         if assemblyLevel:
             return {a.getLocation(): a for a in self}
-        else:
-            return {b.getLocation(): b for a in self for b in a}
+        return {b.getLocation(): b for a in self for b in a}
 
     def getFluxVector(self, energyOrder=0, adjoint=False, extSrc=False, volumeIntegrated=True):
         """
@@ -1643,7 +1640,7 @@ class Core(composites.Composite):
         nDuplicates = len(duplicates)
         if nDuplicates == 1:
             return duplicates[0]
-        elif nDuplicates > 1:
+        if nDuplicates > 1:
             raise ValueError("Too many neighbors found!")
         return None
 
@@ -1910,7 +1907,7 @@ class Core(composites.Composite):
                 meshList.append(innerMeshVal + dP1 * ratio)
                 meshList.sort()
                 return meshList, False
-            elif dP0 / (dP0 + dP1) > (1.0 - ratio):
+            if dP0 / (dP0 + dP1) > (1.0 - ratio):
                 runLog.extra("Mesh gap too large. Adjusting mesh to be more reasonable.")
                 meshList.append(meshList[i - 1] + dP0 * (1.0 - ratio))
                 meshList.sort()
@@ -2054,8 +2051,7 @@ class Core(composites.Composite):
 
         if denom:
             return num / denom
-        else:
-            raise RuntimeError(f"no temperature average for {typeSpec}")
+        raise RuntimeError(f"no temperature average for {typeSpec}")
 
     def growToFullCore(self, cs):
         """Copies symmetric assemblies to build a full core model out of a 1/3 core model.
@@ -2138,8 +2134,7 @@ class Core(composites.Composite):
             for b in a:
                 if b.hasFlags(Flags.FUEL):
                     break
-                else:
-                    fuelHeightInCm += b.getHeight()
+                fuelHeightInCm += b.getHeight()
             if fuelHeightInCm < lowestFuelHeightInCm:
                 lowestFuelHeightInCm = fuelHeightInCm
             fuelBottoms.append(fuelHeightInCm)

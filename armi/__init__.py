@@ -276,10 +276,9 @@ def configure(app: apps.App | None = None, permissive=False, settingsFiles: Iter
     if _app is not None:
         if permissive and isinstance(app, apps.App):
             return
-        else:
-            raise RuntimeError(
-                f"Multiple calls to armi.configure() are not allowed. Previous call from:\n{_ARMI_CONFIGURE_CONTEXT}"
-            )
+        raise RuntimeError(
+            f"Multiple calls to armi.configure() are not allowed. Previous call from:\n{_ARMI_CONFIGURE_CONTEXT}"
+        )
 
     assert not context.BLUEPRINTS_IMPORTED, (
         "ARMI can no longer be configured after blueprints have been imported. Blueprints were imported from"

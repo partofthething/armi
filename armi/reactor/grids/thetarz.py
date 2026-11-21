@@ -48,9 +48,8 @@ class ThetaRZGrid(StructuredGrid):
         if nativeCoords:
             # return Theta, R, Z values directly.
             return meshCoords
-        else:
-            # return x, y ,z
-            return np.array((r * math.cos(theta), r * math.sin(theta), z))
+        # return x, y ,z
+        return np.array((r * math.cos(theta), r * math.sin(theta), z))
 
     def indicesOfBounds(
         self,

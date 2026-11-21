@@ -204,6 +204,7 @@ class TestGeneralComponents(unittest.TestCase):
         else:
             component.parent = _Parent()
             return component
+        return None
 
 
 class TestComponentNDens(TestGeneralComponents):

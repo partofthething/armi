@@ -124,7 +124,7 @@ def getBlockParameterDefinitions():
                 )
                 self.envGroupNum = intValue
                 return
-            elif not isinstance(envGroupChar, str):
+            if not isinstance(envGroupChar, str):
                 raise Exception(f"Wrong type for envGroupChar {envGroupChar}: {type(envGroupChar)}")
 
             if envGroupChar.islower():

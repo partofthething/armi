@@ -255,8 +255,7 @@ class HexGrid(StructuredGrid):
         ring, pos = self.getRingPos(indices)
         if len(indices) == 2:
             return super().getLabel((ring, pos))
-        else:
-            return super().getLabel((ring, pos, indices[2]))
+        return super().getLabel((ring, pos, indices[2]))
 
     @staticmethod
     def _indicesAndEdgeFromRingAndPos(ring, position):
@@ -424,10 +423,9 @@ class HexGrid(StructuredGrid):
             and self.symmetry.boundary == geometry.BoundaryType.PERIODIC
         ):
             return self._getSymmetricIdenticalsThird(indices)
-        elif self.symmetry.domain == geometry.DomainType.FULL_CORE:
+        if self.symmetry.domain == geometry.DomainType.FULL_CORE:
             return []
-        else:
-            raise NotImplementedError(f"Unhandled symmetry condition for HexGrid: {self.symmetry}")
+        raise NotImplementedError(f"Unhandled symmetry condition for HexGrid: {self.symmetry}")
 
     @staticmethod
     def _getSymmetricIdenticalsThird(indices) -> list[IJType]:
@@ -491,8 +489,7 @@ class HexGrid(StructuredGrid):
         # assemblies.
         if self.symmetry.domain == geometry.DomainType.THIRD_CORE:
             return self.isInFirstThird(locator, includeTopEdge=symmetryOverlap)
-        else:
-            return True
+        return True
 
     def isInFirstThird(self, locator, includeTopEdge=False) -> bool:
         """Test if the given locator is in the first 1/3 of the HexGrid.

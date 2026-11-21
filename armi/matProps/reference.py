@@ -33,10 +33,9 @@ class Reference:
     def __repr__(self):
         if not self._ref:
             return UNDEFINED_REF_DATA
-        elif not self._type:
+        if not self._type:
             return self._ref
-        else:
-            return f"{self._ref} ({self._type})"
+        return f"{self._ref} ({self._type})"
 
     @staticmethod
     def _factory(node):

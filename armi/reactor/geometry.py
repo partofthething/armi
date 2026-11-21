@@ -62,10 +62,9 @@ class GeomType(enum.Enum):
         """
         if isinstance(source, GeomType):
             return source
-        elif isinstance(source, str):
+        if isinstance(source, str):
             return cls.fromStr(source)
-        else:
-            raise TypeError(f"Expected str or GeomType; got {type(source)}")
+        raise TypeError(f"Expected str or GeomType; got {type(source)}")
 
     @classmethod
     def fromStr(cls, geomStr: str) -> "GeomType":
@@ -77,11 +76,11 @@ class GeomType(enum.Enum):
             # there is a good reason to make corners-up HEX its own geom type, we will
             # need to figure out how to design around that.
             return cls.HEX
-        elif canonical == CARTESIAN:
+        if canonical == CARTESIAN:
             return cls.CARTESIAN
-        elif canonical == RZT:
+        if canonical == RZT:
             return cls.RZT
-        elif canonical == RZ:
+        if canonical == RZ:
             return cls.RZ
 
         # use the original geomStr with preserved capitalization for better error-finding.
@@ -94,23 +93,21 @@ class GeomType(enum.Enum):
         """Human-presentable label."""
         if self == self.HEX:
             return "Hexagonal"
-        elif self == self.CARTESIAN:
+        if self == self.CARTESIAN:
             return "Cartesian"
-        elif self == self.RZT:
+        if self == self.RZT:
             return "R-Z-Theta"
-        else:
-            return "R-Z"
+        return "R-Z"
 
     def __str__(self):
         """Inverse of fromStr()."""
         if self == self.HEX:
             return HEX
-        elif self == self.CARTESIAN:
+        if self == self.CARTESIAN:
             return CARTESIAN
-        elif self == self.RZT:
+        if self == self.RZT:
             return RZT
-        else:
-            return RZ
+        return RZ
 
 
 class DomainType(enum.Enum):
@@ -127,10 +124,9 @@ class DomainType(enum.Enum):
     def fromAny(cls, source: Union[str, "DomainType"]) -> "DomainType":
         if isinstance(source, DomainType):
             return source
-        elif isinstance(source, str):
+        if isinstance(source, str):
             return cls.fromStr(source)
-        else:
-            raise TypeError(f"Expected str or DomainType; got {type(source)}")
+        raise TypeError(f"Expected str or DomainType; got {type(source)}")
 
     @classmethod
     def fromStr(cls, shapeStr: str) -> "DomainType":
@@ -138,15 +134,15 @@ class DomainType(enum.Enum):
         canonical = shapeStr.lower().strip()
         if canonical == FULL_CORE:
             return cls.FULL_CORE
-        elif canonical == THIRD_CORE:
+        if canonical == THIRD_CORE:
             return cls.THIRD_CORE
-        elif canonical == QUARTER_CORE:
+        if canonical == QUARTER_CORE:
             return cls.QUARTER_CORE
-        elif canonical == EIGHTH_CORE:
+        if canonical == EIGHTH_CORE:
             return cls.EIGHTH_CORE
-        elif canonical == SIXTEENTH_CORE:
+        if canonical == SIXTEENTH_CORE:
             return cls.SIXTEENTH_CORE
-        elif canonical == "":
+        if canonical == "":
             return cls.NULL
 
         errorMsg = f"{str(canonical)} is not a valid domain option. Valid domain options are:"
@@ -158,47 +154,44 @@ class DomainType(enum.Enum):
         """Human-presentable label."""
         if self == self.FULL_CORE:
             return "Full"
-        elif self == self.THIRD_CORE:
+        if self == self.THIRD_CORE:
             return "Third"
-        elif self == self.QUARTER_CORE:
+        if self == self.QUARTER_CORE:
             return "Quarter"
-        elif self == self.EIGHTH_CORE:
+        if self == self.EIGHTH_CORE:
             return "Eighth"
-        elif self == self.SIXTEENTH_CORE:
+        if self == self.SIXTEENTH_CORE:
             return "Sixteenth"
-        else:
-            # is NULL
-            return ""
+        # is NULL
+        return ""
 
     def __str__(self):
         """Inverse of fromStr()."""
         if self == self.FULL_CORE:
             return FULL_CORE
-        elif self == self.THIRD_CORE:
+        if self == self.THIRD_CORE:
             return THIRD_CORE
-        elif self == self.QUARTER_CORE:
+        if self == self.QUARTER_CORE:
             return QUARTER_CORE
-        elif self == self.EIGHTH_CORE:
+        if self == self.EIGHTH_CORE:
             return EIGHTH_CORE
-        elif self == self.SIXTEENTH_CORE:
+        if self == self.SIXTEENTH_CORE:
             return SIXTEENTH_CORE
-        else:
-            # is NULL
-            return ""
+        # is NULL
+        return ""
 
     def symmetryFactor(self) -> float:
         if self in (self.FULL_CORE, self.NULL):
             return 1.0
-        elif self == self.THIRD_CORE:
+        if self == self.THIRD_CORE:
             return 3.0
-        elif self == self.QUARTER_CORE:
+        if self == self.QUARTER_CORE:
             return 4.0
-        elif self == self.EIGHTH_CORE:
+        if self == self.EIGHTH_CORE:
             return 8.0
-        elif self == self.SIXTEENTH_CORE:
+        if self == self.SIXTEENTH_CORE:
             return 16.0
-        else:
-            raise ValueError(f"Could not calculate symmetry factor for domain size {self.label}. update logic.")
+        raise ValueError(f"Could not calculate symmetry factor for domain size {self.label}. update logic.")
 
 
 class BoundaryType(enum.Enum):
@@ -212,10 +205,9 @@ class BoundaryType(enum.Enum):
     def fromAny(cls, source: Union[str, "BoundaryType"]) -> "BoundaryType":
         if isinstance(source, BoundaryType):
             return source
-        elif isinstance(source, str):
+        if isinstance(source, str):
             return cls.fromStr(source)
-        else:
-            raise TypeError(f"Expected str or BoundaryType; got {type(source)}")
+        raise TypeError(f"Expected str or BoundaryType; got {type(source)}")
 
     @classmethod
     def fromStr(cls, symmetryStr: str) -> "BoundaryType":
@@ -223,9 +215,9 @@ class BoundaryType(enum.Enum):
         canonical = symmetryStr.lower().strip()
         if canonical == NO_SYMMETRY:
             return cls.NO_SYMMETRY
-        elif canonical == PERIODIC:
+        if canonical == PERIODIC:
             return cls.PERIODIC
-        elif canonical == REFLECTIVE:
+        if canonical == REFLECTIVE:
             return cls.REFLECTIVE
 
         errorMsg = f"{str(canonical)} is not a valid boundary option. Valid boundary options are:"
@@ -237,19 +229,17 @@ class BoundaryType(enum.Enum):
         """Human-presentable label."""
         if self == self.NO_SYMMETRY:
             return "No Symmetry"
-        elif self == self.REFLECTIVE:
+        if self == self.REFLECTIVE:
             return "Reflective"
-        else:
-            return "Periodic"
+        return "Periodic"
 
     def __str__(self):
         """Inverse of fromStr()."""
         if self == self.NO_SYMMETRY:
             return ""
-        elif self == self.PERIODIC:
+        if self == self.PERIODIC:
             return PERIODIC
-        else:
-            return REFLECTIVE
+        return REFLECTIVE
 
     def hasSymmetry(self):
         return self != self.NO_SYMMETRY
@@ -352,10 +342,9 @@ class SymmetryType:
     def fromAny(cls, source: Union[str, "SymmetryType"]) -> "SymmetryType":
         if isinstance(source, SymmetryType):
             return source
-        elif isinstance(source, str):
+        if isinstance(source, str):
             return cls.fromStr(source)
-        else:
-            raise TypeError(f"Expected str or SymmetryType; got {type(source)}")
+        raise TypeError(f"Expected str or SymmetryType; got {type(source)}")
 
     def __str__(self):
         """Combined string of domain and boundary symmetry type."""
@@ -374,15 +363,14 @@ class SymmetryType:
                 and self.boundary == other.boundary
                 and self.isThroughCenterAssembly == other.isThroughCenterAssembly
             )
-        elif isinstance(other, str):
+        if isinstance(other, str):
             otherSym = SymmetryType.fromStr(other)
             return (
                 self.domain == otherSym.domain
                 and self.boundary == otherSym.boundary
                 and self.isThroughCenterAssembly == otherSym.isThroughCenterAssembly
             )
-        else:
-            raise NotImplementedError
+        raise NotImplementedError
 
     def __hash__(self):
         """Hash a SymmetryType object based on a tuple of its options."""
@@ -411,8 +399,7 @@ def checkValidGeomSymmetryCombo(
     symmetry = SymmetryType.fromAny(symmetryInput)
     if (symmetry.domain, symmetry.boundary) in VALID_GEOM_SYMMETRY[GeomType.fromAny(geomType)]:
         return True
-    else:
-        raise ValueError(f"GeomType: {str(geomType)} and SymmetryType: {str(symmetry)} is not a valid combination!")
+    raise ValueError(f"GeomType: {str(geomType)} and SymmetryType: {str(symmetry)} is not a valid combination!")
 
 
 SYSTEMS = "systems"

@@ -762,7 +762,7 @@ class Operator:
             if issubclass(type(iFunc), type(interface)):
                 runLog.info(f"Ignoring Interface {interface} because existing interface {iFunc} already  more specific")
                 return
-            elif issubclass(type(interface), type(iFunc)):
+            if issubclass(type(interface), type(iFunc)):
                 self.removeInterface(iFunc)
                 runLog.info(
                     f"Will Insert Interface {interface} because it is a subclass of {iFunc} interface and  more derived"
@@ -850,9 +850,8 @@ class Operator:
             self.interfaces.remove(interface)
             interface.detachReactor()
             return True
-        else:
-            runLog.warning(f"Cannot remove interface {interface} because it is not in the interface stack.")
-            return False
+        runLog.warning(f"Cannot remove interface {interface} because it is not in the interface stack.")
+        return False
 
     def getInterface(self, name=None, purpose=None):
         """
@@ -1032,8 +1031,7 @@ class Operator:
         restartName = self.cs.caseTitle + ".restart.dat"
         if not os.path.exists(restartName):
             return
-        else:
-            runLog.info(f"Loading restart data from {restartName}")
+        runLog.info(f"Loading restart data from {restartName}")
 
         with open(restartName) as restart:
             for line in restart:

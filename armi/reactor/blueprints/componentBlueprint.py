@@ -254,7 +254,7 @@ class ComponentBlueprint(YamlObject):
                 f"{self.isotopics}."
             )
             raise ValueError("A zero or negative density was specified in the custom isotopics for a component")
-        elif len(matMods):
+        if len(matMods):
             runLog.warning(
                 f"Custom isotopics and material modifications have both been defined for {self.material} for component"
                 f"{comp}. Please consider carefully if these are in conflict.",
@@ -314,7 +314,7 @@ class ComponentBlueprint(YamlObject):
 
             if attr.name == "shape" or val == attr.default:
                 continue
-            elif attr.name == "material":
+            if attr.name == "material":
                 # value is a material instance
                 value = self._constructMaterial(blueprint, matMods)
             elif attr.name == "latticeIDs":

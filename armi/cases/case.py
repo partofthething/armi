@@ -731,9 +731,8 @@ def _copyInputsHelper(fileDescription: str, sourcePath: str, destPath: str, orig
             # the basename gets written back to the settings file to protect against potential
             # future dir structure changes
             return os.path.basename(destFilePath)
-        else:
-            # keep original filepath in the settings file if file copy was unsuccessful
-            return origFile
+        # keep original filepath in the settings file if file copy was unsuccessful
+        return origFile
     except Exception:
         return origFile
 

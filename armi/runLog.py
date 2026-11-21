@@ -77,8 +77,7 @@ def getLogDir():
     """
     if os.environ.get("ARMI_TEMP_ROOT_PATH"):
         return os.path.join(os.environ["ARMI_TEMP_ROOT_PATH"], "logs")
-    else:
-        return os.path.join(os.getcwd(), "logs")
+    return os.path.join(os.getcwd(), "logs")
 
 
 # The worker log files go to the log directory as it was when ARMI was imported. For some bespoke MPI use cases, the

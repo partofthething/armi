@@ -206,8 +206,7 @@ class SettingsReader:
             proceed = True
         if not proceed:
             raise InvalidSettingsStopProcess(self)
-        else:
-            runLog.info(f"Ignoring invalid settings: {invalidNames}")
+        runLog.info(f"Ignoring invalid settings: {invalidNames}")
 
     def _applySettings(self, name, val):
         """Add a setting, if it is valid. Capture invalid settings."""
@@ -333,7 +332,7 @@ def prompt(statement, question, *options):
             raise RunLogPromptCancel("Manual cancellation of GUI prompt")
         return response in [wx.ID_OK, wx.ID_YES]
 
-    elif context.CURRENT_MODE == context.Mode.INTERACTIVE:
+    if context.CURRENT_MODE == context.Mode.INTERACTIVE:
         response = ""
         responses = [opt for opt in options if opt in ["YES_NO", "YES", "NO", "CANCEL", "OK"]]
 
@@ -362,8 +361,7 @@ def prompt(statement, question, *options):
 
         return response in ["YES", "Y", "OK"]
 
-    else:
-        raise RunLogPromptUnresolvable(f"Incorrect CURRENT_MODE for prompting user: {context.CURRENT_MODE}")
+    raise RunLogPromptUnresolvable(f"Incorrect CURRENT_MODE for prompting user: {context.CURRENT_MODE}")
 
 
 class RunLogPromptCancel(Exception):

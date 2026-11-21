@@ -116,5 +116,4 @@ def fromNameAndCompound(name: str, compound: str):
     if (name, compound) in BY_NAME_AND_COMPOUND:
         endf, ace = BY_NAME_AND_COMPOUND[(name, compound)]
         return ThermalScatteringLabels(name, compound, endf, ace)
-    else:
-        raise ValueError(f"No thermal scattering labels are known for name/compound: {name}/{compound}")
+    raise ValueError(f"No thermal scattering labels are known for name/compound: {name}/{compound}")

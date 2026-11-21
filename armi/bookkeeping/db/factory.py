@@ -74,7 +74,7 @@ def databaseFactory(dbName: str, permission: str, version: str | None = None):
             return Database(dbPath, permission)
 
         raise ValueError(f"Unable to determine Database version for {dbName}")
-    elif permission in permissions.Permissions.write:
+    if permission in permissions.Permissions.write:
         majorversion = version.split(".")[0] if version else "3"
         if majorversion == "2":
             raise ValueError(

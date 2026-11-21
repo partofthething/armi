@@ -454,5 +454,4 @@ def _getTopologyFromShape(b: blocks.Block, offset: int) -> tuple[int, list[int]]
     if isinstance(b, blocks.ThRZBlock):
         return 20, [_QUADRATIC_HEXAHEDRON] + list(range(offset, offset + 20))
 
-    else:
-        raise TypeError(f"Unsupported block type `{type(b)}`")
+    raise TypeError(f"Unsupported block type `{type(b)}`")

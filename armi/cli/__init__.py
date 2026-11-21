@@ -177,10 +177,10 @@ class ArmiCLI:
         if args.list_commands:
             self.listCommands()
             return 0
-        elif args.version:
+        if args.version:
             ArmiCLI.showVersion()
             return 0
-        elif args.command == "help":
+        if args.command == "help":
             self.parser.print_help()
             return 0
 

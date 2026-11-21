@@ -266,8 +266,7 @@ class ParameterCollection(metaclass=_ParameterCollectionType):
         if getattr(self, "readOnly", False):
             if key == "readOnly":
                 raise RuntimeError("A read-only Parameter Collection cannot be made writeable.")
-            else:
-                raise RuntimeError(f"Cannot set a read-only parameter {key}.")
+            raise RuntimeError(f"Cannot set a read-only parameter {key}.")
 
         object.__setattr__(self, key, value)
 
@@ -354,8 +353,7 @@ class ParameterCollection(metaclass=_ParameterCollectionType):
     def __contains__(self, name):
         if isinstance(name, str):
             return hasattr(self, "_p_" + name)
-        else:
-            return name in self._hist
+        return name in self._hist
 
     def __eq__(self, other: "ParameterCollection"):
         if not isinstance(other, self.__class__):

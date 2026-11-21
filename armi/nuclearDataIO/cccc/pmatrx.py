@@ -334,10 +334,9 @@ class _PmatrxNuclideIO:
     def _getProductionMatrix(self, order):
         if order == 1:
             return self._nuclide.isotropicProduction
-        elif order == 2:
+        if order == 2:
             return self._nuclide.linearAnisotropicProduction
-        else:
-            return self._nuclide.nOrderProductionMatrix[order]
+        return self._nuclide.nOrderProductionMatrix[order]
 
     def _setProductionMatrix(self, order, matrix):
         if order == 1:

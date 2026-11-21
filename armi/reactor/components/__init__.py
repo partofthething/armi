@@ -366,9 +366,8 @@ class DerivedShape(UnshapedComponent):
             # since this is only used for comparison, and it must be smaller than at
             # least one component, make it 0 instead of infinity.
             return 0.0
-        else:
-            # area = pi r**2 = pi d**2 / 4  => d = sqrt(4*area/pi)
-            return math.sqrt(4.0 * self.getComponentArea() / math.pi)
+        # area = pi r**2 = pi d**2 / 4  => d = sqrt(4*area/pi)
+        return math.sqrt(4.0 * self.getComponentArea() / math.pi)
 
     def computeVolume(self):
         """Cannot compute volume until it is derived.
@@ -425,7 +424,7 @@ class DerivedShape(UnshapedComponent):
         for sibling in self.parent:
             if sibling is self:
                 continue
-            elif isinstance(sibling, DerivedShape):
+            if isinstance(sibling, DerivedShape):
                 raise ValueError(f"More than one ``DerivedShape`` component in {self.parent} is not allowed.")
 
             siblingVolume += sibling.getVolume()

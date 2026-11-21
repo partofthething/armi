@@ -1019,7 +1019,7 @@ def plotBlockFlux(core, fName=None, bList=None, peak=False, adjoint=False, bList
     if adjoint and bList2:
         runLog.warning("Cannot plot adjoint flux with bList2 argument")
         return
-    elif adjoint:
+    if adjoint:
         bList2 = bList
 
     try:

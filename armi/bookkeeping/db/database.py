@@ -501,7 +501,7 @@ class Database:
         """
         if self.versionMajor != 3:
             raise ValueError(f"Only version 3 of the ARMI DB is supported, found {self.versionMajor}.")
-        elif inputDB.versionMajor != 3:
+        if inputDB.versionMajor != 3:
             raise ValueError(f"Only version 3 of the ARMI DB is supported, found {inputDB.versionMajor}.")
 
         # iterate over the top level H5Groups and copy
@@ -614,11 +614,10 @@ class Database:
         groupName = getH5GroupName(r.p.cycle, r.p.timeNode, statePointName)
         if groupName in self.h5db:
             return self.h5db[groupName]
-        else:
-            group = self.h5db.create_group(groupName, track_order=True)
-            group.attrs["cycle"] = r.p.cycle
-            group.attrs["timeNode"] = r.p.timeNode
-            return group
+        group = self.h5db.create_group(groupName, track_order=True)
+        group.attrs["cycle"] = r.p.cycle
+        group.attrs["timeNode"] = r.p.timeNode
+        return group
 
     def hasTimeStep(self, cycle, timeNode, statePointName=""):
         """Returns True if (cycle, timeNode, statePointName) is contained in the database."""
@@ -854,11 +853,10 @@ class Database:
         """Get the shape of a np.ndarray, list, or tuple."""
         if isinstance(arr, np.ndarray):
             return arr.shape
-        elif isinstance(arr, (list, tuple)):
+        if isinstance(arr, (list, tuple)):
             return (len(arr),)
-        else:
-            # not a list, tuple, or array (likely int, float, or None)
-            return 1
+        # not a list, tuple, or array (likely int, float, or None)
+        return 1
 
     def _writeParams(self, h5group, comps) -> tuple:
         c = comps[0]
@@ -989,17 +987,15 @@ class Database:
                     # This is a temporary viz param (number density) made by _addHomogenizedNumberDensityParams ignore
                     # it safely
                     continue
-                else:
-                    # If a parameter exists in the database but not in the application reading it, we can technically
-                    # keep going. Since this may lead to potential correctness issues, raise a warning
-                    if allowMissing:
-                        runLog.warning(
-                            f"Found `{compTypeName}` parameter `{paramName}` in the database, which is not "
-                            "defined. Ignoring it."
-                        )
-                        continue
-                    else:
-                        raise
+                # If a parameter exists in the database but not in the application reading it, we can technically
+                # keep going. Since this may lead to potential correctness issues, raise a warning
+                if allowMissing:
+                    runLog.warning(
+                        f"Found `{compTypeName}` parameter `{paramName}` in the database, which is not "
+                        "defined. Ignoring it."
+                    )
+                    continue
+                raise
 
             data = dataSet[:]
             attrs = Database._resolveAttrs(dataSet.attrs, h5group)
@@ -1087,7 +1083,7 @@ class Database:
         """
         if self.versionMajor != 3:
             raise ValueError(f"This version of ARMI only supports version 3 of the ARMI DB, found {self.versionMajor}.")
-        elif self.versionMinor < 4:
+        if self.versionMinor < 4:
             raise ValueError(
                 "Location-based histories are only supported for db version 3.4 and greater. This database is version "
                 f"{self.versionMajor}, {self.versionMinor}."
@@ -1469,13 +1465,13 @@ class Database:
                 if thisTime >= endTime:
                     cycleNodes.append(h5Key)
                     break
-                elif thisTime >= startTime:
+                if thisTime >= startTime:
                     cycleNodes.append(h5Key)
 
         # more validation
         if not cycleNodes:
             raise ValueError(f"Provided start time ({startTime}) was greater than the modeled period: {thisTime}.")
-        elif errorIfNotExactlyOne and len(cycleNodes) != 1:
+        if errorIfNotExactlyOne and len(cycleNodes) != 1:
             raise ValueError(f"Did not find exactly one cycle/node pair: {cycleNodes}")
 
         return cycleNodes
@@ -1525,8 +1521,7 @@ def packSpecialData(arrayData: [np.ndarray, JaggedArray], paramName: str) -> tup
         # chances are we have nice, clean data.
         if arrayData.dtype != "O":
             return arrayData, {}
-        else:
-            data = arrayData
+        data = arrayData
 
     attrs: dict[str, Any] = {"specialFormatting": True}
 
@@ -1556,7 +1551,7 @@ def packSpecialData(arrayData: [np.ndarray, JaggedArray], paramName: str) -> tup
         attrs["keys"] = np.array(keys).astype("S")
 
         return data, attrs
-    elif isinstance(arrayData, JaggedArray):
+    if isinstance(arrayData, JaggedArray):
         attrs["jagged"] = True
         attrs["offsets"] = arrayData.offsets
         attrs["shapes"] = arrayData.shapes
@@ -1572,7 +1567,7 @@ def packSpecialData(arrayData: [np.ndarray, JaggedArray], paramName: str) -> tup
         # looks like 1-D plain-old-data
         data = replaceNonesWithNonsense(data, paramName, nones)
         return data, attrs
-    elif any(isinstance(d, (tuple, list, np.ndarray)) for d in data):
+    if any(isinstance(d, (tuple, list, np.ndarray)) for d in data):
         data = replaceNonesWithNonsense(data, paramName, nones)
         return data, attrs
 

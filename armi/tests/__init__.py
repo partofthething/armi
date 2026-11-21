@@ -70,7 +70,7 @@ class Fixture:
     def __call__(self):
         if self._error is not None:
             raise self._error
-        elif not self._success:
+        if not self._success:
             missingDependencies = [d for d in self.dependencies if not os.path.exists(d)]
             if any(missingDependencies):
                 self._error = OSError("Missing dependencies:\n    {}".format("\n    ".join(missingDependencies)))
@@ -246,7 +246,7 @@ class ArmiTestHelper(unittest.TestCase):
                 # we have two floats and can compare them
                 if actualVal == expectedVal == 0:
                     continue
-                elif abs(actualVal - expectedVal) / expectedVal > eps:
+                if abs(actualVal - expectedVal) / expectedVal > eps:
                     return False
             else:
                 # strings, compare directly

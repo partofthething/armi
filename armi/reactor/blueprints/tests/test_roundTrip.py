@@ -92,7 +92,7 @@ def _normalize(node, parentKey=None, inBlockList=False):
             for k, v in node.items()
             if not (k == "name" and (v == parentKey or inBlockList))
         }
-    elif isinstance(node, list):
+    if isinstance(node, list):
         return [_normalize(v, inBlockList=inBlockList) for v in node]
 
     return node

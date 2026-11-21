@@ -114,14 +114,11 @@ def getPowerFractions(cs):
             )
             for (cycleIdx, cycle) in enumerate(cs["cycles"])
         ]
-    else:
-        valuePerCycle = (
-            expandRepeatedFloats(cs["powerFractions"])
-            if cs["powerFractions"] not in [None, []]
-            else [1.0] * cs["nCycles"]
-        )
+    valuePerCycle = (
+        expandRepeatedFloats(cs["powerFractions"]) if cs["powerFractions"] not in [None, []] else [1.0] * cs["nCycles"]
+    )
 
-        return [[value] * (cs["burnSteps"] if cs["burnSteps"] is not None else 0) for value in valuePerCycle]
+    return [[value] * (cs["burnSteps"] if cs["burnSteps"] is not None else 0) for value in valuePerCycle]
 
 
 def getCycleNames(cs):
@@ -144,8 +141,7 @@ def getCycleNames(cs):
     """
     if cs["cycles"] != []:
         return [(cycle["name"] if "name" in cycle.keys() else None) for cycle in cs["cycles"]]
-    else:
-        return [None] * cs["nCycles"]
+    return [None] * cs["nCycles"]
 
 
 def getAvailabilityFactors(cs):
@@ -174,12 +170,11 @@ def getAvailabilityFactors(cs):
             else:
                 availabilityFactors.append(1)
         return availabilityFactors
-    else:
-        return (
-            expandRepeatedFloats(cs["availabilityFactors"])
-            if cs["availabilityFactors"] not in [None, []]
-            else ([cs["availabilityFactor"]] * cs["nCycles"] if cs["availabilityFactor"] is not None else [1])
-        )
+    return (
+        expandRepeatedFloats(cs["availabilityFactors"])
+        if cs["availabilityFactors"] not in [None, []]
+        else ([cs["availabilityFactor"]] * cs["nCycles"] if cs["availabilityFactor"] is not None else [1])
+    )
 
 
 def _getStepAndCycleLengths(cs):
@@ -411,11 +406,10 @@ def getPreviousTimeNode(cycle, node, cs):
         raise ValueError("There is no time step before (0, 0)")
     if node != 0:
         return (cycle, node - 1)
-    else:
-        nodesPerCycle = getNodesPerCycle(cs)
-        nodesInLastCycle = nodesPerCycle[cycle - 1]
-        indexOfLastNode = nodesInLastCycle - 1  # zero based indexing for nodes
-        return (cycle - 1, indexOfLastNode)
+    nodesPerCycle = getNodesPerCycle(cs)
+    nodesInLastCycle = nodesPerCycle[cycle - 1]
+    indexOfLastNode = nodesInLastCycle - 1  # zero based indexing for nodes
+    return (cycle - 1, indexOfLastNode)
 
 
 def tryPickleOnAllContents(obj, ignore=None, verbose=False):
@@ -761,7 +755,7 @@ def safeMove(src: str, dst: str) -> None:
                 f"File move from {dst} to {src} has failed due to exceeding a maximum wait time of {maxWaitTime / 60} "
                 "minutes."
             )
-            return
+            return None
 
     runLog.extra(f"Moved {src} -> {dst}")
     return dst
@@ -773,7 +767,7 @@ def onlyRunOnce(method):
     @functools.wraps(method)
     def wrapper(*args, **kwargs):
         if wrapper.hasRun:
-            return
+            return None
         wrapper.hasRun = True
         return method(*args, **kwargs)
 

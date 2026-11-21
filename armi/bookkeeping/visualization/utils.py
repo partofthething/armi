@@ -139,11 +139,10 @@ def createBlockMesh(b: blocks.Block) -> VtkMesh:
         return _createCartesianBlockMesh(b)
     if isinstance(b, blocks.ThRZBlock):
         return _createTRZBlockMesh(b)
-    else:
-        raise TypeError(
-            f"Unsupported block type `{type(b).__name__}`. Supported types are: "
-            f"{ {t.__name__ for t in (blocks.CartesianBlock, blocks.HexBlock, blocks.ThRZBlock)} }"
-        )
+    raise TypeError(
+        f"Unsupported block type `{type(b).__name__}`. Supported types are: "
+        f"{ {t.__name__ for t in (blocks.CartesianBlock, blocks.HexBlock, blocks.ThRZBlock)} }"
+    )
 
 
 def createAssemMesh(a: assemblies.Assembly) -> VtkMesh:

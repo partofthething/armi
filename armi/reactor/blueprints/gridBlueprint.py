@@ -386,8 +386,7 @@ class GridBlueprint(YamlObject):
         """
         if self.gridContents:
             return max(itertools.chain(*zip(*self.gridContents.keys())))
-        else:
-            return 6
+        return 6
 
     def expandToFull(self):
         """
@@ -467,7 +466,7 @@ class GridBlueprint(YamlObject):
         """
         if self.gridContents:
             return
-        elif self.latticeMap:
+        if self.latticeMap:
             self._readGridContentsLattice()
 
         if self.gridContents is None:

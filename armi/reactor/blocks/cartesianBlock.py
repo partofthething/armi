@@ -82,7 +82,7 @@ class CartesianBlock(Block):
                 if indices[0] == 0 and indices[1] == 0:
                     # central location
                     return 4.0
-                elif indices[0] == 0 or indices[1] == 0:
+                if indices[0] == 0 or indices[1] == 0:
                     # edge location
                     return 2.0
 
@@ -97,8 +97,7 @@ class CartesianBlock(Block):
 
         if self.core.symmetry.isThroughCenterAssembly:
             return 2 * (nRings - 1) * pinPitchDist
-        else:
-            return ((2 * nRings) - 1) * pinPitchDist
+        return ((2 * nRings) - 1) * pinPitchDist
 
     def getNumCellsGivenRings(self, nRings: int):
         """Calculate the number of cells in a Cartesian grid with a given number of rings.
@@ -108,8 +107,7 @@ class CartesianBlock(Block):
         """
         if self.core.symmetry.isThroughCenterAssembly:
             return (2 * nRings - 1) ** 2
-        else:
-            return (2 * nRings) ** 2
+        return (2 * nRings) ** 2
 
     def numRingsToHoldNumCells(self, nCells: int):
         """Calculate the number of rings needed in a Cartesian grid to hold a given number of cells.
@@ -119,5 +117,4 @@ class CartesianBlock(Block):
         """
         if self.core.symmetry.isThroughCenterAssembly:
             return math.ceil((math.sqrt(nCells) + 1) / 2.0)
-        else:
-            return math.ceil(math.sqrt(nCells) / 2.0)
+        return math.ceil(math.sqrt(nCells) / 2.0)

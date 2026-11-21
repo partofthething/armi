@@ -214,7 +214,7 @@ def parseAuthorsFile():
             if line.startswith("#") or not len(line):
                 # ignore comments and blank lines
                 continue
-            elif "(" not in line:
+            if "(" not in line:
                 # ignore authors that don't list a GitHub username
                 continue
 
@@ -265,7 +265,7 @@ def buildScrListing(pastCommit: str, thisPrNum: int = -1):
         if pastCommit in line:
             # do not include the reference commit
             break
-        elif line.endswith(")") and "(#" in line:
+        if line.endswith(")") and "(#" in line:
             # get the PR number
             # A ValueError means this is not a PR: someone unwisely put some trash in the commit message.
             with contextlib.suppress(ValueError):

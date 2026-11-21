@@ -107,13 +107,12 @@ def getXSTypeLabelFromNumber(xsTypeNumber: int) -> str:
         if xsTypeNumber > ord("Z"):
             # two digit. Parse
             return chr(int(str(xsTypeNumber)[:2])) + chr(int(str(xsTypeNumber)[2:]))
-        elif xsTypeNumber < ord("A"):
+        if xsTypeNumber < ord("A"):
             raise ValueError(
                 f"Cannot convert invalid xsTypeNumber `{xsTypeNumber}` to char. "
                 "The number must be >= 65 (corresponding to 'A')."
             )
-        else:
-            return chr(xsTypeNumber)
+        return chr(xsTypeNumber)
     except ValueError:
         runLog.error(f"Error converting {xsTypeNumber} to label.")
         raise
@@ -454,11 +453,10 @@ class AverageBlockCollection(BlockCollection):
         if weightedAvgComponentMass == 0.0:
             # if there is no component mass (e.g., gap), do a regular average
             return np.mean(np.array([c.temperatureInC for c in components]))
-        else:
-            return (
-                sum([c.temperatureInC * mass if mass > 0.0 else 0.0 for c, mass in zip(components, weightedMass)])
-                / weightedAvgComponentMass
-            )
+        return (
+            sum([c.temperatureInC * mass if mass > 0.0 else 0.0 for c, mass in zip(components, weightedMass)])
+            / weightedAvgComponentMass
+        )
 
     def _performAverageByComponent(self):
         """
@@ -469,8 +467,7 @@ class AverageBlockCollection(BlockCollection):
         """
         if not self.averageByComponent:
             return False
-        else:
-            return self._checkBlockSimilarity()
+        return self._checkBlockSimilarity()
 
     def _checkBlockSimilarity(self):
         """
@@ -1386,12 +1383,11 @@ class CrossSectionGroupManager(interfaces.Interface):
         for xsID, collection in blockCollectionsByXsGroup.items():
             if self.xsTypeIsPregenerated(xsID) or len(collection.getCandidateBlocks()) > 0:
                 continue
-            else:
-                runLog.debug(
-                    f"No candidate blocks in group for {xsID} (with a valid representative block flag). "
-                    "Will apply different environment group"
-                )
-                self._unrepresentedXSIDs.append(xsID)
+            runLog.debug(
+                f"No candidate blocks in group for {xsID} (with a valid representative block flag). "
+                "Will apply different environment group"
+            )
+            self._unrepresentedXSIDs.append(xsID)
 
     def getNextAvailableXsTypes(self, howMany=1, excludedXSTypes=None):
         """Return the next however many available xs types.
@@ -1472,6 +1468,7 @@ class CrossSectionGroupManager(interfaces.Interface):
             repType, repEnvGroup = otherXsID
             if repType == missingXsType:
                 return repEnvGroup
+        return None
 
     def _modifyUnrepresentedXSIDs(self, blockCollectionsByXsGroup):
         """
@@ -1532,9 +1529,9 @@ class CrossSectionGroupManager(interfaces.Interface):
     def _getXsIDGroup(self, xsID):
         if self.xsTypeIsPregenerated(xsID):
             return self._PREGEN_GROUP
-        elif xsID in self.representativeBlocks.keys():
+        if xsID in self.representativeBlocks.keys():
             return self._REPR_GROUP
-        elif xsID in self._unrepresentedXSIDs:
+        if xsID in self._unrepresentedXSIDs:
             return self._NON_REPR_GROUP
         return None
 

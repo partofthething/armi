@@ -157,7 +157,7 @@ def reduceTestReactorRings(r, cs, maxNumRings):
     if maxNumRings > maxRings:
         runLog.info(f"The test reactor has a maximum of {maxRings} rings.")
         return
-    elif maxNumRings <= 1:
+    if maxNumRings <= 1:
         raise ValueError("The test reactor must have multiple rings.")
 
     # reducing the size of the test reactor, by removing the outer rings, then processing the loading once at the end

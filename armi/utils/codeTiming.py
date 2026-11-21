@@ -58,11 +58,10 @@ def timed(*args):
     if len(args) == 1 and callable(args[0]):
         label = None
         return time_decorator(args[0])
-    elif len(args) == 1 and isinstance(args[0], str):
+    if len(args) == 1 and isinstance(args[0], str):
         label = args[0]
         return time_decorator
-    else:
-        raise ValueError(f"The timed decorator has been misused. Input args were {args}")
+    raise ValueError(f"The timed decorator has been misused. Input args were {args}")
 
 
 class MasterTimer:
@@ -143,8 +142,7 @@ class MasterTimer:
 
         if master.end_time:
             return master.end_time - master.start_time
-        else:
-            return time.time() - master.start_time
+        return time.time() - master.start_time
 
     @staticmethod
     def startAll():
@@ -297,8 +295,7 @@ class _Timer:
             times = copy.deepcopy(self._times)
             times[-1] = (self._times[-1][0], MasterTimer.time())
             return times
-        else:
-            return self._times
+        return self._times
 
     def _openTimePair(self, curTime):
         self._times.append((curTime, None))
@@ -317,7 +314,7 @@ class _Timer:
 
         if self._frozen:
             return curTime
-        elif self.isActive:
+        if self.isActive:
             # call was made on an active timer, we're now over-started
             self.overStart += 1
             self._closeTimePair(curTime)

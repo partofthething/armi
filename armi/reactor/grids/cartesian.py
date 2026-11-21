@@ -101,7 +101,7 @@ class CartesianGrid(StructuredGrid):
             This is not really implemented, but parts of ARMI need it to not fail, so it always returns None.
 
         """
-        return None
+        return
 
     def getRingPos(self, indices):
         """
@@ -201,8 +201,7 @@ class CartesianGrid(StructuredGrid):
     def locatorInDomain(self, locator, symmetryOverlap: bool | None = False):
         if self.symmetry.domain == geometry.DomainType.QUARTER_CORE:
             return locator.i >= 0 and locator.j >= 0
-        else:
-            return True
+        return True
 
     def changePitch(self, xw: float, yw: float):
         """
@@ -224,44 +223,37 @@ class CartesianGrid(StructuredGrid):
         i, j = indices[0:2]
         if symmetry.domain == geometry.DomainType.FULL_CORE:
             return []
-        elif symmetry.domain == geometry.DomainType.QUARTER_CORE:
+        if symmetry.domain == geometry.DomainType.QUARTER_CORE:
             if symmetry.isThroughCenterAssembly:
                 # some locations lie on the symmetric boundary
                 if i == 0 and j == 0:
                     # on the split corner, so the location is its own symmetric
                     # equivalent
                     return []
-                elif i == 0:
+                if i == 0:
                     if isRotational:
                         return [(j, i), (i, -j), (-j, i)]
-                    else:
-                        return [(i, -j)]
-                elif j == 0:
+                    return [(i, -j)]
+                if j == 0:
                     if isRotational:
                         return [(j, i), (-i, j), (j, -i)]
-                    else:
-                        return [(-i, j)]
-                else:
-                    # Math is a bit easier for the split case, since there is an actual
-                    # center location for (0, 0)
-                    if isRotational:
-                        return [(-j, i), (-i, -j), (j, -i)]
-                    else:
-                        return [(-i, j), (-i, -j), (i, -j)]
-            else:
-                # most objects have 3 equivalents. the bottom-left corner of Quadrant I is (0, 0), so to reflect, add
-                # one and negate each index in combination. To rotate, first flip the indices for the Quadrant II and
-                # Quadrant IV
+                    return [(-i, j)]
+                # Math is a bit easier for the split case, since there is an actual
+                # center location for (0, 0)
                 if isRotational:
-                    # rotational
-                    #        QII           QIII          QIV
-                    return [(-j - 1, i), (-i - 1, -j - 1), (j, -i - 1)]
-                else:
-                    # reflective
-                    #        QII           QIII          QIV
-                    return [(-i - 1, j), (-i - 1, -j - 1), (i, -j - 1)]
-        else:
-            raise NotImplementedError(f"Unhandled symmetry condition for {type(self).__name__}: {symmetry.domain}")
+                    return [(-j, i), (-i, -j), (j, -i)]
+                return [(-i, j), (-i, -j), (i, -j)]
+            # most objects have 3 equivalents. the bottom-left corner of Quadrant I is (0, 0), so to reflect, add
+            # one and negate each index in combination. To rotate, first flip the indices for the Quadrant II and
+            # Quadrant IV
+            if isRotational:
+                # rotational
+                #        QII           QIII          QIV
+                return [(-j - 1, i), (-i - 1, -j - 1), (j, -i - 1)]
+            # reflective
+            #        QII           QIII          QIV
+            return [(-i - 1, j), (-i - 1, -j - 1), (i, -j - 1)]
+        raise NotImplementedError(f"Unhandled symmetry condition for {type(self).__name__}: {symmetry.domain}")
 
     def _isThroughCenter(self):
         """Return whether the central cells are split through the middle for symmetry."""

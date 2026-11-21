@@ -43,7 +43,7 @@ class Migration(abc.ABC):
     def __init__(self, stream=None, path=None):
         if not (bool(stream) ^ bool(path)):  # XOR
             raise RuntimeError("Only a stream or a path may be used as migration input. Choose exactly one.")
-        elif versionToNumber(self.toVersion) <= versionToNumber(self.fromVersion):
+        if versionToNumber(self.toVersion) <= versionToNumber(self.fromVersion):
             raise ValueError(f"{self.toVersion} is not higher than {self.fromVersion}.")
 
         self.stream = stream

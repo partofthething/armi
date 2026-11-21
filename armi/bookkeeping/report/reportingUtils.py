@@ -375,15 +375,14 @@ def getSystemInfo():
     # Get basic system information (on Linux, MacOS, and Windows)
     if context.PLATFORM == context.Platform.LINUX:
         return _getSystemInfoLinux()
-    elif context.PLATFORM == context.Platform.MACOS:
+    if context.PLATFORM == context.Platform.MACOS:
         return _getSystemInfoMac()
-    elif context.PLATFORM == context.Platform.WINDOWS:
+    if context.PLATFORM == context.Platform.WINDOWS:
         return _getSystemInfoWindows()
-    else:
-        runLog.warning(
-            f"Cannot get system information for {sys.platform} because ARMI only supports Linux, MacOS, and Windows."
-        )
-        return ""
+    runLog.warning(
+        f"Cannot get system information for {sys.platform} because ARMI only supports Linux, MacOS, and Windows."
+    )
+    return ""
 
 
 def getInterfaceStackSummary(o):

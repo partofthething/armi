@@ -180,7 +180,7 @@ class BlockBlueprint(KeyedList):
                             f"and number of lattice positions ({len(c.spatialLocator)}). "
                             "Recommend leaving off ``mult`` input when using grids."
                         )
-                    elif not mult or mult == 1.0:
+                    if not mult or mult == 1.0:
                         # learn mult from grid definition
                         c.setDimension("mult", len(c.spatialLocator))
 

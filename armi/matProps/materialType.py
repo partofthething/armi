@@ -96,7 +96,6 @@ class MaterialType:
         """
         if type(other) is int:
             return self._value == other
-        elif type(other) is MaterialType:
+        if type(other) is MaterialType:
             return self._value == other._value
-        else:
-            raise TypeError(f"Cannot compare MaterialType to type {type(other)}")
+        raise TypeError(f"Cannot compare MaterialType to type {type(other)}")

@@ -79,11 +79,10 @@ HEAVY_METAL_PARAMS = ["molesHmBOL", "massHmBOL"]
 def converterFactory(globalFluxOptions):
     if globalFluxOptions.photons:
         return GammaUniformMeshConverter(globalFluxOptions.cs)
-    else:
-        return NeutronicsUniformMeshConverter(
-            globalFluxOptions.cs,
-            calcReactionRates=globalFluxOptions.calcReactionRatesOnMeshConversion,
-        )
+    return NeutronicsUniformMeshConverter(
+        globalFluxOptions.cs,
+        calcReactionRates=globalFluxOptions.calcReactionRatesOnMeshConversion,
+    )
 
 
 class UniformMeshGenerator:
@@ -817,7 +816,7 @@ class UniformMeshGeometryConverter(GeometryConverter):
 
             if abs(zUpper - zLower) < 1e-6 and not sourceBlocksInfo:
                 continue
-            elif not sourceBlocksInfo:
+            if not sourceBlocksInfo:
                 raise ValueError(
                     "An error occurred when attempting to map to the "
                     f"results from {sourceAssembly} to {destinationAssembly}. "
@@ -1437,8 +1436,7 @@ class ParamMapper:
         """Returns the symmetry factor if the parameter is volume integrated, returns 1 otherwise."""
         if self.isVolIntegrated[paramName]:
             return symmetryFactor
-        else:
-            return 1
+        return 1
 
 
 def setNumberDensitiesFromOverlaps(block, overlappingBlockInfo):

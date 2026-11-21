@@ -64,10 +64,9 @@ def isFilePathNewer(path1, path2):
         path1stat = os.stat(path1)
         path2stat = os.stat(path2)
         return path1stat.st_mtime > path2stat.st_mtime
-    elif exist1 and not exist2:
+    if exist1 and not exist2:
         return True
-    else:
-        raise OSError(f"Path 1 does not exist: {path1}")
+    raise OSError(f"Path 1 does not exist: {path1}")
 
 
 def isAccessible(path):

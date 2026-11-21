@@ -1291,7 +1291,7 @@ class NuclideBases:
         if isinstance(nb, (LumpNuclideBase, DummyNuclideBase)):
             # skip lumped fission products or dumps
             return []
-        elif isinstance(nb, NaturalNuclideBase):
+        if isinstance(nb, NaturalNuclideBase):
             isotopics = nb.getNaturalIsotopics()
         else:
             isotopics = [nb]

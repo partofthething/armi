@@ -143,7 +143,7 @@ class Inspector:
     @staticmethod
     def NO_ACTION():
         """Convenience callable used to generate Queries that can't be easily auto-resolved."""
-        return None
+        return
 
     def __init__(self, cs):
         """
@@ -655,16 +655,15 @@ def validateVersion(versionThis: str, versionRequired: str) -> bool:
     if versionRequired == "uncontrolled":
         # This default flag means we don't want to check the version.
         return True
-    elif re.search(fullV, versionThis) is None:
+    if re.search(fullV, versionThis) is None:
         raise ValueError(f"The input version ({versionThis}) does not match the required format: {fullV}")
-    elif re.search(fullV, versionRequired) is not None:
+    if re.search(fullV, versionRequired) is not None:
         return versionThis == versionRequired
-    elif re.search(medV, versionRequired) is not None:
+    if re.search(medV, versionRequired) is not None:
         return ".".join(versionThis.split(".")[:2]) == versionRequired
-    elif re.search(minV, versionRequired) is not None:
+    if re.search(minV, versionRequired) is not None:
         return versionThis.split(".")[0] == versionRequired
-    else:
-        raise ValueError(f"The required version is not a valid format: {versionRequired}")
+    raise ValueError(f"The required version is not a valid format: {versionRequired}")
 
 
 def versionToNumber(version: str):

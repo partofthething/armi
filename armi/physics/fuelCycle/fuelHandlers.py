@@ -344,8 +344,7 @@ class FuelHandler:
         """
         if np.isclose(candidate[0], current[0], rtol=1e-8, atol=1e-8):
             return candidate[1].p.assemNum < current[1].p.assemNum
-        else:
-            return candidate[0] < current[0]
+        return candidate[0] < current[0]
 
     @staticmethod
     def _getParamMax(a, paramName, blockLevelMax=True):
@@ -362,8 +361,7 @@ class FuelHandler:
 
         if blockLevelMax:
             return a.getChildParamValues(paramName).max() * multiplier
-        else:
-            return a.p[paramName] * multiplier
+        return a.p[paramName] * multiplier
 
     def findAssembly(
         self,
@@ -673,9 +671,8 @@ class FuelHandler:
                         if findMany:
                             assemList.append((diff, a))
                             continue
-                        else:
-                            return a
-                    elif abs(a.spatialLocator.getRingPos()[0] - targetRing) < minDiff[0]:
+                        return a
+                    if abs(a.spatialLocator.getRingPos()[0] - targetRing) < minDiff[0]:
                         minDiff = (
                             abs(a.spatialLocator.getRingPos()[0] - targetRing),
                             a,
@@ -702,10 +699,8 @@ class FuelHandler:
             assemsInRings = [a for diff, a in assemList]
             if maxNumAssems:
                 return assemsInRings[:maxNumAssems]
-            else:
-                return assemsInRings
-        else:
-            return minDiff[1]
+            return assemsInRings
+        return minDiff[1]
 
     @staticmethod
     def isAssemblyInAZone(zoneList, a):
@@ -1228,7 +1223,7 @@ class FuelHandler:
                 runLog.warning(f"Cycle {cycleKey} has no shuffle actions defined, skipping.")
                 continue
 
-            elif cycle == 0:
+            if cycle == 0:
                 raise InputError(
                     "Cycle 0 is not allowed in shuffle YAML. "
                     "This cycle is reserved for the initial core loading."
@@ -1373,11 +1368,11 @@ class FuelHandler:
             if toLoc in FuelHandler.DISCHARGE_LOCS and "LoadQueue" in fromLoc:
                 # skip dummy moves
                 continue
-            elif (fromLoc, toLoc) in alreadyDone:
+            if (fromLoc, toLoc) in alreadyDone:
                 # skip this pair
                 continue
 
-            elif startingAt in fromLoc:
+            if startingAt in fromLoc:
                 # looking for chain involving toLoc
                 # back-track the chain of moves
                 chain = [fromLoc]
@@ -1491,7 +1486,7 @@ class FuelHandler:
                 # skip dummy moves
                 continue
 
-            elif toLoc in self.DISCHARGE_LOCS:
+            if toLoc in self.DISCHARGE_LOCS:
                 # discharge. Track chain.
                 chain, enrichList, assemType, ringPosCycle, dest = FuelHandler.trackChain(moveList, startingAt=fromLoc)
                 runLog.extra(f"Load Chain with load assem {assemType}: {chain}")
@@ -1515,18 +1510,15 @@ class FuelHandler:
             if toLoc in self.DISCHARGE_LOCS or fromLoc in ({"LoadQueue"} | self.DISCHARGE_LOCS):
                 # skip loads/discharges; they're already done.
                 continue
-            elif fromLoc in alreadyDone:
+            if fromLoc in alreadyDone:
                 # skip repeats
                 continue
-            else:
-                # normal move
-                chain, _enrichList, _assemType, _loadAssemName, _dest = FuelHandler.trackChain(
-                    moveList, startingAt=fromLoc
-                )
-                loopChains.append(chain)
-                alreadyDone.extend(chain)
+            # normal move
+            chain, _enrichList, _assemType, _loadAssemName, _dest = FuelHandler.trackChain(moveList, startingAt=fromLoc)
+            loopChains.append(chain)
+            alreadyDone.extend(chain)
 
-                runLog.extra(f"Loop Chain: {chain}")
+            runLog.extra(f"Loop Chain: {chain}")
 
         return ProcessMoveListResult(
             loadChains=loadChains,

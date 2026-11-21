@@ -260,18 +260,16 @@ class Component(composites.Composite, metaclass=ComponentType):
                 thisID = self.getCircleInnerDiameter(cold=True)
                 thatID = other.getCircleInnerDiameter(cold=True)
                 return thisID < thatID
-            else:
-                return thisOD < thatOD
+            return thisOD < thatOD
         except (NotImplementedError, Exception) as e:
             if isinstance(e, NotImplementedError):
                 raise NotImplementedError(
                     f"getCircleInnerDiameter not implemented for at least one of {self}, {other}"
                 ) from e
-            else:
-                raise ValueError(
-                    f"Components 1 ({self} with OD {thisOD}) and 2 ({other} and OD {thatOD}) cannot be ordered because "
-                    "their bounding circle outer diameters are not comparable."
-                ) from e
+            raise ValueError(
+                f"Components 1 ({self} with OD {thisOD}) and 2 ({other} and OD {thatOD}) cannot be ordered because "
+                "their bounding circle outer diameters are not comparable."
+            ) from e
 
     def __setstate__(self, state):
         composites.Composite.__setstate__(self, state)
@@ -316,8 +314,7 @@ class Component(composites.Composite, metaclass=ComponentType):
                             f"Name of {self} has a period in it. "
                             f"Components cannot not have periods in their names: `{value}`"
                         ) from ee
-                    else:
-                        raise KeyError(f"Bad component link `{dimName}` defined as `{value}` in {self}") from ee
+                    raise KeyError(f"Bad component link `{dimName}` defined as `{value}` in {self}") from ee
 
     def setLink(self, key, otherComp, otherCompKey):
         """Set the dimension link."""
@@ -661,8 +658,7 @@ class Component(composites.Composite, metaclass=ComponentType):
         i = np.where(self.p.nuclides == nucName.encode())[0]
         if i.size > 0:
             return self.p.numberDensities[i[0]]
-        else:
-            return 0.0
+        return 0.0
 
     def getNuclideNumberDensities(self, nucNames: Iterable[str | np.bytes_]) -> np.ndarray:
         """
@@ -1333,8 +1329,7 @@ class Component(composites.Composite, metaclass=ComponentType):
         if gamma:
             if adjoint:
                 raise ValueError("Adjoint gamma flux is currently unsupported.")
-            else:
-                pinFluxes = self.parent.p.pinMgFluxesGamma
+            pinFluxes = self.parent.p.pinMgFluxesGamma
         else:
             if adjoint:
                 pinFluxes = self.parent.p.pinMgFluxesAdj
@@ -1374,8 +1369,7 @@ class Component(composites.Composite, metaclass=ComponentType):
         if gamma:
             if adjoint:
                 raise ValueError("Adjoint gamma flux is currently unsupported.")
-            else:
-                param = "pinMgFluxesGamma"
+            param = "pinMgFluxesGamma"
         else:
             if adjoint:
                 param = "pinMgFluxesAdj"
@@ -1447,8 +1441,7 @@ class Component(composites.Composite, metaclass=ComponentType):
         """
         if self.parent:
             return self.parent.getLumpedFissionProductCollection()
-        else:
-            return composites.ArmiObject.getLumpedFissionProductCollection(self)
+        return composites.ArmiObject.getLumpedFissionProductCollection(self)
 
     def getMicroSuffix(self):
         return self.parent.getMicroSuffix()

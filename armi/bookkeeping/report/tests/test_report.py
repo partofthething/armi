@@ -75,8 +75,7 @@ Processor(s):
         def __mockSubprocessRun(*args, **kwargs):
             if "os-release" in args[0]:
                 return _MockReturnResult(osInfo)
-            else:
-                return _MockReturnResult(procInfo)
+            return _MockReturnResult(procInfo)
 
         with patch.object(subprocess, "run", side_effect=__mockSubprocessRun):
             out = _getSystemInfoLinux()

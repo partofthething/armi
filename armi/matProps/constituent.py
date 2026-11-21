@@ -58,10 +58,10 @@ class Constituent:
         if self.minValue < 0.0:
             msg = f"Constituent {self.name} has a negative minimum composition value."
             raise ValueError(msg)
-        elif self.maxValue < self.minValue:
+        if self.maxValue < self.minValue:
             msg = f"Constituent {self.name} has an invalid maximum composition value. (max < min)"
             raise ValueError(msg)
-        elif self.maxValue > 100.0:
+        if self.maxValue > 100.0:
             msg = f"Constituent {self.name} has an invalid maximum composition value. (max > 100.0)"
             raise ValueError(msg)
 

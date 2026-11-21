@@ -77,11 +77,10 @@ class DatabaseInterface(interfaces.Interface):
         """Presents the internal database object, if it exists."""
         if self._db is not None:
             return self._db
-        else:
-            raise RuntimeError(
-                "The Database interface has not yet created a database "
-                "object. InteractBOL or loadState must be called first."
-            )
+        raise RuntimeError(
+            "The Database interface has not yet created a database "
+            "object. InteractBOL or loadState must be called first."
+        )
 
     def interactBOL(self):
         """Initialize the database if the main interface was not available. (Beginning of Life)."""

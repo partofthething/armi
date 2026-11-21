@@ -236,8 +236,7 @@ class RadialSegment(ShapedComponent):
             )
         if refVolume:
             return (self.getComponentVolume() / refVolume) / self.getDimension("height")
-        else:
-            return self.getComponentVolume() / self.getDimension("height")
+        return self.getComponentVolume() / self.getDimension("height")
 
     def getComponentVolume(self):
         mult = self.getDimension("mult")

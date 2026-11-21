@@ -227,6 +227,7 @@ class CaseSuite:
                     # allow all errors and continue to next run
                     runLog.error(f"{case} failed during execution.")
                     traceback.print_exc()
+        return None
 
     def results(self) -> dict[str, dict]:
         """The result each case's last run by a :py:class:`~armi.cases.runners.SuiteRunner` left, by title."""

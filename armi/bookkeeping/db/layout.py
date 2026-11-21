@@ -637,8 +637,7 @@ def _unpackLocations(locationTypes, locData, minorVersion: int = DB_MINOR):
     """
     if minorVersion < 3:
         return _unpackLocationsV1(locationTypes, locData)
-    else:
-        return _unpackLocationsV2(locationTypes, locData)
+    return _unpackLocationsV2(locationTypes, locData)
 
 
 def _unpackLocationsV1(locationTypes, locData):
@@ -750,14 +749,13 @@ def replaceNonesWithNonsense(data: np.ndarray, paramName: str, nones: np.ndarray
 
                 defaultValue = np.reshape(np.repeat(NONE_MAP[realType], val.size), val.shape)
                 break
-            else:
-                realType = type(val)
+            realType = type(val)
 
-                if realType is type(None):
-                    continue
+            if realType is type(None):
+                continue
 
-                defaultValue = NONE_MAP[realType]
-                break
+            defaultValue = NONE_MAP[realType]
+            break
         else:
             # Couldn't find any non-None entries, so it really doesn't matter what type we
             # use. Using float, because NaN is nice.

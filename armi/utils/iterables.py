@@ -258,6 +258,6 @@ def pivot(items, position: int):
     """
     if isinstance(items, np.ndarray):
         return np.concatenate((items[position:], items[:position]))
-    elif isinstance(items, list):
+    if isinstance(items, list):
         return items[position:] + items[:position]
     raise TypeError(f"Pivoting {type(items)} not supported : {items}")

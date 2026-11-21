@@ -562,8 +562,7 @@ def computeBlockAverageChi(b, isotxsLib):
         denominator += nucNDens * nuFissionTotal
     if denominator != 0.0:
         return numerator / denominator
-    else:
-        return np.zeros(numGroups)
+    return np.zeros(numGroups)
 
 
 def _getLibTypeSuffix(libType):

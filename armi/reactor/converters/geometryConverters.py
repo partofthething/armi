@@ -811,8 +811,7 @@ class HexToRZThetaConverter(GeometryConverter):
             )
             if self._strictHomogenization:
                 raise ValueError(msg + "Modify mesh converter settings before proceeding.")
-            else:
-                runLog.extra(msg)
+            runLog.extra(msg)
 
         homBlockType = self._getHomogenizedBlockType(numHexBlockByType)
         homBlockTemperature = homBlockTemperature / homBlockVolume
@@ -1019,7 +1018,7 @@ class ThirdCoreHexToFullCoreChanger(GeometryChanger):
             # already full core from geometry file. No need to copy symmetry over.
             runLog.important("Detected that full core reactor already exists. Cannot expand.")
             return self._sourceReactor
-        elif not (
+        if not (
             self._sourceReactor.core.symmetry == self.EXPECTED_INPUT_SYMMETRY
             and self._sourceReactor.core.geomType == geometry.GeomType.HEX
         ):
@@ -1084,6 +1083,7 @@ class ThirdCoreHexToFullCoreChanger(GeometryChanger):
         self._sourceReactor.core.symmetry = geometry.SymmetryType(
             geometry.DomainType.FULL_CORE, geometry.BoundaryType.NO_SYMMETRY
         )
+        return None
 
     def restorePreviousGeometry(self, r=None):
         """Undo the changes made by convert by going back to 1/3 core.

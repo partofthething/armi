@@ -170,7 +170,7 @@ def getIndexOfRotatedCell(initialCellIndex: int, orientationNumber: int) -> int:
         if newPinLocation > tot_pins:
             newPinLocation -= (ring - 1) * 6
         return newPinLocation
-    elif initialCellIndex == 1:
+    if initialCellIndex == 1:
         return initialCellIndex
 
     raise ValueError(f"Cell number must be positive, got {initialCellIndex}")

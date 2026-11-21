@@ -357,7 +357,7 @@ class HexBlock(Block):
         # Allow for some tolerance; user input precision may lead to slight negative gaps
         if pinToDuctGap is not None and pinToDuctGap < -0.005:
             raise ValueError(f"Gap between pins and duct is {pinToDuctGap:.4f} cm in {self}. Make more room.")
-        elif pinToDuctGap is None:
+        if pinToDuctGap is None:
             # Only warn about clad pins that are missing a wire or duct. Wire wrapped directly around an unclad rod
             # (e.g. a solid reflector rod) is a valid design that this gap check simply does not cover.
             ductComp = next(iter(ductComps), None)
@@ -440,17 +440,16 @@ class HexBlock(Block):
             if indices[0] == 0 and indices[1] == 0:
                 # central location
                 return 3.0
-            else:
-                symmetryLine = self.core.spatialGrid.overlapsWhichSymmetryLine(indices)
-                # Detect if upper edge assemblies are included. Doing this is the only way to know definitively whether
-                # or not the edge assemblies are half-assems or full. Seeing the first one is the easiest way to detect
-                # them. Check it last in the and statement so we don't waste time doing it.
-                upperEdgeLoc = self.core.spatialGrid[-1, 2, 0]
-                if symmetryLine in [
-                    grids.BOUNDARY_0_DEGREES,
-                    grids.BOUNDARY_120_DEGREES,
-                ] and bool(self.core.childrenByLocator.get(upperEdgeLoc)):
-                    return 2.0
+            symmetryLine = self.core.spatialGrid.overlapsWhichSymmetryLine(indices)
+            # Detect if upper edge assemblies are included. Doing this is the only way to know definitively whether
+            # or not the edge assemblies are half-assems or full. Seeing the first one is the easiest way to detect
+            # them. Check it last in the and statement so we don't waste time doing it.
+            upperEdgeLoc = self.core.spatialGrid[-1, 2, 0]
+            if symmetryLine in [
+                grids.BOUNDARY_0_DEGREES,
+                grids.BOUNDARY_120_DEGREES,
+            ] and bool(self.core.childrenByLocator.get(upperEdgeLoc)):
+                return 2.0
         return 1.0
 
     def autoCreateSpatialGrids(self, systemSpatialGrid=None):
@@ -496,7 +495,7 @@ class HexBlock(Block):
                 single=True,
             )
             return
-        elif len(multz) != 2 or 1.0 not in multz:
+        if len(multz) != 2 or 1.0 not in multz:
             runLog.extra(
                 f"Could not create a spatialGrid for block {self.p.type}, multiplicities are not {{1, N}} "
                 f"they are {mults}",
@@ -590,8 +589,7 @@ class HexBlock(Block):
 
         if wire and clad:
             return clad.getDimension("od", cold=cold) + wire.getDimension("od", cold=cold)
-        else:
-            raise ValueError(f"Cannot get pin pitch in {self} because it does not have a wire and a clad")
+        raise ValueError(f"Cannot get pin pitch in {self} because it does not have a wire and a clad")
 
     def getWettedPerimeter(self):
         """

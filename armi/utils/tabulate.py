@@ -303,8 +303,7 @@ def _rstEscapeFirstColumn(rows, headers):
     def escapeEmpty(val):
         if isinstance(val, (str, bytes)) and not val.strip():
             return ".."
-        else:
-            return val
+        return val
 
     newHeaders = list(headers)
     newRows = []
@@ -533,7 +532,7 @@ def _isnumber(string):
     """
     if not _isconvertible(float, string):
         return False
-    elif isinstance(string, (str, bytes)) and (math.isinf(float(string)) or math.isnan(float(string))):
+    if isinstance(string, (str, bytes)) and (math.isinf(float(string)) or math.isnan(float(string))):
         return string.lower() in ["inf", "-inf", "nan"]
     return True
 
@@ -589,19 +588,18 @@ def _type(string, hasInvisible=True, numparse=True):
 
     if string is None:
         return type(None)
-    elif hasattr(string, "isoformat"):
+    if hasattr(string, "isoformat"):
         # datetime.datetime, date, and time
         return str
-    elif _isbool(string):
+    if _isbool(string):
         return bool
-    elif _isint(string) and numparse:
+    if _isint(string) and numparse:
         return int
-    elif _isnumber(string) and numparse:
+    if _isnumber(string) and numparse:
         return float
-    elif isinstance(string, bytes):
+    if isinstance(string, bytes):
         return bytes
-    else:
-        return str
+    return str
 
 
 def _afterpoint(string):
@@ -622,17 +620,14 @@ def _afterpoint(string):
     if _isnumber(string) or _isnumberWithThousandsSeparator(string):
         if _isint(string):
             return -1
-        else:
-            pos = string.rfind(".")
-            pos = string.lower().rfind("e") if pos < 0 else pos
-            if pos >= 0:
-                return len(string) - pos - 1
-            else:
-                # no point
-                return -1
-    else:
-        # not a number
+        pos = string.rfind(".")
+        pos = string.lower().rfind("e") if pos < 0 else pos
+        if pos >= 0:
+            return len(string) - pos - 1
+        # no point
         return -1
+    # not a number
+    return -1
 
 
 def _padleft(width, s):
@@ -684,8 +679,8 @@ def _stripAnsi(s):
     """
     if isinstance(s, str):
         return _ansiCodes.sub(r"\4", s)
-    else:  # a bytestring
-        return _ansiCodesBytes.sub(r"\4", s)
+    # a bytestring
+    return _ansiCodesBytes.sub(r"\4", s)
 
 
 def _visibleWidth(s):
@@ -697,16 +692,14 @@ def _visibleWidth(s):
     """
     if isinstance(s, (str, bytes)):
         return len(_stripAnsi(s))
-    else:
-        return len(str(s))
+    return len(str(s))
 
 
 def _isMultiline(s):
     if isinstance(s, str):
         return bool(re.search(_multilineCodes, s))
-    else:
-        # a bytestring
-        return bool(re.search(_multilineCodesBytes, s))
+    # a bytestring
+    return bool(re.search(_multilineCodesBytes, s))
 
 
 def _multilineWidth(multilineS, lineWidthFn=len):
@@ -883,9 +876,9 @@ def _format(val, valtype, floatFmt, intFmt, missingVal="", hasInvisible=True):
 
     if valtype is str:
         return f"{val}"
-    elif valtype is int:
+    if valtype is int:
         return format(val, intFmt)
-    elif valtype is bytes:
+    if valtype is bytes:
         try:
             return str(val, "ascii")
         except (TypeError, UnicodeDecodeError):
@@ -896,8 +889,7 @@ def _format(val, valtype, floatFmt, intFmt, missingVal="", hasInvisible=True):
             rawVal = _stripAnsi(val)
             formattedVal = format(float(rawVal), floatFmt)
             return val.replace(rawVal, formattedVal)
-        else:
-            return format(float(val), floatFmt)
+        return format(float(val), floatFmt)
     else:
         return f"{val}"
 
@@ -913,12 +905,11 @@ def _alignHeader(header, alignment, width, visibleWidth, isMultiline=False, widt
     width += ninvisible
     if alignment == "left":
         return _padright(width, header)
-    elif alignment == "center":
+    if alignment == "center":
         return _padboth(width, header)
-    elif not alignment:
+    if not alignment:
         return f"{header}"
-    else:
-        return _padleft(width, header)
+    return _padleft(width, header)
 
 
 def _removeSeparatingLines(rows):
@@ -931,8 +922,7 @@ def _removeSeparatingLines(rows):
             else:
                 sansRows.append(row)
         return sansRows, separatingLines
-    else:
-        return rows, None
+    return rows, None
 
 
 def _reinsertSeparatingLines(rows, separatingLines):
@@ -1348,7 +1338,7 @@ def tabulate(
         for idx, align in enumerate(colAlign):
             if not idx < len(aligns):
                 break
-            elif align != "global":
+            if align != "global":
                 aligns[idx] = align
     minwidths = [widthFn(h) + minPadding for h in headers] if headers else [0] * len(cols)
     cols = [_alignColumn(c, a, minw, hasInvisible, isMultiline) for c, a, minw in zip(cols, aligns, minwidths)]
@@ -1375,7 +1365,7 @@ def tabulate(
                 hidx = headersPad + idx
                 if not hidx < len(alignsHeaders):
                     break
-                elif align == "same" and hidx < len(aligns):  # same as column align
+                if align == "same" and hidx < len(aligns):  # same as column align
                     alignsHeaders[hidx] = aligns[hidx]
                 elif align != "global":
                     alignsHeaders[hidx] = align
@@ -1421,8 +1411,7 @@ def _expandNumparse(disableNumParse, columnCount):
         for index in disableNumParse:
             numparses[index] = False
         return numparses
-    else:
-        return [not disableNumParse] * columnCount
+    return [not disableNumParse] * columnCount
 
 
 def _expandIterable(original, numDesired, default):
@@ -1435,8 +1424,7 @@ def _expandIterable(original, numDesired, default):
     """
     if isinstance(original, Iterable) and not isinstance(original, str):
         return original + [default] * (numDesired - len(original))
-    else:
-        return [default] * numDesired
+    return [default] * numDesired
 
 
 def _padRow(cells, padding):
@@ -1444,8 +1432,7 @@ def _padRow(cells, padding):
         pad = " " * padding
         paddedCells = [pad + cell + pad for cell in cells]
         return paddedCells
-    else:
-        return cells
+    return cells
 
 
 def _buildSimpleRow(paddedCells, rowfmt):
@@ -1460,8 +1447,7 @@ def _buildRow(paddedCells, colwidths, colAligns, rowfmt):
         return None
     if callable(rowfmt):
         return rowfmt(paddedCells, colwidths, colAligns)
-    else:
-        return _buildSimpleRow(paddedCells, rowfmt)
+    return _buildSimpleRow(paddedCells, rowfmt)
 
 
 def _appendBasicRow(lines, paddedCells, colwidths, colAligns, rowfmt, rowAlign=None):
@@ -1475,12 +1461,11 @@ def _alignCellVeritically(textLines, numLines, columnWidth, rowAlignment):
     blank = [" " * columnWidth]
     if rowAlignment == "bottom":
         return blank * deltaLines + textLines
-    elif rowAlignment == "center":
+    if rowAlignment == "center":
         topDelta = deltaLines // 2
         bottomDelta = deltaLines - topDelta
         return topDelta * blank + textLines + bottomDelta * blank
-    else:
-        return textLines + blank * deltaLines
+    return textLines + blank * deltaLines
 
 
 def _appendMultilineRow(lines, paddedMultilineCells, paddedWidths, colAligns, rowfmt, pad, rowAlign=None):
@@ -1503,10 +1488,9 @@ def _buildLine(colwidths, colAligns, linefmt):
         return None
     if callable(linefmt):
         return linefmt(colwidths, colAligns)
-    else:
-        begin, fill, sep, end = linefmt
-        cells = [fill * w for w in colwidths]
-        return _buildSimpleRow(cells, (begin, sep, end))
+    begin, fill, sep, end = linefmt
+    cells = [fill * w for w in colwidths]
+    return _buildSimpleRow(cells, (begin, sep, end))
 
 
 def _appendLine(lines, colwidths, colAligns, linefmt):
@@ -1570,5 +1554,4 @@ def _formatTable(fmt, headers, headersAligns, rows, colwidths, colAligns, isMult
 
     if headers or rows:
         return "\n".join(lines)
-    else:
-        return ""
+    return ""

@@ -85,8 +85,7 @@ class InputError(Exception):
         callSiteIsFake = self.caller.filename.startswith("<") and self.caller.filename.endswith(">")
         if callSiteIsFake:
             return self.msg
-        else:
-            return self.caller.filename + ":" + str(self.caller.lineno) + " - " + self.msg
+        return self.caller.filename + ":" + str(self.caller.lineno) + " - " + self.msg
 
 
 # ---------------------------------------------------

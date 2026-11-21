@@ -122,8 +122,7 @@ class _Metadata:
                         val2=otherVal,
                     )
                 )
-            else:
-                mergedVal = selfVal
+            mergedVal = selfVal
             mergedData[key] = mergedVal
         return mergedData
 

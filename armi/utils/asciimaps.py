@@ -365,12 +365,11 @@ class AsciiMapHexThirdFlatsUp(AsciiMap):
         if rayNum == 0:
             # middle ray: (1,0), (0,2), (-1,4), (-2,6)
             return 1 - indexOnRay, 2 * indexOnRay
-        elif rayNum == 1:
+        if rayNum == 1:
             # leftmost ray: (0,1), (-1,3), (-2,5), ...
             return -indexOnRay, 2 * indexOnRay + 1
-        else:
-            # innermost ray: (1,1), (0,3), (-1,5)
-            return 1 - indexOnRay, 2 * indexOnRay + 1
+        # innermost ray: (1,1), (0,3), (-1,5)
+        return 1 - indexOnRay, 2 * indexOnRay + 1
 
     def _getIJFromColAndBase(self, columnNum, iBase, jBase):
         """Map ascii column and base to i,j hex indices."""

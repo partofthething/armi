@@ -139,11 +139,12 @@ extend-exclude = ["doc/tutorials/armi-example-app"]
 # I - import sorting
 # N801 - class names use CapWords
 # PIE - flake8-pie: no needless pass, range(0, n), repeated startswith
+# RET - flake8-return: no else after return/raise/continue/break, explicit returns
 # RUF100 - no unused noqa directives
 # SIM - code simplification
 # TID - tidy imports
 # UP - pyupgrade: modern syntax for the oldest supported Python (from requires-python)
-select = ["B", "C4", "D", "E", "F", "I", "N801", "PIE", "RUF100", "SIM", "TID", "UP"]
+select = ["B", "C4", "D", "E", "F", "I", "N801", "PIE", "RET", "RUF100", "SIM", "TID", "UP"]
 
 # Not (yet) enforced, because they need hand-written content rather than mechanical fixes:
 #
@@ -156,9 +157,10 @@ select = ["B", "C4", "D", "E", "F", "I", "N801", "PIE", "RUF100", "SIM", "TID", 
 # D105 - well-known magic methods need no docstring
 # D205 - a blank line between summary and description
 # E731 - assigning lambdas is fine
+# RET504 - a named result before `return` documents the quantity
 # SIM108 - if/else blocks need not become ternaries
 # SIM118 - `in d.keys()` is required where classes overload keys()
-ignore = ["B905", "D100", "D101", "D102", "D103", "D105", "D106", "D205", "D401", "E731", "SIM108", "SIM118"]
+ignore = ["B905", "D100", "D101", "D102", "D103", "D105", "D106", "D205", "D401", "E731", "RET504", "SIM108", "SIM118"]
 
 [tool.ruff.lint.per-file-ignores]
 # Tests need no docstrings

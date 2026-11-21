@@ -212,7 +212,7 @@ class Block(composites.Composite):
         if not fuels:
             # smear density is not computed for non-fuel blocks
             return 0.0
-        elif not self.getNumPins():
+        if not self.getNumPins():
             # smear density is only defined for pinned blocks
             return 0.0
 
@@ -288,8 +288,7 @@ class Block(composites.Composite):
         totalMovableArea = innerCladdingArea - unmovableComponentArea
         if totalMovableArea <= 0.0:
             return 0.0
-        else:
-            return fuelComponentArea / totalMovableArea
+        return fuelComponentArea / totalMovableArea
 
     def autoCreateSpatialGrids(self, systemSpatialGrid=None):
         """
@@ -427,8 +426,7 @@ class Block(composites.Composite):
         if gamma:
             if adjoint:
                 raise ValueError("Adjoint gamma flux is currently unsupported.")
-            else:
-                self.p.pinMgFluxesGamma = fluxes
+            self.p.pinMgFluxesGamma = fluxes
         else:
             if adjoint:
                 self.p.pinMgFluxesAdj = fluxes
@@ -459,12 +457,11 @@ class Block(composites.Composite):
         xsType = self.p.xsType
         if len(xsType) == 1:
             return xsType + env
-        elif len(xsType) == 2 and ord(env) != ord("A"):
+        if len(xsType) == 2 and ord(env) != ord("A"):
             # default is "A" so if we got an off default 2 char, there is no way to resolve.
             raise ValueError("Use of non-default env groups is not allowed with multi-character xs groups!")
-        else:
-            # ignore env group, multi Char XS type to support assigning 2 chars in blueprints
-            return xsType
+        # ignore env group, multi Char XS type to support assigning 2 chars in blueprints
+        return xsType
 
     def getHeight(self):
         """Return the block height."""
@@ -585,8 +582,7 @@ class Block(composites.Composite):
         """
         if self.core and self.parent.spatialGrid and self.spatialLocator:
             return self.core.spatialGrid.getLabel(self.spatialLocator.getCompleteIndices())
-        else:
-            return "ExCore"
+        return "ExCore"
 
     def coords(self):
         """
@@ -1221,13 +1217,12 @@ class Block(composites.Composite):
 
         if tFrac:
             return tFrac
-        else:
-            runLog.info(
-                f"No component {typeSpec} exists on {self}, so area fraction is zero.",
-                single=True,
-                label=f"{typeSpec} areaFrac is zero",
-            )
-            return 0.0
+        runLog.info(
+            f"No component {typeSpec} exists on {self}, so area fraction is zero.",
+            single=True,
+            label=f"{typeSpec} areaFrac is zero",
+        )
+        return 0.0
 
     def verifyBlockDims(self):
         """Optional dimension checking."""

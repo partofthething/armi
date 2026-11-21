@@ -221,10 +221,9 @@ class Material(MatPropsMaterial):
         if hasattr(self, "alpha_inst") and self.alpha_inst is not None:
             Tc = getTc(Tc, Tk)
             return self.alpha_inst(T=Tc)
-        else:
-            Tk = getTk(Tc, Tk)
-            deltaStrain = self.linearExpansionPercent(Tk + 1.0) / 100.0 - self.linearExpansionPercent(Tk - 1.0) / 100.0
-            return deltaStrain / 2.0
+        Tk = getTk(Tc, Tk)
+        deltaStrain = self.linearExpansionPercent(Tk + 1.0) / 100.0 - self.linearExpansionPercent(Tk - 1.0) / 100.0
+        return deltaStrain / 2.0
 
     def linearExpansionPercent(self, Tk: float = None, Tc: float = None) -> float:
         """
@@ -250,15 +249,14 @@ class Material(MatPropsMaterial):
         if hasattr(self, "dl_l") and self.dl_l is not None:
             Tc = getTc(Tc, Tk)
             return self.dl_l(T=Tc)
-        elif hasattr(self, "alpha_mean") and self.alpha_mean is not None:
+        if hasattr(self, "alpha_mean") and self.alpha_mean is not None:
             Tc = getTc(Tc, Tk)
             try:
                 refTempC = self.alpha_mean.getReferenceTemperature()
             except Exception:
                 return 0.0
             return 100.0 * self.alpha_mean(T=Tc) * (Tc - refTempC)
-        else:
-            return 0.0
+        return 0.0
 
     def linearExpansionFactor(self, Tc: float, T0: float) -> float:
         """
@@ -547,20 +545,19 @@ class Material(MatPropsMaterial):
         if cached and cached[0] == Tk:
             # only use cached value if the temperature at which it is cached is the same.
             return cached[1]
-        else:
-            # go look it up from material properties
-            try:
-                # If this is an armi.materials.Material property.
-                val = getattr(self, propName)(Tk=Tk, **kwargs)
-            except KeyError:
-                # This is an armi.matProps.MatPropsMaterial property.
-                if Tc is None:
-                    Tc = getTc(Tc, Tk)
-                val = getattr(self, propName)(T=Tc, **kwargs)
+        # go look it up from material properties
+        try:
+            # If this is an armi.materials.Material property.
+            val = getattr(self, propName)(Tk=Tk, **kwargs)
+        except KeyError:
+            # This is an armi.matProps.MatPropsMaterial property.
+            if Tc is None:
+                Tc = getTc(Tc, Tk)
+            val = getattr(self, propName)(T=Tc, **kwargs)
 
-            # cache only one value for each property. Prevents unbounded cache explosion.
-            self._setCache(propName, (Tk, val))
-            return val
+        # cache only one value for each property. Prevents unbounded cache explosion.
+        self._setCache(propName, (Tk, val))
+        return val
 
     def getMassFrac(self, nucName=None, normalized=True, expandFissionProducts=False):
         """
@@ -639,8 +636,7 @@ class Material(MatPropsMaterial):
             if FAIL_ON_RANGE or np.isnan(val):
                 runLog.error(msg)
                 raise ValueError(msg)
-            else:
-                runLog.warning(msg, single=True, label=f"T out of bounds for {self.name} {label}")
+            runLog.warning(msg, single=True, label=f"T out of bounds for {self.name} {label}")
 
     def heatCapacity(self, Tk=None, Tc=None):
         """Returns heat capacity in units of J/kg/C."""

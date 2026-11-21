@@ -258,7 +258,7 @@ class Assembly(composites.Composite):
             name = param.name
             if obj.p[name] is None or isinstance(obj.p[name], str):
                 continue
-            elif isinstance(obj.p[name], Iterable):
+            if isinstance(obj.p[name], Iterable):
                 obj.p[name] = [value * scalingFactor for value in obj.p[name]]
             else:
                 # numpy array or other
@@ -286,7 +286,7 @@ class Assembly(composites.Composite):
         # just use ring and position, not axial (which is 0)
         if not self.parent:
             return self.LOAD_QUEUE
-        elif isinstance(self.parent, SpentFuelPool):
+        if isinstance(self.parent, SpentFuelPool):
             return self.SPENT_FUEL_POOL
         return self.parent.spatialGrid.getLabel(self.spatialLocator.getCompleteIndices()[:2])
 
@@ -370,29 +370,28 @@ class Assembly(composites.Composite):
                 # these blocks line up
                 newBlockStack.append(b)
                 continue
-            elif refB.getHeight() > b.getHeight():
+            if refB.getHeight() > b.getHeight():
                 raise RuntimeError(
                     f"can't split {b} ({b.getHeight()}cm) into larger blocks to match ref block {refB} "
                     f"({refB.getHeight()}cm)"
                 )
-            else:
-                # b is larger than refB. Split b up by splitting it into several smaller blocks of
-                # refBs
-                heightToChop = b.getHeight()
-                heightChopped = 0.0
-                while abs(heightChopped - heightToChop) > 1e-5:  # stop when they are equal. floating point.
-                    # update which ref block we're on (does nothing on the first pass)
-                    refB = refA[i + newBlocks]
-                    newB = copy.deepcopy(b)
-                    newB.setHeight(refB.getHeight())  # make block match ref mesh
-                    newBlockStack.append(newB)
-                    heightChopped += refB.getHeight()
-                    newBlocks += 1
-                    runLog.important(f"Added a new block {newB} of height {newB.getHeight()}")
-                    runLog.important(f"Chopped {heightChopped} of {heightToChop}")
+            # b is larger than refB. Split b up by splitting it into several smaller blocks of
+            # refBs
+            heightToChop = b.getHeight()
+            heightChopped = 0.0
+            while abs(heightChopped - heightToChop) > 1e-5:  # stop when they are equal. floating point.
+                # update which ref block we're on (does nothing on the first pass)
+                refB = refA[i + newBlocks]
+                newB = copy.deepcopy(b)
+                newB.setHeight(refB.getHeight())  # make block match ref mesh
+                newBlockStack.append(newB)
+                heightChopped += refB.getHeight()
+                newBlocks += 1
+                runLog.important(f"Added a new block {newB} of height {newB.getHeight()}")
+                runLog.important(f"Chopped {heightChopped} of {heightToChop}")
 
-                # subtract one because we eliminated the original b completely.
-                newBlocks -= 1
+            # subtract one because we eliminated the original b completely.
+            newBlocks -= 1
 
         self.removeAll()
         self.spatialGrid = grids.AxialGrid.fromNCells(len(newBlockStack))
@@ -572,11 +571,10 @@ class Assembly(composites.Composite):
             if diff1 == diff2:  # params are flat
                 if diff1 != 0:  # no match
                     continue
-                else:
-                    if z1 not in heights:
-                        heights.append(z1)
-                    if z2 not in heights:
-                        heights.append(z2)
+                if z1 not in heights:
+                    heights.append(z1)
+                if z2 not in heights:
+                    heights.append(z2)
 
             # check if param is bounded by two adjacent blocks
             elif diff1 * diff2 <= 0:

@@ -120,16 +120,15 @@ class LocationBase(ABC):
         # because the comparison is not symmetric.
         if selfR < thatR:
             return True
-        elif selfR > thatR:
+        if selfR > thatR:
             return False
-        else:
-            for lt, eq in zip(selfIndices < thatIndices, selfIndices == thatIndices):
-                if eq:
-                    continue
+        for lt, eq in zip(selfIndices < thatIndices, selfIndices == thatIndices):
+            if eq:
+                continue
 
-                return lt
+            return lt
 
-            return False
+        return False
 
     def __len__(self) -> int:
         """Returns 3, the number of directions."""

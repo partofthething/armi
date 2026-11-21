@@ -433,11 +433,10 @@ def _diffSimpleData(ref: h5py.Dataset, src: h5py.Dataset, diffResults: DiffResul
         # Strings are persnickety
         if src.dtype.kind == ref.dtype.kind and src.dtype.kind in {"U", "S"}:
             return
-        else:
-            runLog.error(f"Failed to compare {paramName} in {compName}")
-            runLog.error(f"source: {src}")
-            runLog.error(f"reference: {ref}")
-            diff = np.array([np.inf])
+        runLog.error(f"Failed to compare {paramName} in {compName}")
+        runLog.error(f"source: {src}")
+        runLog.error(f"reference: {ref}")
+        diff = np.array([np.inf])
     except ValueError:
         runLog.error(f"Failed to compare {paramName} in {compName}")
         runLog.error(f"source: {src}")
