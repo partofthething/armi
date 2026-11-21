@@ -63,7 +63,7 @@ class ExtractInputs(EntryPoint):
 
         bail = False
         for path in [settingsPath, bpPath]:
-            if os.path.exists(settingsPath):
+            if os.path.exists(path):
                 runLog.error("`{}` already exists. Aborting.".format(path))
                 bail = True
         if bail:
