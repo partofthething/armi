@@ -1180,8 +1180,8 @@ class FuelHandler:
                         # extract the assembly ring, position and cycle.
                         try:
                             ringPosCycle = ast.literal_eval(ringPosCycle.split("=", 1)[1])
-                        except (ValueError, SyntaxError):
-                            raise InputError('Failed to parse ring/position/cycle line "{0}" in shuffle file'.format(line))
+                        except (ValueError, SyntaxError) as ee:
+                            raise InputError(f'Failed to parse ringPosCycle in shuffle file line "{line}"') from ee
                     enrichList = [float(i) for i in m.group(5).split()]
                     moves[cycle].append(AssemblyMove(oldLoc, newLoc, enrichList, assemType, ringPosCycle))
                     numMoves += 1
