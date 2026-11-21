@@ -246,8 +246,25 @@ class EchoExecuter(executers.DefaultExecuter):
         return EchoOutput(os.path.join(self.options.workingDir, f"{self.options.label}.res"))
 
 
+class TransformingExecuter(EchoExecuter):
+    """Marks the reactor transformed in prepare; can fail while writing its input."""
+
+    failWrite = False
+
+    def _performGeometryTransformations(self):
+        self.r.transformed = True
+
+    def _undoGeometryTransformations(self):
+        self.r.transformed = False
+
+    def writeInput(self):
+        if self.failWrite:
+            raise OSError("disk full")
+        super().writeInput()
+
+
 class TestDefaultExecuter(CodeTestCase):
-    def executer(self, label, **options):
+    def executer(self, label, executerClass=None, **options):
         opts = executers.ExecutionOptions(label=label)
         opts.code = self.code
         opts.inputFile = f"{label}.inp"
@@ -260,7 +277,7 @@ class TestDefaultExecuter(CodeTestCase):
             setattr(opts, name, value)
         reactor = MockReactor()
         reactor.applied = []
-        return EchoExecuter(opts, reactor)
+        return (executerClass or EchoExecuter)(opts, reactor)
 
     def test_runExternalExecutable(self):
         """Run an external executable with an Executer, without changing the working directory.
@@ -291,6 +308,34 @@ class TestDefaultExecuter(CodeTestCase):
         executer = self.executer("block", code=executers.Code("missing", "/no/such/code"))
         with self.assertRaises(IOError):
             executer.run()
+
+    def test_geometryRestoredWhenAnythingFails(self):
+        """Whatever step raises, no executer leaves the reactor geometry transformed."""
+
+        def transforming(label, failWrite=False):
+            executer = self.executer(label, executerClass=TransformingExecuter)
+            executer.failWrite = failWrite
+            return executer
+
+        with self.subTest("writing the input fails"):
+            executer = transforming("block", failWrite=True)
+            with self.assertRaises(OSError):
+                executer.run()
+            self.assertFalse(executer.r.transformed)
+
+        with self.subTest("the code fails"):
+            os.environ["FAILURES"] = "5"
+            executer = transforming("block")
+            with self.assertRaises(RuntimeError):
+                executer.run()
+            self.assertFalse(executer.r.transformed)
+            os.environ.pop("FAILURES")
+
+        with self.subTest("a later executer fails to write its input, side by side"):
+            batch = [transforming("block0"), transforming("block1", failWrite=True)]
+            with self.assertRaises(OSError):
+                executers.runExecuters(batch)
+            self.assertEqual([e.r.transformed for e in batch], [False, False])
 
     def test_manyExecutersSideBySide(self):
         executers_ = [self.executer(f"block{i}", cache=self.cache) for i in range(3)]

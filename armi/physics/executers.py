@@ -542,12 +542,12 @@ class DefaultExecuter(Executer):
 
     def run(self):
         """Prepare, run the code (if there is one) and finish; return the output."""
-        self.prepare()
         try:
+            self.prepare()
             return self.finish(self._execute())
         finally:
-            # Finish also undoes the transformations; this keeps the reactor restored even
-            # when the code run or the output read raises. No-op when finish already ran.
+            # Keep the reactor restored even when writing the input, the code run or the output read raises. Undoing is
+            # a no-op when finish already did it, or when nothing was transformed.
             self._undoGeometryTransformations()
 
     def prepare(self) -> None:
@@ -647,8 +647,9 @@ def runExecuters(executers: Sequence[DefaultExecuter], maxWorkers: Optional[int]
     prepared = []
     try:
         for executer in executers:
-            executer.prepare()
+            # Listed before prepare(): it may raise after transforming the geometry (e.g. writing the input).
             prepared.append(executer)
+            executer.prepare()
         runs = [executer.codeRun() for executer in executers]
         pending = [i for i, run in enumerate(runs) if run is not None]
         results = [None] * len(executers)
