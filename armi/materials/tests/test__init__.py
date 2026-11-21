@@ -105,6 +105,18 @@ class TestYamlMaterial(unittest.TestCase):
         self.assertIsInstance(mat, Material)
         self.assertNotIsInstance(mat, HT9)
 
+    def test_editedFileIsReloaded(self):
+        """A YAML material edited during the process is picked up the next time the namespace is set."""
+        before = materials.createMaterialByName("HT9").massFrac["C"]
+        with open("HT9.yaml") as f:
+            text = f.read()
+        with open("HT9.yaml", "w") as f:
+            f.write(text.replace("C: [0.2, 0.2]", "C: [0.4, 0.4]"))
+
+        materials.setMaterialNamespaceOrder(self.namespaceOrder)
+        after = materials.createMaterialByName("HT9").massFrac["C"]
+        self.assertAlmostEqual(after, 2 * before, delta=0.01 * before)
+
     def test_loadReactor(self):
         # verifies that a reactor can be loaded from case settings with YAML materials
         _, r = loadTestReactor(

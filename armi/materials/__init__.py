@@ -53,8 +53,8 @@ _MATERIAL_NAMESPACE_ORDER = ["armi.materials"]
 
 # Dictionary of loaded materials: d[mat directory] = (stamp, {mat name: instance of Material object})
 #
-# The stamp is a fingerprint of the directory's YAML files (path, mtime, size per file), so a
-# file that changes invalidates the cached copy.
+# The stamp is a fingerprint of the directory's YAML files (path, mtime, size per file); setMaterialNamespaceOrder
+# reloads a directory whose files changed.
 #
 # NOTE: This is the collection used to cache YAML materials in the usual ARMI workflow. There is something similar in
 # matProps, but that is not typically used in ARMI runs and exists purely for peopel that use matProps without ARMI.
@@ -167,9 +167,10 @@ def setMaterialNamespaceOrder(order):
         else:
             continue
 
-        # Re-check the directory: cached materials are valid only while the files are unchanged.
+        # Reload the directory if any of its files changed since it was loaded. This is checked here, once per reactor
+        # build or settings load, rather than on every material lookup: walking the directory costs several times
+        # more than creating the material.
         _loadDirIfNeeded(yDir)
-
 
 
 def getLoadedYamlDirs() -> dict:
@@ -326,7 +327,7 @@ def createMaterialByName(name: str, namespaceOrder: List[str] = None):
             # check and see if you can find the material
             if yDir not in _loadedYamlMats:
                 continue
-            mats = _loadDirIfNeeded(yDir)
+            mats = _loadedYamlMats[yDir][1]
             if name not in mats:
                 continue
 
