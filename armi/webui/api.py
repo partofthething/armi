@@ -207,6 +207,13 @@ class Session:
         if target.suffix.lower() in RESULTS_SUFFIXES:
             return self.openResults({"path": str(target)})
 
+        # Opening anything replaces whatever was open; nothing may be left over from the old file.
+        self._closeResults()
+        self.doc = None
+        self.settings = None
+        self.dirty = False
+        self.settingsDirty = False
+
         try:
             if _looksLikeSettings(target):
                 self._loadSettings(target)
@@ -339,6 +346,12 @@ class Session:
 
     # -- results --------------------------------------------------------------------------------
 
+    def _closeResults(self):
+        if self.results is not None:
+            self.results.close()
+        self.results = None
+        self._fuelCycle = None
+
     def _openCaseResults(self):
         """Open the database a case writes, if it has been run, so its results are a click away."""
         if self.settings is None or self.settings.path is None:
@@ -351,10 +364,8 @@ class Session:
                 runLog.warning(f"Not showing results from {candidate.name}: {ee}")
 
     def _setResults(self, database):
-        if self.results is not None:
-            self.results.close()
+        self._closeResults()
         self.results = database
-        self._fuelCycle = None
         database.warm()
 
     def openResults(self, body):
