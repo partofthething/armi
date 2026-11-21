@@ -772,13 +772,12 @@ class ResultsDatabase:
             if attrs.get("dict", False):
                 # A dict-format dataset carries the nuclide names as the "keys" attribute
                 # rather than a separate "nuclides" dataset.
-                keys = np.asarray(attrs.get("keys", []))
-                hits = np.flatnonzero(keys.astype("S6") == target)
-                mask = typeNames == typeName
+                keys = np.asarray(attrs.get("keys", []), dtype=bytes)
+                hits = np.flatnonzero(keys == target)
                 if hits.size == 0:
                     continue
-                data = densities[()]
-                col = np.asarray(data)[:, hits[0]].astype(np.float64)
+                col = np.asarray(densities[:, hits[0]], dtype=np.float64)
+                mask = typeNames == typeName
                 rows = indexInData[mask]
                 ok = rows < len(col)
                 chunk = np.full(mask.sum(), np.nan)
