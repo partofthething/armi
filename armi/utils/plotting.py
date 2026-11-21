@@ -994,7 +994,8 @@ def plotBlockFlux(core, fName=None, bList=None, peak=False, adjoint=False, bList
                 if sum(thisFlux) > sum(self.peakFlux):
                     self.peakFlux = thisFlux
 
-            self.avgFlux = self.avgFlux / len(bList)
+            if self.blockList:
+                self.avgFlux = self.avgFlux / len(self.blockList)
 
         def setEnergyStructure(self, upperEnergyBounds):
             self.E = [eMax / 1e6 for eMax in upperEnergyBounds]
