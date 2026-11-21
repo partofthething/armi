@@ -1050,7 +1050,7 @@ def plotBlockFlux(core, fName=None, bList=None, peak=False, adjoint=False, bList
                 f.write("{0:12E} {1:12E} {2:12E}\n".format(eMax, avgFlux, peakFlux))
 
     if max(bf1.avgFlux) <= 0.0:
-        runLog.warning(f"Cannot plot flux with maxval=={bf1.avgFlux} in {bList[0] if bList else "no blocks"}")
+        runLog.warning(f"Cannot plot flux with maxval=={bf1.avgFlux} in {bList[0] if bList else 'no blocks'}")
         return
 
     plt.figure()
