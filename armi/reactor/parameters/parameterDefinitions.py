@@ -360,8 +360,8 @@ class Parameter:
         )
 
     def __eq__(self, other):
-        """Name defines equality."""
-        return self.name == other.name
+        """Name and collection type define equality."""
+        return self.name == other.name and self.collectionType == other.collectionType
 
     def __ne__(self, other):
         return not (self == other)
@@ -371,7 +371,9 @@ class Parameter:
         return self.name < other.name
 
     def __hash__(self):
-        return hash(self.name) + id(self)
+        # ``__eq__`` compares by (name, collectionType), so the hash must too for equal
+        # objects to match.
+        return hash((self.name, self.collectionType))
 
     def __setstate__(self, state):
         self._backup = state[0]  # a tuple of 1 element.
