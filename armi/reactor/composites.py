@@ -2766,6 +2766,11 @@ class Composite(ArmiObject):
         -------
         averageTemperature : float
             Child-averaged temperature (in degrees Celsius)
+
+        Raises
+        ------
+        ValueError :
+            No matching component with a non-zero volume was found.
         """
         tempNumerator = 0.0
         totalVol = 0.0
@@ -2773,6 +2778,11 @@ class Composite(ArmiObject):
             vol = component.getVolume()
             tempNumerator += component.temperatureInC * vol
             totalVol += vol
+
+        if totalVol == 0.0:
+            raise ValueError(
+                f"{self} has no matching components with non-zero volume. Cannot compute a volume-averaged temperature."
+            )
 
         return tempNumerator / totalVol
 
