@@ -65,7 +65,9 @@ class _FlagMeta(type):
 
     def __new__(cls, name, bases, attrs):
         autoAt = 1
-        explicitFields = [(attr, val) for attr, val in attrs.items() if isinstance(val, int)]
+        explicitFields = [
+            (attr, val) for attr, val in attrs.items() if isinstance(val, int) and not _FlagMeta.isdunder(attr)
+        ]
         explicitValues = {val for name, val in explicitFields}
 
         flagClass = type.__new__(cls, name, bases, attrs)
@@ -235,7 +237,7 @@ class Flag(metaclass=_FlagMeta):
 
         Example
         -------
-        >>> class MyFlags(Flags):
+        >>> class MyFlags(Flag):
         ...     FOO = auto()
         ...     BAR = 1
         ...     BAZ = auto()
