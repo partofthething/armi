@@ -174,13 +174,11 @@ def writeWelcomeHeaders(o, cs):
         processorNames = context.MPI_NODENAMES
         uniqueNames = set(processorNames)
         nodeMappingData = []
-        sysInfo = ""
+        sysInfo = getSystemInfo()
         for uniqueName in uniqueNames:
             matchingProcs = [str(rank) for rank, procName in enumerate(processorNames) if procName == uniqueName]
             numProcessors = str(len(matchingProcs))
             nodeMappingData.append((uniqueName, numProcessors, ", ".join(matchingProcs)))
-
-            sysInfo += getSystemInfo()
 
         runLog.section("=========== Machine Information ===========")
         runLog.info(
