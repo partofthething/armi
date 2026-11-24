@@ -388,6 +388,8 @@ class Material(MatPropsMaterial):
         """
         if massFraction > 1.0 or massFraction < 0.0:
             raise ValueError(f"Cannot enrich to massFraction of {massFraction}, must be between 0 and 1")
+        if nuclideName not in self.massFrac:
+            raise ValueError(f"Nuclide {nuclideName} is not present in the mass fractions of {self}: {self.massFrac}")
 
         nucsNames = list(self.massFrac)
 
