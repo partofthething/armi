@@ -173,7 +173,7 @@ def buildRingSchedule(
         The peripheral ring into which an assembly enters the core. Default is outermost ring.
 
     dischargeRing : int, optional
-        The last ring an assembly sits in before discharging. Default is jumpRing-1
+        The last ring an assembly sits in before discharging. Default is the center ring (ring 1).
 
     jumpRingFrom : int
         The last ring an assembly sits in before jumping to the center
@@ -195,10 +195,19 @@ def buildRingSchedule(
 
     Examples
     --------
-    >>> f.buildRingSchedule(17, 1, jumpRingFrom=14)
-    ([13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 14, 15, 16, 17],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+    >>> f.buildRingSchedule(9, 9, 1, jumpRingFrom=6)
+    ([5, 4, 3, 2, 1, 6, 7, 8, 9], [0, 0, 0, 0, 0, 0, 0, 0, 0])
     """
+    # default unset rings before any validation/bounds-checking below
+    if dischargeRing is None:
+        # No discharge ring given, so we default to converging from outside to inside
+        # and therefore discharging from the center
+        dischargeRing = 1
+    if chargeRing is None:
+        # Charge ring not specified. Since we default to convergent shuffling, we
+        # must insert the fuel at the periphery.
+        chargeRing = maxRingInCore
+
     if dischargeRing > maxRingInCore:
         runLog.warning(
             f"Discharge ring {dischargeRing} is outside the core (max {maxRingInCore}). Changing it to be the max ring"
@@ -210,15 +219,6 @@ def buildRingSchedule(
         )
         chargeRing = maxRingInCore
 
-    # process arguments
-    if dischargeRing is None:
-        # No discharge ring given, so we default to converging from outside to inside
-        # and therefore discharging from the center
-        dischargeRing = 1
-    if chargeRing is None:
-        # Charge ring not specified. Since we default to convergent shuffling, we
-        # must insert the fuel at the periphery.
-        chargeRing = maxRingInCore
     if jumpRingFrom is not None and not (1 < jumpRingFrom < maxRingInCore):
         raise ValueError(f"JumpRingFrom {jumpRingFrom} is not in the core.")
     if jumpRingTo is not None and not (1 <= jumpRingTo < maxRingInCore):
