@@ -240,7 +240,16 @@ def getComponentParameterDefinitions():
         def _validatePinIndices(self, val):
             if val is not None:
                 # holds [0, 65_535] so at most, 65_535 pins per block
-                self._p_pinIndices = np.array(val, dtype=np.uint16)
+                arr = np.asarray(val)
+                if arr.size == 0:
+                    # an empty assignment is valid (e.g. for off-grid components)
+                    self._p_pinIndices = np.array([], dtype=np.uint16)
+                    return
+                if arr.dtype.kind not in "iu":
+                    raise ValueError(f"pinIndices must be integer values in [0, 65535], got {val}")
+                if arr.min() < 0 or arr.max() > 65535:
+                    raise ValueError(f"pinIndices values must be integers in [0, 65535], got {val}")
+                self._p_pinIndices = np.array(arr, dtype=np.uint16)
             else:
                 self._p_pinIndices = None
 
