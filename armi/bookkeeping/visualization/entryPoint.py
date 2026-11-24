@@ -127,14 +127,16 @@ class VisFileEntryPoint(entryPoint.EntryPoint):
         with db:
             dbNodes = list(db.genTimeSteps())
 
-            if nodes is not None and any(node not in dbNodes for node in nodes):
+            availableNodes = {ts[:2] for ts in dbNodes}
+            if nodes is not None and any(node not in availableNodes for node in nodes):
                 raise RuntimeError(
                     "Some of the requested nodes are not in the source database.\nRequested: "
                     f"{nodes}\nPresent: {dbNodes}"
                 )
 
             with dumper:
-                for cycle, node in dbNodes:
+                for ts in dbNodes:
+                    cycle, node = ts[:2]
                     if nodes is not None and (cycle, node) not in nodes:
                         continue
 
