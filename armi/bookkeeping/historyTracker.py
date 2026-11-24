@@ -399,21 +399,16 @@ class HistoryTrackerInterface(interfaces.Interface):
         -------
         timeSteps
             times in years that are available in the history
-
-        See Also
-        --------
-        getTimeIndices : gets indices where an assembly is in the core
         """
         dbi = self.getInterface("database")
         timeInYears = dbi.getHistory(self.r, ["time"])["time"]
 
-        # remove the time step info. Clients don't want it
-        timeInYears = [t[1] for t in timeInYears]
-        if a:
-            b = self._getBlockInAssembly(a)
-            ids = dbi.getHistory(["id"])["id"]
-            timeInYears = [time for time, ids in zip(timeInYears, ids) if b.p.id in ids]
-        return timeInYears
+        if a is None:
+            return list(timeInYears.values())
+
+        b = self._getBlockInAssembly(a)
+        blockHistory = dbi.getHistory(b, ["id"])["id"]
+        return [time for ts, time in timeInYears.items() if ts in blockHistory]
 
     @staticmethod
     def _getBlockInAssembly(a: "Assembly") -> "Block":
