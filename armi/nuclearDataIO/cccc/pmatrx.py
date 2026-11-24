@@ -314,7 +314,9 @@ class _PmatrxNuclideIO:
         activationMTU = self._metadata["activationMTU"] = self._metadata["activationMTU"] or [None] * numActivationXS
         for xsNum in range(numActivationXS):
             with self._pmatrixIO.createRecord() as record:
-                pmatrixParams["activationXS"][xsNum] = record.rwList(activationXS[xsNum], self._numNeutronGroups)
+                pmatrixParams["activationXS"][xsNum] = record.rwList(
+                    activationXS[xsNum], "float", self._numNeutronGroups
+                )
                 pmatrixParams["activationMT"][xsNum] = record.rwInt(activationMT[xsNum])
                 pmatrixParams["activationMTU"][xsNum] = record.rwInt(activationMTU[xsNum])
 
