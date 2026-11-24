@@ -56,12 +56,6 @@ class CompareCases(EntryPoint):
             ),
         )
         parser.add_argument(
-            "--weights",
-            nargs="*",
-            action="store",
-            help="Period separated key/value pairs for database table weights",
-        )
-        parser.add_argument(
             "--exclude",
             default=CONVERTED_EXCLUSIONS,
             action="store",
@@ -100,9 +94,6 @@ class CompareCases(EntryPoint):
 
         if self.args.timestepCompare:
             self.args.timestepCompare = [tuple(map(int, step.split("."))) for step in self.args.timestepCompare]
-
-        if self.args.weights:
-            self.args.weights = dict(w.split(".") for w in self.args.weights)
 
     def invoke(self):
         from armi.bookkeeping.db import compareDatabases
@@ -203,7 +194,6 @@ class CompareSuites(CompareCases):
 
         nIssues = refSuite.compare(
             cmpSuite,
-            weights=self.args.weights,
             tolerance=self.args.tolerance,
             exclusion=self.args.exclude,
             timestepCompare=self.args.timestepCompare,

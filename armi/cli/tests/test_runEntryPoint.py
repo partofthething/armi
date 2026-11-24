@@ -195,7 +195,6 @@ class TestCompareCases(unittest.TestCase):
 
             self.assertEqual(cc.name, "compare")
             self.assertIsNone(cc.args.timestepCompare)
-            self.assertIsNone(cc.args.weights)
 
             with self.assertRaises(ValueError):
                 # The "fake" files do exist, so this should fail.
@@ -212,7 +211,6 @@ class TestCompareSuites(unittest.TestCase):
             self.assertEqual(cs.name, "compare-suites")
             self.assertEqual(cs.args.reference, "/path/to/fake1.h5")
             self.assertTrue(cs.args.skip_inspection)
-            self.assertIsNone(cs.args.weights)
 
 
 class TestExtractInputs(unittest.TestCase):

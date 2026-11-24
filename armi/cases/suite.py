@@ -267,7 +267,6 @@ class CaseSuite:
         self,
         that,
         exclusion: Sequence[str] | None = None,
-        weights=None,
         tolerance=0.01,
         timestepCompare=None,
     ) -> int:
