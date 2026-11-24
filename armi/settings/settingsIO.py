@@ -171,7 +171,7 @@ class SettingsReader:
         yaml = YAML(typ="rt")
         yaml.allow_duplicate_keys = False
         tree = yaml.load(stream)
-        if "settings" not in tree:
+        if not isinstance(tree, dict) or "settings" not in tree:
             raise InvalidSettingsFileError(
                 self.inputPath,
                 "Missing the `settings:` header required in YAML settings",
@@ -181,7 +181,13 @@ class SettingsReader:
             raise InvalidSettingsFileError(self.inputPath, "Appears to be an orifice_settings file")
 
         caseSettings = tree[Roots.CUSTOM]
-        setts = tree["settings"]
+        if not isinstance(caseSettings, dict):
+            raise InvalidSettingsFileError(
+                self.inputPath,
+                "Expected a mapping of setting names to values under the `settings:` header",
+            )
+
+        setts = caseSettings
         if CONF_VERSIONS in setts and "armi" in setts[CONF_VERSIONS]:
             self.inputVersion = setts[CONF_VERSIONS]["armi"]
         else:
