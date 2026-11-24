@@ -210,17 +210,14 @@ class SettingsReader:
 
     def _applySettings(self, name, val):
         """Add a setting, if it is valid. Capture invalid settings."""
-        _nameToSet, _wasRenamed = self._renamer.renameSetting(name)
+        nameToSet, _wasRenamed = self._renamer.renameSetting(name)
 
-        if name not in self.cs:
+        if nameToSet not in self.cs:
             self.invalidSettings.add(name)
         else:
-            # apply validations
-            _settingObj = self.cs.getSetting(name)
-
             # The val is automatically coerced into the expected type when set using either the default or user-defined
             # schema
-            self.cs[name] = val
+            self.cs[nameToSet] = val
 
 
 class SettingsWriter:
