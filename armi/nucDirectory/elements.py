@@ -434,6 +434,16 @@ class Elements:
 
         return elems
 
+    def _getElementByName(self, name: str):
+        """Resolve an element by name, tolerating case mismatch (e.g. 'neon')."""
+        element = self.byName.get(name)
+        if element is not None:
+            return element
+        for key, val in self.byName.items():
+            if key.lower() == name.lower():
+                return val
+        return None
+
     def getName(self, z: int | None = None, symbol: str | None = None) -> str:
         r"""
         Returns element name.
@@ -452,12 +462,17 @@ class Elements:
         >>> elements.getName(symbol="Ne")
         'Neon'
         """
-        element = None
         if z:
-            element = self.byZ[z]
-        else:
-            element = self.byName[symbol.upper()]
+            return self.byZ[z].name
+        if symbol is None:
+            raise ValueError("Either z or symbol must be provided")
 
+        element = self.bySymbol.get(symbol.upper())
+        if element is None:
+            # tolerate a full name passed where a symbol was expected
+            element = self.byName.get(symbol)
+        if element is None:
+            raise KeyError(f"Unknown element symbol {symbol!r}")
         return element.name
 
     def getSymbol(self, z: int | None = None, name: str | None = None) -> str:
@@ -474,17 +489,19 @@ class Elements:
         Examples
         --------
         >>> elements.getSymbol(10)
-        'Ne'
+        'NE'
         >>> elements.getSymbol(name="Neon")
-        'Ne'
+        'NE'
 
         """
-        element = None
         if z:
-            element = self.byZ[z]
-        else:
-            element = self.byName[name.lower()]
+            return self.byZ[z].symbol
+        if name is None:
+            raise ValueError("Either z or name must be provided")
 
+        element = self._getElementByName(name)
+        if element is None:
+            raise KeyError(f"Unknown element name {name!r}")
         return element.symbol
 
     def getElementZ(self, symbol: str | None = None, name: str | None = None) -> int:
@@ -500,23 +517,30 @@ class Elements:
 
         Examples
         --------
-        >>> elements.getZ("Zr")
+        >>> elements.getElementZ(symbol="Zr")
         40
-        >>> elements.getZ(name="Zirconium")
+        >>> elements.getElementZ(name="Zirconium")
         40
 
         Notes
         -----
-        Element Z is stored in elementZBySymbol, indexed by upper-case element symbol.
+        Element Z is stored in bySymbol, indexed by upper-case element symbol.
         """
         if not symbol and not name:
             return None
 
         element = None
         if symbol:
-            element = self.bySymbol[symbol.upper()]
+            element = self.bySymbol.get(symbol.upper())
+            if element is None:
+                # tolerate a full name passed where a symbol was expected
+                element = self.byName.get(symbol)
+            if element is None:
+                raise KeyError(f"Unknown element symbol {symbol!r}")
         else:
-            element = self.byName[name.lower()]
+            element = self._getElementByName(name)
+            if element is None:
+                raise KeyError(f"Unknown element name {name!r}")
 
         return element.z
 
