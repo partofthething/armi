@@ -433,6 +433,10 @@ class Assembly(composites.Composite):
                 fuelIndex = bi
 
         if zeroAtFuel:
+            if fuelIndex is None:
+                raise ValueError(
+                    f"Cannot set zeroAtFuel for assembly {self.getName()!r}: it contains no fuel block."
+                )
             # adjust the mesh to put zero at the first fuel block.
             zeroVal = meshVals[fuelIndex]
             meshVals = [mv - zeroVal for mv in meshVals]
