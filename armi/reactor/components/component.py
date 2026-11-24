@@ -1326,6 +1326,9 @@ class Component(composites.Composite, metaclass=ComponentType):
             return volumeFraction * self.parent.getIntegratedMgFlux(adjoint, gamma)
 
         # pin-level flux is available. Note that it is NOT integrated on the param level.
+        if self.p.pinNum < 1:
+            raise ValueError(f"pinNum must be at least 1, got {self.p.pinNum}")
+
         if gamma:
             if adjoint:
                 raise ValueError("Adjoint gamma flux is currently unsupported.")
