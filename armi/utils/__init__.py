@@ -471,6 +471,10 @@ def slantSplit(val, ratio, nodes, order="low first"):
     val = float(val)
     ratio = float(ratio)
     nodes = int(nodes)
+    if nodes < 1:
+        raise ValueError(f"nodes must be at least 1, got {nodes}")
+    if nodes == 1:
+        return [val]
     v0 = 2.0 * val / (nodes * (1.0 + ratio))
     X = []
     for i in range(nodes):
@@ -544,9 +548,6 @@ def list2str(strings, width=None, preStrings=None, fmt=None):
     fmt : str, optional
         The format to apply to each string, such as ' >4d', '^12.4E'.
     """
-    if preStrings is None:
-        preStrings = []
-
     if fmt is None:
         fmt = ""
 
@@ -557,8 +558,7 @@ def list2str(strings, width=None, preStrings=None, fmt=None):
         string = "{0:{fmt}}".format(string, fmt=fmt)
         newStrings.append(string)
 
-    preStrings.extend(newStrings)
-    return "".join(preStrings)
+    return "".join(list(preStrings or []) + newStrings)
 
 
 def createFormattedStrWithDelimiter(dataList, maxNumberOfValuesBeforeDelimiter=9, delimiter="\n"):
@@ -660,7 +660,7 @@ def userName() -> str:
     """
     Return a database-friendly username.
 
-    This will return the current user's username, removing any prefix like ``pre-``, if present.
+    This will return the current user's username, removing a single-letter prefix such as ``a-``, if present.
 
     Notes
     -----
