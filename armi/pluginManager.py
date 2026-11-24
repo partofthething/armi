@@ -38,8 +38,17 @@ class ArmiPluginManager(pluggy.PluginManager):
         return self._counter
 
     def register(self, *args, **kwargs):
-        self._counter += 1
-        pluggy.PluginManager.register(self, *args, **kwargs)
+        result = pluggy.PluginManager.register(self, *args, **kwargs)
+        # Bump the counter only when the plugin was actually registered,
+        # so clients do not invalidate their caches on a failed/no-op register.
+        if result is not None:
+            self._counter += 1
+        return result
 
     def unregister(self, *args, **kwargs):
-        pluggy.PluginManager.unregister(self, *args, **kwargs)
+        result = pluggy.PluginManager.unregister(self, *args, **kwargs)
+        # Bump the counter only when a plugin was actually removed,
+        # so cached data keyed on this counter stays valid.
+        if result is not None:
+            self._counter += 1
+        return result
