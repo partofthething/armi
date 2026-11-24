@@ -125,15 +125,18 @@ class TestGeneralUtils(unittest.TestCase):
         str1 = "OneTwoThreeFour"
         str2 = utils.list2str(list2, None, list1, None)
         self.assertEqual(str1, str2)
-        str1 = "OneTwoThreeFourT...Four"
+        # preStrings must not be mutated: the prefix only ever stays "OneTwo"
+        str1 = "OneTwoT...Four"
         str2 = utils.list2str(list2, 4, list1, None)
         self.assertEqual(str1, str2)
-        str1 = "OneTwoThreeFourT...FourThreeFour "
+        self.assertEqual(list1, ["One", "Two"])
+        str1 = "OneTwoThreeFour "
         str2 = utils.list2str(list2, None, list1, 5)
         self.assertEqual(str1, str2)
-        str1 = "OneTwoThreeFourT...FourThreeFour T... Four "
+        str1 = "OneTwoT... Four "
         str2 = utils.list2str(list2, 4, list1, 5)
         self.assertEqual(str1, str2)
+        self.assertEqual(list1, ["One", "Two"])
 
     def test_slantSplit(self):
         x1 = utils.slantSplit(10.0, 4.0, 4)
