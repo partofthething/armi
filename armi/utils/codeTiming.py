@@ -47,9 +47,12 @@ def timed(*args):
                 ]
             )
 
-            MasterTimer.startTimer(label or generated_name)
-            return_value = func(*args, **kwargs)
-            MasterTimer.endTimer(label or generated_name)
+            generatedLabel = label or generated_name
+            MasterTimer.startTimer(generatedLabel)
+            try:
+                return_value = func(*args, **kwargs)
+            finally:
+                MasterTimer.endTimer(generatedLabel)
 
             return return_value
 
