@@ -109,13 +109,16 @@ class GlobalFluxInterface(interfaces.Interface):
         lastNodeInCycle = getBurnSteps(self.cs)[self.r.p.cycle]
         if self.r.p.timeNode == lastNodeInCycle and self._bocKeff is not None:
             eocKeff = self.r.core.p.keffUnc or self.r.core.p.keff
-            swing = (eocKeff - self._bocKeff) / (eocKeff * self._bocKeff)
-            self.r.core.p.rxSwing = swing * units.ABS_REACTIVITY_TO_PCM
-            runLog.info(
-                f"BOC Uncontrolled keff: {self._bocKeff},  "
-                f"EOC Uncontrolled keff: {self.r.core.p.keffUnc}, "
-                f"Cycle Reactivity Swing: {self.r.core.p.rxSwing} pcm"
-            )
+            if eocKeff and self._bocKeff:
+                swing = (eocKeff - self._bocKeff) / (eocKeff * self._bocKeff)
+                self.r.core.p.rxSwing = swing * units.ABS_REACTIVITY_TO_PCM
+                runLog.info(
+                    f"BOC Uncontrolled keff: {self._bocKeff},  "
+                    f"EOC Uncontrolled keff: {self.r.core.p.keffUnc}, "
+                    f"Cycle Reactivity Swing: {self.r.core.p.rxSwing} pcm"
+                )
+            else:
+                runLog.warning("Cannot compute rxSwing: zero keff in swing calculation")
 
     def checkEnergyBalance(self):
         """Check that there is energy balance between the power generated and the specified power.
@@ -176,7 +179,7 @@ class GlobalFluxInterface(interfaces.Interface):
 
         inName = self.cs.caseTitle + timeId.format(cycle, node) + f"{additionalLabel}.{self.name}.inp"
         outName = self.cs.caseTitle + timeId.format(cycle, node) + f"{additionalLabel}.{self.name}.out"
-        stdName = outName.strip(".out") + ".stdout"
+        stdName = outName.removesuffix(".out") + ".stdout"
 
         return inName, outName, stdName
 
