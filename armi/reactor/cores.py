@@ -1293,9 +1293,21 @@ class Core(composites.Composite):
         # property that is generated on demand
         if not locContents:
             locContents = self.makeLocationLookup(assemblyLevel)
+
+        def toLocKey(loc):
+            if isinstance(loc, str):
+                return loc
+            if hasattr(loc, "getCompleteIndices") and self.spatialGrid is not None:
+                indices = loc.getCompleteIndices()
+                if assemblyLevel:
+                    # assembly locations are keyed by plane indices (ring, pos) only
+                    indices = indices[:2]
+                return self.spatialGrid.getLabel(indices)
+            return str(loc)
+
         try:
             # now look 'em up
-            return [locContents[str(loc)] for loc in locs]
+            return [locContents[toLocKey(loc)] for loc in locs]
         except KeyError as e:
             raise KeyError(f"There is nothing in core location {e}.") from e
 
