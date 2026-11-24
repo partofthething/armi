@@ -157,7 +157,7 @@ def createAssemMesh(a: assemblies.Assembly) -> VtkMesh:
     zMin = a.spatialGrid._bounds[2][0]
     zMax = a.spatialGrid._bounds[2][-1]
 
-    if mesh.cellTypes[0] == VtkHexahedron:
+    if mesh.cellTypes[0] == VtkHexahedron.tid:
         mesh.vertices[0:4, 2] = zMin
         mesh.vertices[4:8, 2] = zMax
     elif mesh.cellTypes[0] == _HEX_PRISM_TID:
@@ -211,7 +211,7 @@ def _createCartesianBlockMesh(b: blocks.CartesianBlock) -> VtkMesh:
 
     pitch = b.getPitch()
     halfPitchX = pitch[0] * 0.5
-    halfPitchY = pitch[0] * 0.5
+    halfPitchY = pitch[1] * 0.5
 
     rectVerts = np.array(
         [
