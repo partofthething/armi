@@ -804,11 +804,16 @@ def replaceNonsenseWithNones(data: np.ndarray, paramName: str) -> np.ndarray:
     --------
     replaceNonesWithNonsense
     """
-    # NOTE: This is closely-related to the NONE_MAP.
+    # NOTE: Mirror the NONE_MAP sentinel logic (signed ints at min+2, unsigned at max-2).
     if np.issubdtype(data.dtype, np.floating):
         isNone = np.isnan(data)
     elif np.issubdtype(data.dtype, np.integer):
-        isNone = data == np.iinfo(data.dtype).min + 2
+        info = np.iinfo(data.dtype)
+        if np.issubdtype(data.dtype, np.unsignedinteger):
+            sentinel = info.max - 2
+        else:
+            sentinel = info.min + 2
+        isNone = data == sentinel
     elif np.issubdtype(data.dtype, np.str_):
         isNone = data == "<!None!>"
     else:
