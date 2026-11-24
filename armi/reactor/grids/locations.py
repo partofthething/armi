@@ -378,7 +378,7 @@ class MultiIndexLocation(IndexLocation):
         self._locations.extend(locations)
 
     def pop(self, location: IndexLocation):
-        self._locations.pop(location)
+        self._locations.remove(location)
 
     @property
     def indices(self) -> list[np.ndarray]:
