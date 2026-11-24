@@ -594,27 +594,26 @@ class Case:
                 fromPath(fileName),
                 os.path.join(clone.cs.inputDirectory, fileName),
             )
+            with open(fromPath(fileName)) as f:
+                # The root for handling YAML includes is relative to the YAML file, not the settings file
+                root = pathlib.Path(self.cs.inputDirectory) / pathlib.Path(fileName).parent
+                cloneRoot = pathlib.Path(clone.cs.inputDirectory) / pathlib.Path(clone.cs[CONF_LOADING_FILE]).parent
+                for includePath, mark in textProcessors.findYamlInclusions(f, root=root):
+                    if not includePath.is_absolute():
+                        includeSrc = root / includePath
+                        includeDest = cloneRoot / includePath
+                    else:
+                        # don't bother copying absolute files
+                        continue
+                    if not includeSrc.exists():
+                        raise OSError(f"The input file file `{includeSrc}` referenced at {mark} does not exist.")
+                    pathTools.copyOrWarn(
+                        f"auxiliary input file `{includeSrc}` referenced at {mark}",
+                        includeSrc,
+                        includeDest,
+                    )
         else:
             runLog.warning(f"skipping {CONF_LOADING_FILE}, there is no file specified")
-
-        with open(self.cs[CONF_LOADING_FILE]) as f:
-            # The root for handling YAML includes is relative to the YAML file, not the settings file
-            root = pathlib.Path(self.cs.inputDirectory) / pathlib.Path(self.cs[CONF_LOADING_FILE]).parent
-            cloneRoot = pathlib.Path(clone.cs.inputDirectory) / pathlib.Path(clone.cs[CONF_LOADING_FILE]).parent
-            for includePath, mark in textProcessors.findYamlInclusions(f, root=root):
-                if not includePath.is_absolute():
-                    includeSrc = root / includePath
-                    includeDest = cloneRoot / includePath
-                else:
-                    # don't bother copying absolute files
-                    continue
-                if not includeSrc.exists():
-                    raise OSError(f"The input file file `{includeSrc}` referenced at {mark} does not exist.")
-                pathTools.copyOrWarn(
-                    f"auxiliary input file `{includeSrc}` referenced at {mark}",
-                    includeSrc,
-                    includeDest,
-                )
 
         for fileName in additionalFiles or []:
             pathTools.copyOrWarn("additional file", fromPath(fileName), clone.cs.inputDirectory)
