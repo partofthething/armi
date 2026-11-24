@@ -692,14 +692,10 @@ def safeCopy(src: str, dst: str) -> None:
         dst = os.path.join(dst, os.path.basename(src))
 
     srcSize = os.path.getsize(src)
-    if PLATFORM == Platform.WINDOWS or PLATFORM == Platform.MACOS:
-        shutil.copyfile(src, dst)
-        shutil.copymode(src, dst)
-    elif PLATFORM == Platform.LINUX:
-        cmd = f'cp "{src}" "{dst}"'
-        os.system(cmd)
-    else:
+    if PLATFORM not in (Platform.WINDOWS, Platform.MACOS, Platform.LINUX):
         raise OSError("Cannot perform ``safeCopy`` on files because ARMI only supports Linux, MacOS, and Windows.")
+    shutil.copyfile(src, dst)
+    shutil.copymode(src, dst)
 
     waitTime = 0.01  # 10 ms
     maxWaitTime = 300  # 5 min
@@ -712,7 +708,7 @@ def safeCopy(src: str, dst: str) -> None:
         totalWaitTime += waitTime
         if totalWaitTime > maxWaitTime:
             runLog.warning(
-                f"File copy from {dst} to {src} has failed due to exceeding a maximum wait time of {maxWaitTime / 60} "
+                f"File copy from {src} to {dst} has failed due to exceeding a maximum wait time of {maxWaitTime / 60} "
                 "minutes."
             )
             return
@@ -729,17 +725,12 @@ def safeMove(src: str, dst: str) -> None:
         dst = os.path.join(dst, os.path.basename(src))
 
     srcSize = os.path.getsize(src)
-    if PLATFORM == Platform.WINDOWS or PLATFORM == Platform.MACOS:
-        # this covers Windows ("win32") and MacOS ("darwin")
-        shutil.move(src, dst)
-    elif PLATFORM == Platform.LINUX:
-        cmd = f'mv "{src}" "{dst}"'
-        os.system(cmd)
-    else:
+    if PLATFORM not in (Platform.WINDOWS, Platform.MACOS, Platform.LINUX):
         raise OSError("Cannot perform ``safeMove`` on files because ARMI only supports Linux, MacOS, and Windows.")
+    shutil.move(src, dst)
 
     waitTime = 0.01  # 10 ms
-    maxWaitTime = 6000  # 1 min
+    maxWaitTime = 6000  # 100 min
     totalWaitTime = 0
     while True:
         try:
@@ -752,7 +743,7 @@ def safeMove(src: str, dst: str) -> None:
         totalWaitTime += waitTime
         if totalWaitTime > maxWaitTime:
             runLog.warning(
-                f"File move from {dst} to {src} has failed due to exceeding a maximum wait time of {maxWaitTime / 60} "
+                f"File move from {src} to {dst} has failed due to exceeding a maximum wait time of {maxWaitTime / 60} "
                 "minutes."
             )
             return None
