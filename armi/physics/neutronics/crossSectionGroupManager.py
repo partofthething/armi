@@ -1065,7 +1065,7 @@ class CrossSectionGroupManager(interfaces.Interface):
         # validate structure
         for upperTemp in tempGroupBounds:
             if upperTemp < -C_TO_K:
-                raise ValueError("Temperature boundary is below absolute zero {0}.format(upperTemp)")
+                raise ValueError(f"Temperature boundary is below absolute zero {upperTemp}")
             if upperTemp < lastTemp:
                 raise ValueError("Temp groups must be ascending")
             lastTemp = upperTemp
