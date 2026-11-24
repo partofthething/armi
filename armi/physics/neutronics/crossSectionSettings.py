@@ -256,7 +256,7 @@ class XSSettings(dict):
         # exact key not present so give lowest env group key, eg AA or BA as the source for
         # settings since users do not typically provide all combinations of second chars explicitly
         xsType = xsID[0]
-        envGroup = xsID[1]
+        envGroup = xsID[1] if len(xsID) > 1 else ""
         existingXsOpts = [xsOpt for xsOpt in self.values() if xsOpt.xsType == xsType and xsOpt.envGroup < envGroup]
 
         if not any(existingXsOpts):
